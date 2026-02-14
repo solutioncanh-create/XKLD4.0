@@ -227,7 +227,7 @@ export default function DangKy() {
 
                     {/* Input ẩn */}
                     <input type="file" id="file-upload" accept="image/*" className="hidden"
-                        onChange={handleUploadImage} disabled={uploading} />
+                        onChange={(e) => handleUploadImage(e, 'anh_ho_so')} disabled={uploading} />
 
                     {/* Overlay hướng dẫn khi hover vào ảnh đã có */}
                     {formData.anh_ho_so && !uploading && (
@@ -645,11 +645,11 @@ export default function DangKy() {
 
             <div className="bg-white shadow-xl rounded-xl border border-gray-100 overflow-hidden min-h-[500px]">
                 <form className="p-6 md:p-8">
-                    {step === 1 && <Step1_CaNhan />}
-                    {step === 2 && <Step2_GiaDinh />}
-                    {step === 3 && <Step3_SucKhoe />}
-                    {step === 4 && <Step4_HocVan />}
-                    {step === 5 && <Step5_NguyenVong />}
+                    {step === 1 && Step1_CaNhan()}
+                    {step === 2 && Step2_GiaDinh()}
+                    {step === 3 && Step3_SucKhoe()}
+                    {step === 4 && Step4_HocVan()}
+                    {step === 5 && Step5_NguyenVong()}
                 </form>
             </div>
 

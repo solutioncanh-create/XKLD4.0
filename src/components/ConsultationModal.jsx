@@ -11,14 +11,14 @@ export default function ConsultationModal({ onClose, job }) {
 
         try {
             // Lưu vào bảng ho_so
-            const { error } = await supabase.from('ho_so').insert([{
+            // Lưu vào bảng yeu_cau_tu_van
+            const { error } = await supabase.from('yeu_cau_tu_van').insert([{
                 ho_ten: formData.name,
                 so_dien_thoai: formData.phone,
-                nam_sinh: new Date().getFullYear() - parseInt(formData.age || 18),
+                tuoi: parseInt(formData.age || 0),
                 que_quan: formData.hometown,
-                ghi_chu: job ? `Đăng ký từ Modal - Đơn hàng: ${job.ten_don_hang} (ID: ${job.id})` : 'Đăng ký từ Modal Trang chủ',
-                trang_thai: 'Chờ tư vấn',
-                nguon: 'Web - Modal Popup'
+                ghi_chu: job ? `Quan tâm đơn: ${job.ten_don_hang}` : 'Tư vấn chung',
+                trang_thai: 'Chờ tư vấn'
             }])
 
             if (error) throw error

@@ -27,7 +27,7 @@ export default function HomePage() {
                         </div>
 
                         {/* Headline */}
-                        <h1 className="text-5xl sm:text-5xl md:text-7xl lg:text-7xl font-black leading-[1.1] tracking-tight text-secondary-900">
+                        <h1 className="text-[45px] sm:text-5xl md:text-7xl lg:text-7xl font-black leading-[1.1] tracking-tight text-secondary-900">
                             Kiến Tạo Tương Lai<br />
                             <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary-700 to-primary-500 pb-2">Hành trình Japan</span>
                         </h1>
