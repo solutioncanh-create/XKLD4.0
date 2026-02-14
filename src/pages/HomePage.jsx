@@ -27,23 +27,23 @@ export default function HomePage() {
                         </div>
 
                         {/* Headline */}
-                        <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black leading-[1.1] tracking-tight text-secondary-900">
+                        <h1 className="text-5xl sm:text-5xl md:text-7xl lg:text-7xl font-black leading-[1.1] tracking-tight text-secondary-900">
                             Kiến Tạo Tương Lai<br />
                             <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary-700 to-primary-500 pb-2">Hành trình Japan</span>
                         </h1>
 
                         {/* Subheadline */}
-                        <p className="text-base sm:text-lg md:text-xl text-secondary-600 max-w-2xl mx-auto leading-relaxed font-normal px-4">
+                        <p className="text-lg sm:text-lg md:text-xl text-secondary-600 max-w-2xl mx-auto leading-relaxed font-normal px-4">
                             Hệ thống quản lý ứng viên thông minh, kết nối trực tiếp với các đơn vị uy tín hàng đầu Nhật Bản. Mở ra cơ hội nghề nghiệp vững chắc.
                         </p>
 
                         {/* CTA Buttons */}
                         <div className="flex flex-col sm:flex-row gap-3 justify-center pt-2 px-4 sm:px-0">
-                            <Link to="/dang-ky" className="group relative w-full sm:w-auto inline-flex items-center justify-center px-6 py-4 text-base md:text-lg font-bold text-white transition-all duration-300 bg-primary-700 rounded-xl focus:outline-none hover:bg-primary-800 hover:shadow-lg hover:shadow-primary-500/20 hover:-translate-y-0.5">
+                            <Link to="/dang-ky" className="group relative w-full sm:w-auto inline-flex items-center justify-center px-6 py-4 text-lg font-bold text-white transition-all duration-300 bg-primary-700 rounded-xl focus:outline-none hover:bg-primary-800 hover:shadow-lg hover:shadow-primary-500/20 hover:-translate-y-0.5">
                                 Khai Form Online
                                 <span className="material-icons-outlined ml-2 group-hover:translate-x-1 transition-transform">arrow_forward</span>
                             </Link>
-                            <button onClick={() => setModalOpen(true)} className="w-full sm:w-auto inline-flex items-center justify-center px-6 py-4 text-base md:text-lg font-bold text-primary-900 transition-all duration-300 bg-white border border-secondary-200 rounded-xl hover:bg-secondary-50 hover:border-primary-200 focus:outline-none hover:shadow-md hover:-translate-y-0.5">
+                            <button onClick={() => setModalOpen(true)} className="w-full sm:w-auto inline-flex items-center justify-center px-6 py-4 text-lg font-bold text-primary-900 transition-all duration-300 bg-white border border-secondary-200 rounded-xl hover:bg-secondary-50 hover:border-primary-200 focus:outline-none hover:shadow-md hover:-translate-y-0.5">
                                 Yêu Cầu Tư Vấn
                             </button>
                         </div>
@@ -55,10 +55,10 @@ export default function HomePage() {
             <section className="py-10 md:py-16 bg-white relative">
                 <div className="container mx-auto px-4 sm:px-6">
                     <div className="text-center max-w-3xl mx-auto mb-8 md:mb-12 px-4">
-                        <span className="text-primary-600 font-bold tracking-widest uppercase text-xs mb-2 block">Giá Trị Cốt Lõi</span>
-                        <h2 className="text-3xl md:text-4xl font-bold text-secondary-900 mb-3">Tại Sao Chọn Chúng Tôi?</h2>
+                        <span className="text-primary-600 font-bold tracking-widest uppercase text-[15px] mb-2 block">Giá Trị Cốt Lõi</span>
+                        <h2 className="text-4xl font-bold text-secondary-900 mb-3">Tại Sao Chọn Chúng Tôi?</h2>
                         <div className="w-48 h-px bg-gradient-to-r from-transparent via-primary-300 to-transparent mx-auto mb-6"></div>
-                        <p className="text-secondary-500 text-base md:text-lg leading-relaxed">Cam kết đồng hành cùng bạn trên mọi chặng đường với sự minh bạch và tận tâm nhất.</p>
+                        <p className="text-secondary-500 text-lg leading-relaxed">Cam kết đồng hành cùng bạn trên mọi chặng đường với sự minh bạch và tận tâm nhất.</p>
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 md:gap-6 px-2">
@@ -89,7 +89,7 @@ export default function HomePage() {
             {/* STATS SECTION */}
             <section className="py-10 md:py-14 bg-secondary-50 border-y border-secondary-100">
                 <div className="container mx-auto px-4 sm:px-6">
-                    <div className="grid grid-cols-1 lg:grid-cols-4 divide-y lg:divide-y-0 lg:divide-x divide-secondary-200 bg-white rounded-2xl shadow-sm border border-secondary-200">
+                    <div className="grid grid-cols-1 lg:grid-cols-4 divide-y lg:divide-y-0 lg:divide-x divide-secondary-100 bg-white rounded-2xl shadow-sm border border-secondary-100">
                         <StatNumber number="500+" label="Đối tác Nhật Bản" icon="business" />
                         <StatNumber number="10K+" label="Hồ sơ thành công" icon="assignment_turned_in" />
                         <StatNumber number="99%" label="Tỷ lệ đỗ Visa" icon="airplane_ticket" />
@@ -131,8 +131,8 @@ function FeatureCard({ icon, title, desc }) {
             <div className={`w-14 h-14 md:w-16 md:h-16 rounded-2xl flex items-center justify-center mb-5 text-3xl transition-all duration-300 text-primary-700 bg-primary-50 group-hover:bg-primary-600 group-hover:text-white shadow-sm`}>
                 <span className="material-icons-outlined">{icon}</span>
             </div>
-            <h3 className="text-lg md:text-xl font-bold text-secondary-900 mb-3 group-hover:text-primary-700 transition-colors">{title}</h3>
-            <p className="text-secondary-500 text-base leading-relaxed flex-1">
+            <h3 className="text-xl font-bold text-secondary-900 mb-3 group-hover:text-primary-700 transition-colors">{title}</h3>
+            <p className="text-secondary-500 text-lg leading-relaxed flex-1">
                 {desc}
             </p>
         </div>
