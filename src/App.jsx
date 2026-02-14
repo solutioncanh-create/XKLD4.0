@@ -16,6 +16,7 @@ import DonHangManager from './pages/admin/DonHangManager'
 import OrderMatching from './pages/admin/OrderMatching'
 import YeuCauTuVanManager from './pages/admin/YeuCauTuVanManager'
 import DanhSachThiTuyenPrint from './pages/admin/DanhSachThiTuyenPrint'
+import CandidateKanban from './pages/admin/CandidateKanban'
 
 import YeuCauTuVan from './pages/YeuCauTuVan'
 
@@ -42,6 +43,7 @@ function App() {
           <Route path="ho-so" element={<HoSoManager />} />
           <Route path="don-hang" element={<DonHangManager />} />
           <Route path="ghep-don" element={<OrderMatching />} />
+          <Route path="quan-ly-trang-thai" element={<CandidateKanban />} />
 
           <Route path="thong-ke" element={<div className="text-center py-20 bg-white m-6 rounded-xl shadow-sm"><span className="material-icons-outlined text-6xl text-gray-200 block mb-4">insights</span><h3 className="text-xl font-bold text-gray-400">Đang xây dựng Thống kê</h3></div>} />
           <Route path="tai-khoan" element={<div className="text-center py-20 bg-white m-6 rounded-xl shadow-sm"><span className="material-icons-outlined text-6xl text-gray-200 block mb-4">manage_accounts</span><h3 className="text-xl font-bold text-gray-400">Đang xây dựng Quản lý Tài khoản</h3></div>} />

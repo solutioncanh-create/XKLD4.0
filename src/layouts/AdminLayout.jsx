@@ -40,6 +40,7 @@ export default function AdminLayout({ adminStats }) {
                     <MenuItem to="/admin/ho-so" icon="people" label="Hồ sơ ứng viên" badge={adminStats?.pending > 0 ? adminStats.pending : null} onClick={onClose} />
                     <MenuItem to="/admin/don-hang" icon="work_outline" label="Đơn hàng" onClick={onClose} />
                     <MenuItem to="/admin/ghep-don" icon="group_add" label="SETUP Phỏng vấn" onClick={onClose} />
+                    <MenuItem to="/admin/quan-ly-trang-thai" icon="view_column" label="Quản lý Trạng thái" onClick={onClose} />
                 </div>
 
                 <div>

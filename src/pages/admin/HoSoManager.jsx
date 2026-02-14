@@ -70,6 +70,7 @@ export default function HoSoManager() {
                             <th className="px-6 py-4 font-bold border-b border-gray-200">Ứng viên</th>
                             <th className="px-6 py-4 font-bold border-b border-gray-200">Thông tin liên hệ</th>
                             <th className="px-6 py-4 font-bold border-b border-gray-200">Nguyện vọng</th>
+                            <th className="px-6 py-4 font-bold border-b border-gray-200">Trạng thái</th>
                             <th className="px-6 py-4 font-bold border-b border-gray-200">Ngày ĐK</th>
                             <th className="px-6 py-4 font-bold border-b border-gray-200 text-right">Thao tác</th>
                         </tr>
@@ -96,24 +97,33 @@ export default function HoSoManager() {
                                         <div>
                                             <div className="font-bold text-gray-800 text-base">{p.ho_ten}</div>
                                             <div className="text-xs text-gray-500 flex items-center gap-1 mt-0.5">
-                                                <span className="material-icons-outlined text-[10px]">wc</span> {p.gioi_tinh} • {new Date().getFullYear() - (p.ngay_sinh ? new Date(p.ngay_sinh).getFullYear() : 2000)} tuổi
+                                                <span className="material-icons-outlined text-[8px] text-gray-400">person</span> {p.gioi_tinh} • {new Date().getFullYear() - (p.ngay_sinh ? new Date(p.ngay_sinh).getFullYear() : 2000)} tuổi
                                             </div>
                                         </div>
                                     </div>
                                 </td>
                                 <td className="px-6 py-4 text-sm">
                                     <div className="text-gray-800 font-medium flex items-center gap-2">
-                                        <span className="material-icons-outlined text-gray-400 text-sm">call</span>
+                                        <span className="material-icons-outlined text-gray-400 text-[8px]">call</span>
                                         {p.so_dien_thoai || '---'}
                                     </div>
                                     <div className="text-gray-500 text-xs mt-1 flex items-center gap-2">
-                                        <span className="material-icons-outlined text-gray-400 text-sm">location_on</span>
+                                        <span className="material-icons-outlined text-gray-400 text-[8px]">location_on</span>
                                         {p.que_quan || '---'}
                                     </div>
                                 </td>
                                 <td className="px-6 py-4">
-                                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-blue-100 text-blue-700 border border-blue-200">
+                                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-blue-50 text-blue-700 border border-blue-100">
                                         {p.nganh_nghe_mong_muon || 'Chưa chọn'}
+                                    </span>
+                                </td>
+                                <td className="px-6 py-4">
+                                    <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold border ${p.trang_thai === 'Đỗ đơn' ? 'bg-green-100 text-green-800 border-green-200' :
+                                        p.trang_thai === 'Đợi đơn' ? 'bg-blue-100 text-blue-800 border-blue-200' :
+                                            p.trang_thai === 'Rút đơn' ? 'bg-red-100 text-red-800 border-red-200' :
+                                                'bg-yellow-100 text-yellow-800 border-yellow-200'
+                                        }`}>
+                                        {p.trang_thai || 'Chờ tư vấn'}
                                     </span>
                                 </td>
                                 <td className="px-6 py-4 text-sm text-gray-500">
@@ -123,10 +133,11 @@ export default function HoSoManager() {
                                 <td className="px-6 py-4 text-right">
                                     <button
                                         onClick={() => navigate(`/ho-so/${p.id}`)}
-                                        className="text-primary-600 hover:text-white border border-primary-200 hover:bg-primary-600 focus:ring-2 focus:outline-none focus:ring-primary-300 font-medium rounded-lg text-sm px-4 py-2 text-center inline-flex items-center transition-all duration-200 shadow-sm hover:shadow-md"
+                                        className="group inline-flex items-center justify-center px-3 py-2 rounded-lg text-gray-400 hover:text-primary-600 hover:bg-primary-50 transition-all duration-200"
+                                        title="Xem chi tiết hồ sơ"
                                     >
-                                        <span className="material-icons-outlined text-lg mr-1">visibility</span>
-                                        Chi tiết
+                                        <span className="material-icons-outlined text-xl group-hover:scale-110 transition-transform">visibility</span>
+                                        <span className="hidden sm:block ml-2 text-sm font-medium">Xem</span>
                                     </button>
                                 </td>
                             </tr>
