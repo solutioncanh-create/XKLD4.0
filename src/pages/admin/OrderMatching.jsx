@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
+import { Link } from 'react-router-dom'
 import { supabase } from '../../supabaseClient'
-import jsPDF from 'jspdf'
-import autoTable from 'jspdf-autotable'
+
 
 export default function OrderMatching() {
     const [orders, setOrders] = useState([])
@@ -14,7 +14,7 @@ export default function OrderMatching() {
     const [searchTerm, setSearchTerm] = useState('')
     const [activeTab, setActiveTab] = useState('list') // 'list' | 'add'
     const [loadingDetails, setLoadingDetails] = useState(false)
-    const [generatingPDF, setGeneratingPDF] = useState(false)
+
 
     useEffect(() => {
         fetchOrders()
@@ -147,128 +147,7 @@ export default function OrderMatching() {
         }
     }
 
-    const getImageData = (url) => {
-        return new Promise((resolve) => {
-            const img = new Image()
-            img.crossOrigin = 'Anonymous'
-            img.onload = () => {
-                const canvas = document.createElement('canvas')
-                canvas.width = img.width
-                canvas.height = img.height
-                const ctx = canvas.getContext('2d')
-                ctx.drawImage(img, 0, 0)
-                resolve(canvas.toDataURL('image/jpeg'))
-            }
-            img.onerror = (e) => {
-                console.warn('Failed to load image for PDF:', url, e)
-                resolve(null)
-            }
-            img.src = url
-        })
-    }
 
-    const handlePrintExamList = async () => {
-        if (!selectedOrder) return
-        setGeneratingPDF(true)
-
-        try {
-            const doc = new jsPDF('l', 'mm', 'a4') // Landscape mode
-
-            const removeAccents = (str) => {
-                return str ? str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/đ/g, "d").replace(/Đ/g, "D") : ""
-            }
-
-            // Header Info
-            doc.setFontSize(18)
-            doc.text("DANH SACH THI TUYEN", 148, 20, { align: "center" })
-
-            doc.setFontSize(12)
-            doc.text(`Don hang: ${removeAccents(selectedOrder.ten_don_hang)}`, 14, 30)
-            doc.text(`Ngay thi: ${selectedOrder.ngay_tuyen_du_kien || '...'}`, 14, 36)
-            doc.text(`Dia diem: ${removeAccents(selectedOrder.dia_diem_lam_viec)}`, 14, 42)
-
-            const tableColumn = ["SBD", "ANH", "HO TEN", "NAM SINH", "QUE QUAN", "HON NHAN", "CAO (cm)", "NANG (kg)", "MAU"]
-            const tableRows = []
-
-            // Prepare Rows
-            matchedCandidates.forEach(item => {
-                const candidate = item.ho_so
-                if (!candidate) return
-
-                const namSinh = candidate.ngay_sinh ? new Date(candidate.ngay_sinh).getFullYear() : ''
-
-                const row = [
-                    item.sbd,
-                    '', // Placeholder for image
-                    removeAccents(candidate.ho_ten || '').toUpperCase(),
-                    namSinh,
-                    removeAccents(candidate.que_quan || ''),
-                    removeAccents(candidate.hon_nhan || ''),
-                    candidate.chieu_cao || '',
-                    candidate.can_nang || '',
-                    candidate.nhom_mau || ''
-                ]
-                tableRows.push(row)
-            })
-
-            // Fetch Images
-            const imageUrls = {}
-            const imagePromises = matchedCandidates.map(async (item) => {
-                if (item.ho_so?.anh_ho_so) {
-                    const base64 = await getImageData(item.ho_so.anh_ho_so)
-                    if (base64) {
-                        imageUrls[item.sbd] = base64
-                    }
-                }
-            })
-
-            await Promise.all(imagePromises)
-
-            // Generate Table using explicit autoTable call
-            autoTable(doc, {
-                head: [tableColumn],
-                body: tableRows,
-                startY: 50,
-                theme: 'grid',
-                headStyles: { fillColor: [22, 160, 133], halign: 'center', valign: 'middle' },
-                bodyStyles: { valign: 'middle', fontSize: 10 },
-                columnStyles: {
-                    0: { cellWidth: 15, halign: 'center', fontStyle: 'bold' }, // SBD
-                    1: { cellWidth: 25, minCellHeight: 25 }, // ANH column
-                    2: { cellWidth: 50 }, // Hoten
-                    3: { cellWidth: 20, halign: 'center' }, // Namsinh
-                    4: { cellWidth: 'auto' }, // Que quan
-                    5: { cellWidth: 25 }, // Hon nhan
-                    6: { cellWidth: 20, halign: 'center' }, // Cao
-                    7: { cellWidth: 20, halign: 'center' }, // Nang
-                    8: { cellWidth: 15, halign: 'center' }  // Mau
-                },
-                didDrawCell: (data) => {
-                    if (data.column.index === 1 && data.cell.section === 'body') {
-                        const sbd = data.row.raw[0] // Get SBD from first column
-                        const imgData = imageUrls[sbd]
-                        if (imgData) {
-                            try {
-                                const dim = 21
-                                const x = data.cell.x + (data.cell.width - dim) / 2
-                                const y = data.cell.y + (data.cell.height - dim) / 2
-                                doc.addImage(imgData, 'JPEG', x, y, dim, dim)
-                            } catch (e) {
-                                console.warn('Error adding image to PDF', e)
-                            }
-                        }
-                    }
-                }
-            })
-
-            doc.save(`Danh_Sach_Thi_Tuyel_${selectedOrder.id}.pdf`)
-        } catch (error) {
-            console.error('PDF Generation Error:', error)
-            alert('Lỗi tạo PDF: ' + error.message)
-        } finally {
-            setGeneratingPDF(false)
-        }
-    }
 
     return (
         <div className="h-[calc(100vh-80px)] flex flex-col md:flex-row gap-6 animate-fade-in overflow-hidden pb-4">
@@ -322,16 +201,18 @@ export default function OrderMatching() {
                                     <span className="flex items-center gap-1"><span className="material-icons-outlined text-sm">group</span> Cần tuyển: {selectedOrder.so_luong_tuyen}</span>
                                 </div>
                             </div>
-                            <button
-                                onClick={handlePrintExamList}
-                                disabled={matchedCandidates.length === 0 || generatingPDF}
-                                className={`px-4 py-2 text-white rounded-lg font-bold shadow flex items-center gap-2 transition-colors
-                                    ${generatingPDF ? 'bg-gray-400 cursor-not-allowed' : 'bg-red-600 hover:bg-red-700'}
-                                `}
-                            >
-                                {generatingPDF ? <span className="animate-spin w-4 h-4 border-2 border-white rounded-full border-t-transparent"></span> : <span className="material-icons-outlined">picture_as_pdf</span>}
-                                {generatingPDF ? 'Đang tạo PDF...' : 'Xuất DS Thi Tuyển'}
-                            </button>
+                            <div>
+                                <Link
+                                    to={`/in-danh-sach-pv/${selectedOrder.id}`}
+                                    target="_blank"
+                                    className={`px-4 py-2 text-white rounded-lg font-bold shadow flex items-center gap-2 transition-colors
+                                        ${matchedCandidates.length === 0 ? 'bg-gray-400 cursor-not-allowed pointer-events-none' : 'bg-blue-600 hover:bg-blue-700'}
+                                    `}
+                                >
+                                    <span className="material-icons-outlined">print</span>
+                                    In Danh Sách
+                                </Link>
+                            </div>
                         </div>
 
                         {/* Tabs */}
@@ -342,7 +223,7 @@ export default function OrderMatching() {
                                     ${activeTab === 'list' ? 'border-primary-600 text-primary-700 bg-white' : 'border-transparent text-gray-500 hover:text-gray-700'}
                                 `}
                             >
-                                Danh Sách Đã Ghép ({matchedCandidates.length})
+                                DANH SÁCH PHỎNG VẤN ({matchedCandidates.length})
                             </button>
                             <button
                                 onClick={() => setActiveTab('add')}
@@ -366,12 +247,9 @@ export default function OrderMatching() {
                                                 <th className="px-4 py-3 border-b text-center w-16">SBD</th>
                                                 <th className="px-4 py-3 border-b text-center w-20">Ảnh</th>
                                                 <th className="px-4 py-3 border-b">Họ Tên</th>
-                                                <th className="px-4 py-3 border-b text-center">Năm Sinh</th>
+                                                <th className="px-4 py-3 border-b text-center w-16">Tuổi</th>
                                                 <th className="px-4 py-3 border-b">Quê Quán</th>
-                                                <th className="px-4 py-3 border-b">Hôn Nhân</th>
-                                                <th className="px-4 py-3 border-b text-center">Cao</th>
-                                                <th className="px-4 py-3 border-b text-center">Nặng</th>
-                                                <th className="px-4 py-3 border-b text-center">Máu</th>
+
                                                 <th className="px-4 py-3 border-b text-right w-16"></th>
                                             </tr>
                                         </thead>
@@ -391,14 +269,11 @@ export default function OrderMatching() {
                                                         </div>
                                                     </td>
                                                     <td className="px-4 py-3 font-medium text-gray-900 align-middle">{item.ho_so ? item.ho_so.ho_ten : <span className="text-red-400 italic">Dữ liệu lỗi</span>}</td>
-                                                    <td className="px-4 py-3 text-gray-500 text-center align-middle">
-                                                        {item.ho_so?.ngay_sinh ? new Date(item.ho_so.ngay_sinh).getFullYear() : '---'}
+                                                    <td className="px-4 py-3 text-gray-500 text-center font-bold align-middle">
+                                                        {item.ho_so?.ngay_sinh ? (new Date().getFullYear() - new Date(item.ho_so.ngay_sinh).getFullYear()) : ''}
                                                     </td>
                                                     <td className="px-4 py-3 text-gray-500 align-middle">{item.ho_so?.que_quan}</td>
-                                                    <td className="px-4 py-3 text-gray-500 text-sm align-middle">{item.ho_so?.hon_nhan}</td>
-                                                    <td className="px-4 py-3 text-gray-500 text-center align-middle">{item.ho_so?.chieu_cao}</td>
-                                                    <td className="px-4 py-3 text-gray-500 text-center align-middle">{item.ho_so?.can_nang}</td>
-                                                    <td className="px-4 py-3 text-gray-500 text-center align-middle">{item.ho_so?.nhom_mau}</td>
+
                                                     <td className="px-4 py-3 text-right align-middle">
                                                         <button onClick={() => handleRemoveCandidate(item.id)} className="text-red-300 hover:text-red-500 transition-colors p-1" title="Xóa khỏi danh sách">
                                                             <span className="material-icons-outlined text-lg">cancel</span>

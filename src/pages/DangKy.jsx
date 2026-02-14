@@ -17,6 +17,7 @@ export default function DangKy() {
 
     const [formData, setFormData] = useState({
         // --- BƯỚC 1: CÁ NHÂN & GIẤY TỜ ---
+        ma_ho_so: '', // Mã hồ sơ tùy chỉnh
         ho_ten: '',
         ngay_sinh: '',
         gioi_tinh: 'Nam',
@@ -145,20 +146,37 @@ export default function DangKy() {
     const bmi = (formData.chieu_cao && formData.can_nang) ? (formData.can_nang / ((formData.chieu_cao / 100) ** 2)).toFixed(1) : ''
 
     // --- Submit ---
+    // --- Submit ---
     const handleSubmit = async (e) => {
         e.preventDefault()
         setLoading(true)
+
+        // Chuyển chuỗi rỗng thành null để tránh lỗi database
+        const cleanData = (data) => {
+            const cleaned = { ...data }
+            Object.keys(cleaned).forEach(key => {
+                if (cleaned[key] === '') {
+                    cleaned[key] = null
+                }
+            })
+            // Xử lý riêng cho mảng JSON nếu cần
+            return cleaned
+        }
+
+        const payload = cleanData(formData)
+
         try {
             if (id) {
-                const { error } = await supabase.from('ho_so').update(formData).eq('id', id)
+                const { error } = await supabase.from('ho_so').update(payload).eq('id', id)
                 if (error) throw error
-                alert('Cập nhật hồ sơ thành công!')
+                // alert('Cập nhật hồ sơ thành công!') // Có thể bỏ alert nếu muốn trải nghiệm mượt hơn
+                navigate('/admin')
             } else {
-                const { error } = await supabase.from('ho_so').insert([formData])
+                const { error } = await supabase.from('ho_so').insert([payload])
                 if (error) throw error
                 alert('Đăng ký mới thành công!')
+                navigate('/')
             }
-            navigate('/')
         } catch (error) { alert('Lỗi: ' + error.message) }
         finally { setLoading(false) }
     }
@@ -237,6 +255,16 @@ export default function DangKy() {
                     )}
                 </div>
                 <div className="md:col-span-3 grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="md:col-span-2">
+                        <label className="label text-gray-700 font-semibold">Mã Hồ Sơ (Tùy chọn)</label>
+                        <input
+                            name="ma_ho_so"
+                            value={formData.ma_ho_so || ''}
+                            onChange={handleChange}
+                            className="input w-full border-gray-300 focus:border-primary-500 focus:ring-primary-500 rounded-md shadow-sm"
+                            placeholder="Nhập mã nếu có (VD: XKLD-2024-001)..."
+                        />
+                    </div>
                     <div className="md:col-span-2">
                         <label className="label">Họ và Tên (In hoa)</label>
                         <input name="ho_ten" value={formData.ho_ten} onChange={handleChange} className="input uppercase" placeholder="NGUYỄN VĂN A" />
@@ -340,10 +368,22 @@ export default function DangKy() {
                 <div key={idx} className="bg-gray-50 p-3 rounded-lg border border-gray-200 relative mb-3">
                     <button type="button" onClick={() => removeItem('thong_tin_gia_dinh', idx)} className="absolute top-2 right-2 text-red-500 hover:text-red-700 font-bold" title="Xóa dòng này">✕</button>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                        <div><label className="text-xs text-gray-500 block mb-1">Quan hệ</label><input placeholder="Bố/Mẹ/Vợ..." value={mem.quan_he} onChange={(e) => handleArrayChange('thong_tin_gia_dinh', idx, 'quan_he', e.target.value)} className="input-sm font-medium" /></div>
+                        <div>
+                            <label className="text-xs text-gray-500 block mb-1">Quan hệ</label>
+                            <select className="input-sm w-full font-medium" value={mem.quan_he} onChange={(e) => handleArrayChange('thong_tin_gia_dinh', idx, 'quan_he', e.target.value)}>
+                                <option value="">-- Chọn --</option>
+                                {['Bố', 'Mẹ', 'Ông bà', 'Anh chị', 'Vợ', 'Con'].map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                            </select>
+                        </div>
                         <div className="md:col-span-1"><label className="text-xs text-gray-500 block mb-1">Họ và Tên</label><input placeholder="NGUYỄN VĂN A" value={mem.ho_ten} onChange={(e) => handleArrayChange('thong_tin_gia_dinh', idx, 'ho_ten', e.target.value)} className="input-sm uppercase" /></div>
                         <div><label className="text-xs text-gray-500 block mb-1">Năm sinh</label><input type="number" placeholder="19xx" value={mem.nam_sinh} onChange={(e) => handleArrayChange('thong_tin_gia_dinh', idx, 'nam_sinh', e.target.value)} className="input-sm" /></div>
-                        <div><label className="text-xs text-gray-500 block mb-1">Nghề nghiệp</label><input placeholder="Làm ruộng..." value={mem.nghe_nghiep} onChange={(e) => handleArrayChange('thong_tin_gia_dinh', idx, 'nghe_nghiep', e.target.value)} className="input-sm" /></div>
+                        <div>
+                            <label className="text-xs text-gray-500 block mb-1">Nghề nghiệp</label>
+                            <select className="input-sm w-full" value={mem.nghe_nghiep} onChange={(e) => handleArrayChange('thong_tin_gia_dinh', idx, 'nghe_nghiep', e.target.value)}>
+                                <option value="">-- Chọn --</option>
+                                {['Nông nghiệp', 'Công nhân', 'Viên chức', 'Hộ kinh doanh', 'Học sinh'].map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                            </select>
+                        </div>
                     </div>
                 </div>
             ))}
@@ -375,8 +415,22 @@ export default function DangKy() {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div><label className="label">Nhóm máu</label><select name="nhom_mau" value={formData.nhom_mau} onChange={handleChange} className="input"><option>A</option><option>B</option><option>O</option><option>AB</option></select></div>
                 <div><label className="label">Tay thuận</label><select name="tay_thuan" value={formData.tay_thuan} onChange={handleChange} className="input"><option>Phải</option><option>Trái</option><option>Hai tay</option></select></div>
-                <div><label className="label">Thị lực (Trái)</label><input name="thi_luc_trai" value={formData.thi_luc_trai} onChange={handleChange} className="input" placeholder="10/10" /></div>
-                <div><label className="label">Thị lực (Phải)</label><input name="thi_luc_phai" value={formData.thi_luc_phai} onChange={handleChange} className="input" placeholder="10/10" /></div>
+                <div><label className="label">Thị lực (Trái)</label>
+                    <select name="thi_luc_trai" value={formData.thi_luc_trai} onChange={handleChange} className="input">
+                        <option value="">-- Chọn --</option>
+                        <option value="Tốt">Tốt</option>
+                        <option value="Trung bình">Trung bình</option>
+                        <option value="Kém">Kém</option>
+                    </select>
+                </div>
+                <div><label className="label">Thị lực (Phải)</label>
+                    <select name="thi_luc_phai" value={formData.thi_luc_phai} onChange={handleChange} className="input">
+                        <option value="">-- Chọn --</option>
+                        <option value="Tốt">Tốt</option>
+                        <option value="Trung bình">Trung bình</option>
+                        <option value="Kém">Kém</option>
+                    </select>
+                </div>
             </div>
 
             <h4 className="font-bold text-gray-700 mt-4">Thói quen & Bệnh lý</h4>
@@ -514,10 +568,10 @@ export default function DangKy() {
                                     </div>
                                     <div>
                                         <label className="text-xs text-gray-500 block mb-1">Công việc</label>
-                                        <input placeholder="Công nhân may..." className="input-sm w-full"
-                                            value={item.cong_viec}
-                                            onChange={(e) => handleArrayChange('kinh_nghiem_lam_viec', idx, 'cong_viec', e.target.value)}
-                                        />
+                                        <select className="input-sm w-full" value={item.cong_viec} onChange={(e) => handleArrayChange('kinh_nghiem_lam_viec', idx, 'cong_viec', e.target.value)}>
+                                            <option value="">-- Chọn --</option>
+                                            {['Nông nghiệp', 'Công nhân', 'Viên chức', 'Hộ kinh doanh', 'Học sinh'].map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                                        </select>
                                     </div>
                                 </div>
                             </div>
@@ -551,7 +605,36 @@ export default function DangKy() {
 
         return (
             <div className="space-y-6 animate-fade-in">
-                <h3 className="section-title">VII. KỸ NĂNG & SÀNG LỌC</h3>
+
+                {/* --- VII. NGUYỆN VỌNG ĐĂNG KÝ (Moved Up) --- */}
+                <h3 className="section-title">VII. NGUYỆN VỌNG ĐĂNG KÝ</h3>
+                <div>
+                    <label className="label mb-2 block">Ngành nghề mong muốn</label>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                        {['Thực phẩm', 'Cơ khí', 'Xây dựng', 'May mặc', 'Nông nghiệp', 'Điện tử'].map(job => (
+                            <label key={job} className={`cursor-pointer border p-3 rounded text-center ${formData.nganh_nghe_mong_muon.includes(job) ? 'bg-primary-50 border-primary-500 text-primary-700 font-bold' : 'hover:bg-gray-50'}`}>
+                                <input type="radio" name="nganh_nghe_mong_muon" value={job} checked={formData.nganh_nghe_mong_muon === job} onChange={handleChange} className="sr-only" />{job}
+                            </label>
+                        ))}
+                    </div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div><label className="label">Dự định ở Nhật mấy năm?</label><select name="thoi_gian_du_kien" value={formData.thoi_gian_du_kien} onChange={handleChange} className="input"><option>1 năm</option><option>3 năm</option><option>5 năm</option><option>8 năm</option><option>10 năm</option></select></div>
+                    <div>
+                        <label className="label">Mục đích đi Nhật</label>
+                        <select name="muc_dich_di_nhat" value={formData.muc_dich_di_nhat} onChange={handleChange} className="input">
+                            <option value="">-- Chọn mục đích --</option>
+                            <option value="Kiếm thu nhập giúp gia đình & tích lũy vốn">Kiếm thu nhập giúp gia đình & tích lũy vốn</option>
+                            <option value="Học hỏi kỹ năng, tác phong làm việc Nhật Bản">Học hỏi kỹ năng, tác phong làm việc Nhật Bản</option>
+                            <option value="Trải nghiệm văn hóa và đất nước Nhật Bản">Trải nghiệm văn hóa và đất nước Nhật Bản</option>
+                            <option value="Phát triển bản thân và tìm kiếm cơ hội tương lai">Phát triển bản thân và tìm kiếm cơ hội tương lai</option>
+                            <option value="Nâng cao trình độ tiếng Nhật">Nâng cao trình độ tiếng Nhật</option>
+                        </select>
+                    </div>
+                </div>
+
+                {/* --- VIII. KỸ NĂNG & SÀNG LỌC (Moved Down) --- */}
+                <h3 className="section-title mt-6">VIII. KỸ NĂNG & TÍNH CÁCH</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div><label className="label">Tiếng Nhật</label><select name="trinh_do_tieng_nhat" value={formData.trinh_do_tieng_nhat} onChange={handleChange} className="input"><option>Chưa biết</option><option>Giới thiệu cơ bản</option><option>N5</option><option>N4</option><option>N3</option></select></div>
                     <div><label className="label">Bằng lái xe</label><select name="bang_lai_xe" value={formData.bang_lai_xe} onChange={handleChange} className="input"><option>Chưa có</option><option>Xe máy</option><option>Ô tô</option></select></div>
@@ -587,21 +670,6 @@ export default function DangKy() {
                     </div>
                 </div>
 
-                <h3 className="section-title mt-6">VIII. NGUYỆN VỌNG ĐĂNG KÝ</h3>
-                <div>
-                    <label className="label mb-2 block">Ngành nghề mong muốn</label>
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                        {['Thực phẩm', 'Cơ khí', 'Xây dựng', 'May mặc', 'Nông nghiệp', 'Điện tử'].map(job => (
-                            <label key={job} className={`cursor-pointer border p-3 rounded text-center ${formData.nganh_nghe_mong_muon.includes(job) ? 'bg-primary-50 border-primary-500 text-primary-700 font-bold' : 'hover:bg-gray-50'}`}>
-                                <input type="radio" name="nganh_nghe_mong_muon" value={job} checked={formData.nganh_nghe_mong_muon === job} onChange={handleChange} className="sr-only" />{job}
-                            </label>
-                        ))}
-                    </div>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div><label className="label">Dự định ở Nhật mấy năm?</label><select name="thoi_gian_du_kien" value={formData.thoi_gian_du_kien} onChange={handleChange} className="input"><option>1 năm</option><option>3 năm</option><option>5 năm</option><option>8 năm</option><option>10 năm</option></select></div>
-                    <div><label className="label">Mục đích đi Nhật</label><input name="muc_dich_di_nhat" value={formData.muc_dich_di_nhat} onChange={handleChange} className="input" placeholder="Kiếm tiền, học nghề..." /></div>
-                </div>
             </div>
         )
     }

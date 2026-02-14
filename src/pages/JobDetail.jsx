@@ -100,7 +100,7 @@ export default function JobDetail() {
                             </h3>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                                <DetailItem icon="group" label="Số lượng tuyển" value={`${job.so_luong_tuyen} Nam/Nữ`} />
+                                <DetailItem icon="group" label="Số lượng tuyển" value={`${job.so_luong_tuyen || 0} ${job.yeu_cau_gioi_tinh || '(Nam/Nữ)'}`} />
                                 <DetailItem icon="cake" label="Độ tuổi" value={`${job.tuoi_tu || 18} - ${job.tuoi_den || 35} tuổi`} />
                                 <DetailItem icon="school" label="Trình độ" value="Tốt nghiệp THPT trở lên" />
                                 <DetailItem icon="height" label="Chiều cao" value="Nam > 160cm, Nữ > 150cm" />

@@ -36,9 +36,10 @@ export default function AdminLayout({ adminStats }) {
 
                 <div>
                     <p className="px-4 text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Quản lý</p>
+                    <MenuItem to="/admin/yeu-cau-tu-van" icon="mark_email_unread" label="Yêu cầu tư vấn" onClick={onClose} />
                     <MenuItem to="/admin/ho-so" icon="people" label="Hồ sơ ứng viên" badge={adminStats?.pending > 0 ? adminStats.pending : null} onClick={onClose} />
                     <MenuItem to="/admin/don-hang" icon="work_outline" label="Đơn hàng" onClick={onClose} />
-                    <MenuItem to="/admin/ghep-don" icon="group_add" label="Ghép đơn & DS Thi tuyển" onClick={onClose} />
+                    <MenuItem to="/admin/ghep-don" icon="group_add" label="SETUP Phỏng vấn" onClick={onClose} />
                 </div>
 
                 <div>

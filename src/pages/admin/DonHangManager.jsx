@@ -13,7 +13,8 @@ export default function DonHangManager() {
         so_luong_tuyen: 1, dia_diem_lam_viec: '',
         thoi_han_nop_ho_so: '', ngay_tuyen_du_kien: '',
         mo_ta_cong_viec: '', // Thêm mô tả
-        trang_thai: 'Đang tuyển'
+        trang_thai: 'Đang tuyển',
+        yeu_cau_gioi_tinh: 'Không yêu cầu'
     }
 
     const [formData, setFormData] = useState(initialOrderState)
@@ -44,14 +45,18 @@ export default function DonHangManager() {
     const handleSaveOrder = async (e) => {
         e.preventDefault()
         try {
+            // Tạm thời loại bỏ yeu_cau_gioi_tinh nếu cột chưa được tạo trong DB để tránh lỗi
+            // Khi nào chạy migration xong thì bỏ dòng destructuring này đi
+            const { yeu_cau_gioi_tinh, ...safePayload } = formData
+
             if (editingId) {
                 // UPDATE
-                const { error } = await supabase.from('don_hang').update(formData).eq('id', editingId)
+                const { error } = await supabase.from('don_hang').update(safePayload).eq('id', editingId)
                 if (error) throw error
                 alert('Cập nhật đơn hàng thành công!')
             } else {
                 // INSERT
-                const { error } = await supabase.from('don_hang').insert([formData])
+                const { error } = await supabase.from('don_hang').insert([safePayload])
                 if (error) throw error
                 alert('Thêm đơn hàng mới thành công!')
             }
@@ -150,6 +155,18 @@ export default function DonHangManager() {
                                 value={formData.so_luong_tuyen}
                                 onChange={e => setFormData({ ...formData, so_luong_tuyen: e.target.value })}
                             />
+                        </div>
+
+                        <div className="group">
+                            <label className="text-xs font-bold text-secondary-500 uppercase tracking-wide mb-1.5 block">Yêu cầu giới tính</label>
+                            <select className="input-field w-full pl-4 py-2.5 bg-secondary-50 border border-secondary-200 rounded-lg focus:bg-white focus:border-primary-500 outline-none font-medium"
+                                value={formData.yeu_cau_gioi_tinh || 'Không yêu cầu'}
+                                onChange={e => setFormData({ ...formData, yeu_cau_gioi_tinh: e.target.value })}
+                            >
+                                <option value="Không yêu cầu">Không yêu cầu</option>
+                                <option value="Nam">Nam</option>
+                                <option value="Nữ">Nữ</option>
+                            </select>
                         </div>
 
                         <div className="group">

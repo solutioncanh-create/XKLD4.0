@@ -30,44 +30,6 @@ export default function HoSoManager() {
         }
     }
 
-    const seedFakeData = async () => {
-        // ... (Giữ nguyên logic seed data cũ, rút gọn để focus vào cấu trúc)
-        // Trong thực tế nên tách seed ra file util riêng, nhưng tạm thời để đây cho nhanh
-        const defaultProfile = {
-            ho_ten: '', ngay_sinh: '2000-01-01', gioi_tinh: 'Nam', hon_nhan: 'Độc thân',
-            que_quan: '', dia_chi_thuong_tru: 'Hà Nội', so_dien_thoai: '', email: '',
-            so_cccd: '001200000000', ngay_cap_cccd: '2020-01-01', noi_cap_cccd: 'Cục CS QLHC',
-            so_ho_chieu: '', ngay_cap_ho_chieu: '2020-01-01', ngay_het_han_ho_chieu: '2030-01-01',
-            ton_giao: 'Không', size_ao: 'M', size_giay: '40',
-            anh_ho_so: '', anh_cccd_mat_truoc: '', anh_cccd_mat_sau: '',
-            thong_tin_gia_dinh: [], nguoi_bao_lanh: 'Nguyễn Văn A', sdt_nguoi_bao_lanh: '0900000000',
-            chieu_cao: 165, can_nang: 60, nhom_mau: 'O', thi_luc_trai: '10/10', thi_luc_phai: '10/10', tay_thuan: 'Phải',
-            xam_hinh: false, mu_mau: false, hut_thuoc: false, uong_ruou: false,
-            qua_trinh_hoc_tap: [], kinh_nghiem_lam_viec: [],
-            trinh_do_tieng_nhat: 'Chưa biết', bang_lai_xe: 'Chưa có', diem_manh: '', diem_yeu: '',
-            nganh_nghe_mong_muon: '', thoi_gian_du_kien: '3 năm', muc_dich_di_nhat: 'Kiếm tiền'
-        }
-
-        const fakeDataList = [
-            { ho_ten: 'NGUYỄN VĂN MẠNH', ngay_sinh: '2000-05-15', gioi_tinh: 'Nam', so_dien_thoai: '0912345678', nganh_nghe_mong_muon: 'Xây dựng', anh_ho_so: 'https://randomuser.me/api/portraits/men/32.jpg', que_quan: 'Hà Nội' },
-            { ho_ten: 'TRẦN THỊ LAN', ngay_sinh: '2002-08-20', gioi_tinh: 'Nữ', so_dien_thoai: '0987654321', nganh_nghe_mong_muon: 'Thực phẩm', anh_ho_so: 'https://randomuser.me/api/portraits/women/44.jpg', que_quan: 'Nam Định' },
-            { ho_ten: 'LÊ VĂN HÙNG', ngay_sinh: '1999-12-10', gioi_tinh: 'Nam', so_dien_thoai: '0909090909', nganh_nghe_mong_muon: 'Cơ khí', anh_ho_so: 'https://randomuser.me/api/portraits/men/85.jpg', que_quan: 'Thanh Hóa' },
-            { ho_ten: 'PHẠM THỊ HƯƠNG', ngay_sinh: '2001-03-25', gioi_tinh: 'Nữ', so_dien_thoai: '0933445566', nganh_nghe_mong_muon: 'May mặc', anh_ho_so: 'https://randomuser.me/api/portraits/women/68.jpg', que_quan: 'Nghệ An' },
-            { ho_ten: 'HOÀNG VĂN NAM', ngay_sinh: '1998-11-05', gioi_tinh: 'Nam', so_dien_thoai: '0911223344', nganh_nghe_mong_muon: 'Nông nghiệp', anh_ho_so: 'https://randomuser.me/api/portraits/men/22.jpg', que_quan: 'Thái Bình' }
-        ]
-
-        try {
-            const dataToInsert = fakeDataList.map(item => ({ ...defaultProfile, ...item }))
-            const { error } = await supabase.from('ho_so').insert(dataToInsert)
-            if (error) throw error
-            alert('Đã thêm 5 hồ sơ mẫu thành công!')
-            fetchProfiles()
-        } catch (error) {
-            console.error('Seed Error:', error)
-            alert('Lỗi: ' + error.message)
-        }
-    }
-
     return (
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden animate-fade-in">
             {/* Header Toolbar */}
@@ -93,11 +55,6 @@ export default function HoSoManager() {
                         <span className="material-icons-outlined absolute left-3 top-2.5 text-gray-400 group-hover:text-primary-500 transition-colors">search</span>
                     </div>
 
-                    <button onClick={seedFakeData} className="px-4 py-2.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 text-sm font-bold flex items-center justify-center gap-2 transition-colors border border-gray-200">
-                        <span className="material-icons-outlined text-lg">playlist_add</span>
-                        + 5 HS Demo
-                    </button>
-
                     <button onClick={() => navigate('/dang-ky')} className="px-5 py-2.5 bg-primary-600 text-white rounded-lg hover:bg-primary-700 text-sm font-bold shadow-lg shadow-primary-200 flex items-center justify-center gap-2 transition-all hover:scale-105 active:scale-95">
                         <span className="material-icons-outlined">add_circle</span>
                         Thêm Mới
@@ -106,7 +63,7 @@ export default function HoSoManager() {
             </div>
 
             {/* Table */}
-            <div className="overflow-x-auto min-h-[400px]">
+            < div className="overflow-x-auto min-h-[400px]" >
                 <table className="w-full text-left border-collapse">
                     <thead className="bg-gray-50 text-gray-500 text-xs uppercase tracking-wider sticky top-0">
                         <tr>
@@ -132,9 +89,9 @@ export default function HoSoManager() {
                                 <td className="px-6 py-4">
                                     <div className="flex items-center gap-4">
                                         <div className="relative">
-                                            <img src={p.anh_ho_so || `https://ui-avatars.com/api/?name=${p.ho_ten}&background=random`} className="w-12 h-12 rounded-full object-cover border-2 border-white shadow-sm group-hover:scale-105 transition-transform" alt="" />
+                                            <img src={p.anh_ho_so || (p.gioi_tinh === 'Nữ' ? `https://avatar.iran.liara.run/public/girl?username=${p.ho_ten}` : `https://avatar.iran.liara.run/public/boy?username=${p.ho_ten}`)} className="w-12 h-12 rounded-full object-cover border-2 border-white shadow-sm group-hover:scale-105 transition-transform" alt="" />
                                             {/* Status dot (example) */}
-                                            <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></span>
+                                            <span className={`absolute bottom-0 right-0 w-3.5 h-3.5 border-2 border-white rounded-full ${p.gioi_tinh === 'Nữ' ? 'bg-pink-500' : 'bg-blue-500'}`}></span>
                                         </div>
                                         <div>
                                             <div className="font-bold text-gray-800 text-base">{p.ho_ten}</div>
@@ -176,7 +133,7 @@ export default function HoSoManager() {
                         ))}
                     </tbody>
                 </table>
-            </div>
-        </div>
+            </div >
+        </div >
     )
 }

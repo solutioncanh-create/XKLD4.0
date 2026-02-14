@@ -6,11 +6,14 @@ export default function ChiTietHoSo() {
     const { id } = useParams()
     const [hoSo, setHoSo] = useState(null)
     const [loading, setLoading] = useState(true)
+    const [error, setError] = useState(null)
     const navigate = useNavigate()
 
     useEffect(() => {
         const fetchChiTiet = async () => {
             try {
+                if (!id) throw new Error('ID hồ sơ không hợp lệ')
+
                 const { data, error } = await supabase
                     .from('ho_so')
                     .select('*')
@@ -21,7 +24,7 @@ export default function ChiTietHoSo() {
                 setHoSo(data)
             } catch (error) {
                 console.error('Lỗi tải chi tiết:', error)
-                alert('Lỗi tải dữ liệu hồ sơ!')
+                setError(error.message)
             } finally {
                 setLoading(false)
             }
@@ -44,47 +47,56 @@ export default function ChiTietHoSo() {
     }
 
     if (loading) return <div className="text-center p-10 text-primary-600 font-medium">Đang tải dữ liệu...</div>
+    if (error) return <div className="text-center p-10 text-red-500 font-bold">Lỗi: {error}</div>
     if (!hoSo) return <div className="text-center p-10 text-red-500 font-bold">Không tìm thấy hồ sơ!</div>
 
     return (
-        <div className="max-w-5xl mx-auto px-4 py-8">
+        <div className="max-w-5xl mx-auto px-4 py-8 mt-[10px]">
             {/* Header & Navigation */}
-            <div className="mb-6 flex flex-col sm:flex-row items-center justify-between gap-4 print:hidden">
-                <Link to="/admin" className="text-primary-600 hover:text-primary-800 flex items-center gap-2 font-medium transition-colors">
-                    ← Quay lại Dashboard
+            <div className="mb-6 flex flex-col sm:flex-row items-center justify-between gap-4 animate-fade-in-up">
+                <Link to="/admin" className="text-gray-500 hover:text-primary-600 flex items-center gap-2 font-medium transition-colors group">
+                    <span className="group-hover:-translate-x-1 transition-transform">←</span> Quay lại Dashboard
                 </Link>
 
-                <div className="flex gap-3">
+                <div className="flex flex-wrap gap-2 justify-center sm:justify-end">
                     <button
                         onClick={handleDelete}
-                        className="px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 font-medium flex items-center gap-2 transition-colors"
+                        className="px-3 py-2 bg-white border border-red-200 text-red-600 rounded-lg hover:bg-red-50 font-medium flex items-center gap-2 transition-colors text-sm shadow-sm"
                     >
-                        <span className="material-icons-outlined text-sm">delete</span> Xóa hồ sơ
+                        <span className="material-icons-outlined text-base">delete</span> Xóa
                     </button>
                     <Link
                         to={`/sua-ho-so/${id}`}
-                        className="px-4 py-2 bg-yellow-100 text-yellow-700 rounded-lg hover:bg-yellow-200 font-medium flex items-center gap-2 transition-colors"
+                        className="px-3 py-2 bg-white border border-yellow-200 text-yellow-600 rounded-lg hover:bg-yellow-50 font-medium flex items-center gap-2 transition-colors text-sm shadow-sm"
                     >
-                        <span className="material-icons-outlined text-sm">edit</span> Sửa hồ sơ
+                        <span className="material-icons-outlined text-base">edit</span> Sửa
                     </Link>
                     <button
-                        onClick={() => window.print()}
-                        className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 font-medium flex items-center gap-2 shadow-sm transition-colors"
+                        onClick={() => window.open(`/in-ho-so/${id}`, '_blank')}
+                        className="px-3 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 font-medium flex items-center gap-2 shadow-md hover:shadow-lg transition-all text-sm"
                     >
-                        <span className="material-icons-outlined text-sm">print</span> In hồ sơ
+                        <span className="material-icons-outlined text-base">print</span> In HS
+                    </button>
+                    <button
+                        onClick={() => window.open(`/in-ho-so-jp/${id}`, '_blank')}
+                        className="px-3 py-2 bg-white border border-primary-200 text-primary-700 rounded-lg hover:bg-primary-50 font-medium flex items-center gap-2 shadow-sm transition-colors text-sm"
+                    >
+                        <span className="material-icons-outlined text-base">language</span> In Tiếng Nhật
                     </button>
                 </div>
             </div>
 
             {/* Main Profile Card */}
-            <div className="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+            <div className="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100 animate-fade-in">
 
                 {/* Cover & Avatar Header */}
-                <div className="h-32 bg-gradient-to-r from-primary-400 to-accent-500"></div>
-                <div className="px-6 relative flex flex-col sm:flex-row items-end -mt-12 mb-6">
-                    <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-full border-4 border-white bg-gray-200 overflow-hidden shadow-lg flex-shrink-0">
+                <div className="h-40 bg-gradient-to-r from-primary-600 to-primary-800 relative">
+                    <div className="absolute inset-0 bg-pattern opacity-10"></div>
+                </div>
+                <div className="px-8 relative flex flex-col sm:flex-row items-end -mt-10 mb-8">
+                    <div className="w-32 h-32 rounded-full border-4 border-white bg-gray-200 overflow-hidden shadow-2xl flex-shrink-0 relative group">
                         {hoSo.anh_ho_so ? (
-                            <img src={hoSo.anh_ho_so} alt="Avatar" className="w-full h-full object-cover" />
+                            <img src={hoSo.anh_ho_so} alt="Avatar" className="w-full h-full object-cover transition-transform group-hover:scale-110" />
                         ) : (
                             <div className="w-full h-full flex items-center justify-center text-gray-400 text-4xl font-bold bg-gray-100">
                                 {hoSo.ho_ten ? hoSo.ho_ten.charAt(0) : '?'}
@@ -92,169 +104,280 @@ export default function ChiTietHoSo() {
                         )}
                     </div>
                     <div className="mt-4 sm:ml-6 sm:mb-2 flex-grow text-center sm:text-left">
-                        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">{hoSo.ho_ten}</h1>
-                        <p className="text-gray-500">
-                            {hoSo.gioi_tinh} • {hoSo.ngay_sinh ? new Date(hoSo.ngay_sinh).getFullYear() : 'N/A'} • {hoSo.que_quan || 'Chưa cập nhật'}
-                        </p>
+                        <h1 className="text-3xl font-bold text-gray-900 mb-1">{hoSo.ho_ten}</h1>
+                        <div className="flex flex-wrap items-center justify-center sm:justify-start gap-4 text-sm text-gray-400">
+                            <span className="flex items-center gap-1"><span className="material-icons-outlined text-base">cake</span> {hoSo.ngay_sinh ? new Date(hoSo.ngay_sinh).getFullYear() : 'N/A'}</span>
+                            <span className="flex items-center gap-1"><span className="material-icons-outlined text-base">wc</span> {hoSo.gioi_tinh}</span>
+                            <span className="flex items-center gap-1"><span className="material-icons-outlined text-base">place</span> {hoSo.que_quan || '---'}</span>
+                        </div>
                     </div>
                 </div>
 
                 {/* Details Grid */}
-                <div className="px-6 pb-8 grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="px-8 pb-10 grid grid-cols-1 lg:grid-cols-2 gap-10">
 
                     {/* Section 1: Thông tin cá nhân */}
-                    <div>
-                        <h3 className="text-lg font-bold text-primary-700 mb-4 border-b border-gray-100 pb-2 flex items-center gap-2">
-                            <span className="material-icons-outlined">person</span>
+                    <div className="space-y-6">
+                        <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2 border-b-2 border-primary-100 pb-2">
+                            <span className="material-icons-outlined text-primary-600 bg-primary-50 p-1 rounded">person</span>
                             Thông Tin Cá Nhân
                         </h3>
-                        <div className="space-y-3">
+                        <div className="bg-gray-50/50 rounded-xl p-6 space-y-4 border border-gray-100">
                             <InfoRow label="Ngày sinh" value={hoSo.ngay_sinh ? new Date(hoSo.ngay_sinh).toLocaleDateString('vi-VN') : ''} />
                             <InfoRow label="Giới tính" value={hoSo.gioi_tinh} />
                             <InfoRow label="Hôn nhân" value={hoSo.hon_nhan} />
                             <InfoRow label="Tôn giáo" value={hoSo.ton_giao} />
-                            <InfoRow label="SĐT" value={hoSo.so_dien_thoai} />
+                            <InfoRow label="SĐT" value={hoSo.so_dien_thoai} highlight />
                             <InfoRow label="Email" value={hoSo.email} />
                             <InfoRow label="Quê quán" value={hoSo.que_quan} />
                             <InfoRow label="Thường trú" value={hoSo.dia_chi_thuong_tru} />
-                            <InfoRow label="Số CCCD" value={hoSo.so_cccd} />
-                            <InfoRow label="Ngày cấp" value={hoSo.ngay_cap_cccd ? new Date(hoSo.ngay_cap_cccd).toLocaleDateString('vi-VN') : ''} />
-                            <InfoRow label="Nơi cấp" value={hoSo.noi_cap_cccd} />
-                            <InfoRow label="Hộ chiếu" value={hoSo.so_ho_chieu} />
+                            <div className="pt-4 mt-2 border-t border-gray-100 border-dashed">
+                                <InfoRow label="Số CCCD" value={hoSo.so_cccd} />
+                                <InfoRow label="Ngày cấp" value={hoSo.ngay_cap_cccd ? new Date(hoSo.ngay_cap_cccd).toLocaleDateString('vi-VN') : ''} />
+                                <InfoRow label="Nơi cấp" value={hoSo.noi_cap_cccd} />
+                            </div>
+                            <InfoRow label="Hộ chiếu" value={hoSo.so_ho_chieu} highlight />
                         </div>
                     </div>
 
                     {/* Section 2: Sức khỏe & Ngoại hình */}
-                    <div>
-                        <h3 className="text-lg font-bold text-primary-700 mb-4 border-b border-gray-100 pb-2 flex items-center gap-2">
-                            <span className="material-icons-outlined">health_and_safety</span>
+                    <div className="space-y-6">
+                        <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2 border-b-2 border-primary-100 pb-2">
+                            <span className="material-icons-outlined text-primary-600 bg-primary-50 p-1 rounded">health_and_safety</span>
                             Sức Khỏe & Ngoại Hình
                         </h3>
-                        <div className="grid grid-cols-2 gap-4 mb-4">
-                            <div className="bg-primary-50 p-3 rounded-lg text-center">
-                                <span className="block text-gray-500 text-xs uppercase">Chiều cao</span>
-                                <span className="text-xl font-bold text-primary-800">{hoSo.chieu_cao || 0} cm</span>
+
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="bg-gradient-to-br from-primary-50 to-white p-4 rounded-xl text-center border border-primary-100 shadow-sm">
+                                <span className="block text-primary-400 text-xs uppercase font-bold tracking-wider mb-1">Chiều cao</span>
+                                <span className="text-2xl font-black text-primary-700">{hoSo.chieu_cao || 0} <span className="text-base font-normal text-gray-400">cm</span></span>
                             </div>
-                            <div className="bg-primary-50 p-3 rounded-lg text-center">
-                                <span className="block text-gray-500 text-xs uppercase">Cân nặng</span>
-                                <span className="text-xl font-bold text-primary-800">{hoSo.can_nang || 0} kg</span>
-                            </div>
-                            <div className="bg-gray-50 p-3 rounded-lg text-center">
-                                <span className="block text-gray-500 text-xs uppercase">Size Áo</span>
-                                <span className="text-lg font-bold text-gray-700">{hoSo.size_ao || '-'}</span>
-                            </div>
-                            <div className="bg-gray-50 p-3 rounded-lg text-center">
-                                <span className="block text-gray-500 text-xs uppercase">Size Giày</span>
-                                <span className="text-lg font-bold text-gray-700">{hoSo.size_giay || '-'}</span>
+                            <div className="bg-gradient-to-br from-primary-50 to-white p-4 rounded-xl text-center border border-primary-100 shadow-sm">
+                                <span className="block text-primary-400 text-xs uppercase font-bold tracking-wider mb-1">Cân nặng</span>
+                                <span className="text-2xl font-black text-primary-700">{hoSo.can_nang || 0} <span className="text-base font-normal text-gray-400">kg</span></span>
                             </div>
                         </div>
-                        <div className="space-y-3">
+
+                        <div className="bg-gray-50/50 rounded-xl p-6 space-y-4 border border-gray-100">
+                            <div className="grid grid-cols-2 gap-6 mb-4 pb-4 border-b border-gray-100 border-dashed">
+                                <InfoRow label="Size Áo" value={hoSo.size_ao} />
+                                <InfoRow label="Size Giày" value={hoSo.size_giay} />
+                            </div>
+
                             <InfoRow label="Nhóm máu" value={hoSo.nhom_mau} highlight />
                             <InfoRow label="Thị lực (T/P)" value={`${hoSo.thi_luc_trai || '?'} / ${hoSo.thi_luc_phai || '?'}`} />
                             <InfoRow label="Tay thuận" value={hoSo.tay_thuan} />
-                            <div className="flex gap-2 mt-2 flex-wrap pt-2">
-                                {hoSo.mu_mau && <Badge type="warning">Mù màu</Badge>}
-                                {hoSo.xam_hinh && <Badge type="warning">Xăm hình</Badge>}
-                                {hoSo.hut_thuoc && <Badge type="neutral">Hút thuốc</Badge>}
-                                {hoSo.uong_ruou && <Badge type="neutral">Uống rượu</Badge>}
-                                {!hoSo.mu_mau && !hoSo.xam_hinh && !hoSo.hut_thuoc && !hoSo.uong_ruou &&
-                                    <span className="text-sm text-green-600 italic">Không có thói quen xấu</span>
-                                }
+
+                            <div className="grid grid-cols-2 gap-x-6 gap-y-3 pt-2">
+                                <StatusBadge label="Mù màu" value={hoSo.mu_mau} />
+                                <StatusBadge label="Xăm hình" value={hoSo.xam_hinh} />
+                                <StatusBadge label="Hút thuốc" value={hoSo.hut_thuoc} />
+                                <StatusBadge label="Uống rượu" value={hoSo.uong_ruou} />
                             </div>
                         </div>
                     </div>
                 </div>
 
-                {/* Section 3: Full Width Details */}
-                <div className="px-6 pb-8 space-y-8 border-t border-gray-100 pt-8">
+                {/* Full Width Sections */}
+                <div className="px-8 pb-10 space-y-10 border-t border-gray-100 pt-10">
+
+                    {/* Nguyện vọng & Kỹ năng */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                        <div className="space-y-6">
+                            <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2 border-b-2 border-primary-100 pb-2">
+                                <span className="material-icons-outlined text-primary-600 bg-primary-50 p-1 rounded">work_outline</span>
+                                Nguyện Vọng
+                            </h3>
+                            <div className="bg-primary-50/30 p-6 rounded-xl border border-primary-100 space-y-4">
+                                <InfoRow label="Ngành nghề" value={hoSo.nganh_nghe_mong_muon} highlight />
+                                <InfoRow label="Thời gian đi" value={hoSo.thoi_gian_du_kien} />
+                                <InfoRow label="Mục đích" value={hoSo.muc_dich_di_nhat} />
+                            </div>
+                        </div>
+
+                        <div className="space-y-6">
+                            <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2 border-b-2 border-primary-100 pb-2">
+                                <span className="material-icons-outlined text-primary-600 bg-primary-50 p-1 rounded">psychology</span>
+                                Kỹ Năng & Điểm Mạnh
+                            </h3>
+                            <div className="bg-white p-6 rounded-xl border border-gray-200 space-y-4 shadow-sm">
+                                <InfoRow label="Tiếng Nhật" value={hoSo.trinh_do_tieng_nhat} highlight />
+                                <InfoRow label="Bằng lái" value={hoSo.bang_lai_xe} />
+                                <div className="space-y-2 pt-2">
+                                    <div>
+                                        <span className="text-gray-500 text-xs uppercase font-bold block mb-1">Điểm mạnh</span>
+                                        <p className="font-medium text-gray-800 bg-gray-50 p-2 rounded border border-gray-100 text-sm">{hoSo.diem_manh || '---'}</p>
+                                    </div>
+                                    <div>
+                                        <span className="text-gray-500 text-xs uppercase font-bold block mb-1">Điểm yếu</span>
+                                        <p className="font-medium text-gray-800 bg-gray-50 p-2 rounded border border-gray-100 text-sm">{hoSo.diem_yeu || '---'}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 
                     {/* Gia đình & Bảo lãnh */}
-                    <div>
-                        <h3 className="text-lg font-bold text-primary-700 mb-4 flex items-center gap-2">
-                            <span className="material-icons-outlined">family_restroom</span>
+                    <div className="space-y-6">
+                        <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2 border-b-2 border-primary-100 pb-2">
+                            <span className="material-icons-outlined text-primary-600 bg-primary-50 p-1 rounded">family_restroom</span>
                             Gia Đình & Bảo Lãnh
                         </h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-gray-50 p-4 rounded-xl mb-4">
-                            <InfoRow label="Người bảo lãnh" value={hoSo.nguoi_bao_lanh} highlight />
-                            <InfoRow label="SĐT Bảo lãnh" value={hoSo.sdt_nguoi_bao_lanh} highlight />
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                            <div className="bg-yellow-50/50 p-4 rounded-xl border border-yellow-100 flex items-center justify-between">
+                                <span className="text-gray-500 text-sm font-medium">Người bảo lãnh</span>
+                                <span className="font-bold text-gray-900">{hoSo.nguoi_bao_lanh || '---'}</span>
+                            </div>
+                            <div className="bg-yellow-50/50 p-4 rounded-xl border border-yellow-100 flex items-center justify-between">
+                                <span className="text-gray-500 text-sm font-medium">SĐT Liên hệ</span>
+                                <span className="font-bold text-gray-900">{hoSo.sdt_nguoi_bao_lanh || '---'}</span>
+                            </div>
                         </div>
+
                         {Array.isArray(hoSo.thong_tin_gia_dinh) && hoSo.thong_tin_gia_dinh.length > 0 ? (
-                            <div className="overflow-x-auto border rounded-lg">
+                            <div className="overflow-hidden border border-gray-200 rounded-xl shadow-sm">
                                 <table className="w-full text-sm text-left">
-                                    <thead className="bg-gray-100 font-bold text-gray-700">
-                                        <tr><th className="p-3">Họ tên</th><th className="p-3">Quan hệ</th><th className="p-3">Năm sinh</th><th className="p-3">Công việc</th></tr>
+                                    <thead className="bg-primary-50 text-primary-800 font-bold">
+                                        <tr><th className="p-4">Họ tên</th><th className="p-4">Quan hệ</th><th className="p-4">Năm sinh</th><th className="p-4">Công việc</th></tr>
                                     </thead>
-                                    <tbody className="divide-y divide-gray-200 bg-white">
+                                    <tbody className="divide-y divide-gray-100 bg-white">
                                         {hoSo.thong_tin_gia_dinh.map((tv, idx) => (
-                                            <tr key={idx}>
-                                                <td className="p-3">{tv?.ho_ten}</td>
-                                                <td className="p-3">{tv?.quan_he}</td>
-                                                <td className="p-3">{tv?.nam_sinh}</td>
-                                                <td className="p-3">{tv?.cong_viec}</td>
+                                            <tr key={idx} className="hover:bg-gray-50 transition-colors">
+                                                <td className="p-4 font-medium">{tv?.ho_ten}</td>
+                                                <td className="p-4 text-gray-500"><span className="bg-gray-100 px-2 py-1 rounded text-xs text-gray-600">{tv?.quan_he}</span></td>
+                                                <td className="p-4 text-gray-500">{tv?.nam_sinh}</td>
+                                                <td className="p-4 text-gray-500">{tv?.nghe_nghiep || tv?.cong_viec}</td>
                                             </tr>
                                         ))}
                                     </tbody>
                                 </table>
                             </div>
-                        ) : <p className="text-gray-400 italic text-sm pl-2">Chưa cập nhật thành viên gia đình.</p>}
+                        ) : <div className="text-center p-8 bg-gray-50 rounded-xl border border-gray-100 text-gray-400 italic">Chưa cập nhật thông tin gia đình</div>}
                     </div>
 
-                    {/* Nguyện vọng & Kỹ năng */}
-                    <div>
-                        <h3 className="text-lg font-bold text-primary-700 mb-4 flex items-center gap-2">
-                            <span className="material-icons-outlined">work_history</span>
-                            Nguyện Vọng & Kỹ Năng
-                        </h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-blue-50 p-6 rounded-xl border border-blue-100">
-                            <div className="space-y-3">
-                                <InfoRow label="Ngành nghề" value={hoSo.nganh_nghe_mong_muon} highlight />
-                                <InfoRow label="Thời gian đi" value={hoSo.thoi_gian_du_kien} />
-                                <InfoRow label="Mục đích" value={hoSo.muc_dich_di_nhat} />
-                            </div>
-                            <div className="space-y-3">
-                                <InfoRow label="Tiếng Nhật" value={hoSo.trinh_do_tieng_nhat} highlight />
-                                <InfoRow label="Bằng lái" value={hoSo.bang_lai_xe} />
-                                <div className="text-sm"><span className="text-gray-500 block mb-1">Điểm mạnh:</span> <span className="font-medium bg-white px-2 py-1 rounded block border border-blue-100">{hoSo.diem_manh || '-'}</span></div>
-                                <div className="text-sm"><span className="text-gray-500 block mb-1">Điểm yếu:</span> <span className="font-medium bg-white px-2 py-1 rounded block border border-blue-100">{hoSo.diem_yeu || '-'}</span></div>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Quá trình học tập & Làm việc */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                        <div>
-                            <h4 className="font-bold text-gray-800 mb-3 flex items-center gap-2"><span className="material-icons-outlined text-primary-500">school</span> Học vấn</h4>
+                    {/* Quá trình học tập & Làm việc dạng Bảng */}
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+                        {/* Học vấn */}
+                        <div className="space-y-6">
+                            <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2 border-b-2 border-primary-100 pb-2">
+                                <span className="material-icons-outlined text-primary-600 bg-primary-50 p-1 rounded">school</span>
+                                Học Vấn
+                            </h3>
                             {Array.isArray(hoSo.qua_trinh_hoc_tap) && hoSo.qua_trinh_hoc_tap.length > 0 ? (
-                                <ul className="space-y-3 text-sm">{hoSo.qua_trinh_hoc_tap.map((item, i) => (
-                                    <li key={i} className="bg-gray-50 p-3 rounded-lg border border-gray-100 shadow-sm">
-                                        <div className="font-bold text-primary-700">{item?.tu_nam} - {item?.den_nam}</div>
-                                        <div className="font-medium text-gray-900 mt-1">{item?.ten_truong}</div>
-                                        <div className="text-gray-500 text-xs mt-1">{item?.chuyen_nganh}</div>
-                                    </li>
-                                ))}</ul>
-                            ) : <p className="text-gray-400 italic text-sm">Chưa cập nhật.</p>}
+                                <div className="overflow-hidden border border-gray-200 rounded-xl shadow-sm">
+                                    <table className="w-full text-sm text-left">
+                                        <thead className="bg-primary-50 text-primary-800 font-bold uppercase text-xs">
+                                            <tr>
+                                                <th className="p-3 w-32">Thời gian</th>
+                                                <th className="p-3">Trường / Ngành</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-gray-100 bg-white">
+                                            {hoSo.qua_trinh_hoc_tap.map((item, i) => (
+                                                <tr key={i} className="hover:bg-gray-50">
+                                                    <td className="p-3 font-medium text-primary-600 whitespace-nowrap align-top text-xs">
+                                                        {formatTimeRange(item?.thoi_gian)}
+                                                    </td>
+                                                    <td className="p-3">
+                                                        <div className="font-bold text-gray-800">{item?.ten_truong}</div>
+                                                        <div className="text-xs text-gray-500 mt-1 flex items-center gap-1">
+                                                            <span className="material-icons-outlined text-[10px]">verified</span>
+                                                            {item?.bang_cap || item?.chuyen_nganh || '---'}
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            ) : <div className="text-center p-8 bg-gray-50 rounded-xl border border-gray-100 text-gray-400 italic">Chưa cập nhật học vấn</div>}
                         </div>
-                        <div>
-                            <h4 className="font-bold text-gray-800 mb-3 flex items-center gap-2"><span className="material-icons-outlined text-primary-500">engineering</span> Kinh nghiệm</h4>
+
+                        {/* Kinh nghiệm */}
+                        <div className="space-y-6">
+                            <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2 border-b-2 border-primary-100 pb-2">
+                                <span className="material-icons-outlined text-primary-600 bg-primary-50 p-1 rounded">engineering</span>
+                                Kinh Nghiệm
+                            </h3>
                             {Array.isArray(hoSo.kinh_nghiem_lam_viec) && hoSo.kinh_nghiem_lam_viec.length > 0 ? (
-                                <ul className="space-y-3 text-sm">{hoSo.kinh_nghiem_lam_viec.map((item, i) => (
-                                    <li key={i} className="bg-gray-50 p-3 rounded-lg border border-gray-100 shadow-sm">
-                                        <div className="font-bold text-primary-700">{item?.tu_nam} - {item?.den_nam}</div>
-                                        <div className="font-medium text-gray-900 mt-1">{item?.ten_cong_ty}</div>
-                                        <div className="text-gray-500 text-xs mt-1">{item?.cong_viec}</div>
-                                    </li>
-                                ))}</ul>
-                            ) : <p className="text-gray-400 italic text-sm">Chưa cập nhật.</p>}
+                                <div className="overflow-hidden border border-gray-200 rounded-xl shadow-sm">
+                                    <table className="w-full text-sm text-left">
+                                        <thead className="bg-primary-50 text-primary-800 font-bold uppercase text-xs">
+                                            <tr>
+                                                <th className="p-3 w-32">Thời gian</th>
+                                                <th className="p-3">Công ty / CV</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-gray-100 bg-white">
+                                            {hoSo.kinh_nghiem_lam_viec.map((item, i) => (
+                                                <tr key={i} className="hover:bg-gray-50">
+                                                    <td className="p-3 font-medium text-primary-600 whitespace-nowrap align-top text-xs">
+                                                        {formatTimeRange(item?.thoi_gian)}
+                                                    </td>
+                                                    <td className="p-3">
+                                                        <div className="font-bold text-gray-800">{item?.cong_ty}</div>
+                                                        <div className="text-xs text-gray-500 mt-1 bg-gray-100 px-2 py-0.5 rounded inline-block">
+                                                            {item?.cong_viec}
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            ) : <div className="text-center p-8 bg-gray-50 rounded-xl border border-gray-100 text-gray-400 italic">Chưa cập nhật kinh nghiệm</div>}
                         </div>
                     </div>
-
                 </div>
             </div>
         </div>
     )
 }
 
-// Helper Components
+function StatusBadge({ label, value }) {
+    if (!value && value !== false) return null;
+    const isPositive = value === 'Có' || value === true || (typeof value === 'string' && value.toLowerCase().includes('có'));
+    // Note: Với bệnh tật/thói quen xấu thì "Có" là Negative, "Không" là Positive. 
+    // Nhưng ở đây hiển thị trạng thái, ta cứ dùng màu trung tính hoặc alert.
+
+    // Logic màu:
+    // Có -> Red/Orange (Cảnh báo)
+    // Không -> Green/Gray (Tốt)
+    // Nhưng text ở đây là "Xăm hình", "Hút thuốc"
+
+    let colorClass = 'bg-gray-100 text-gray-600';
+    if (value === 'Không' || value === false) colorClass = 'bg-green-50 text-green-700 border border-green-100';
+    else if (value) colorClass = 'bg-orange-50 text-orange-700 border border-orange-100';
+
+    return (
+        <div className="flex justify-between items-center text-sm">
+            <span className="text-gray-500">{label}</span>
+            <span className={`px-2 py-0.5 rounded font-medium text-xs ${colorClass}`}>{value === true ? 'Có' : (value === false ? 'Không' : value)}</span>
+        </div>
+    )
+}
+
+function formatTimeRange(rangeString) {
+    if (!rangeString) return '---';
+    if (!rangeString.includes(' - ')) return rangeString;
+
+    // Tách chuỗi "yyyy-mm-dd - yyyy-mm-dd"
+    const [start, end] = rangeString.split(' - ');
+
+    const formatDate = (dStr) => {
+        if (!dStr) return '?';
+        try {
+            const d = new Date(dStr);
+            if (isNaN(d.getTime())) return dStr;
+            // Format: mm/yyyy
+            return `${d.getMonth() + 1}/${d.getFullYear()}`;
+        } catch { return dStr; }
+    };
+
+    return `${formatDate(start)} - ${formatDate(end)}`;
+}
+
 function InfoRow({ label, value, highlight = false }) {
     if (!value && value !== 0) return null
     return (
@@ -262,17 +385,5 @@ function InfoRow({ label, value, highlight = false }) {
             <span className="text-gray-500 text-sm">{label}</span>
             <span className={`text-sm font-medium text-right ${highlight ? 'text-primary-700' : 'text-gray-900'}`}>{value}</span>
         </div>
-    )
-}
-
-function Badge({ children, type }) {
-    const colors = {
-        warning: 'bg-yellow-100 text-yellow-800 border border-yellow-200',
-        neutral: 'bg-gray-100 text-gray-800 border border-gray-200',
-    }
-    return (
-        <span className={`px-2 py-0.5 rounded text-xs font-semibold ${colors[type] || colors.neutral}`}>
-            {children}
-        </span>
     )
 }

@@ -4,6 +4,8 @@ import ChiTietHoSo from './pages/ChiTietHoSo'
 import HomePage from './pages/HomePage'
 import JobBoard from './pages/JobBoard'
 import JobDetail from './pages/JobDetail'
+import HoSoPrintTemplate from './pages/HoSoPrintTemplate'
+import HoSoPrintTemplateJP from './pages/HoSoPrintTemplateJP'
 import Navbar from './Navbar'
 
 // Admin Pages
@@ -12,6 +14,8 @@ import DashboardHome from './pages/admin/DashboardHome'
 import HoSoManager from './pages/admin/HoSoManager'
 import DonHangManager from './pages/admin/DonHangManager'
 import OrderMatching from './pages/admin/OrderMatching'
+import YeuCauTuVanManager from './pages/admin/YeuCauTuVanManager'
+import DanhSachThiTuyenPrint from './pages/admin/DanhSachThiTuyenPrint'
 
 import YeuCauTuVan from './pages/YeuCauTuVan'
 
@@ -27,10 +31,14 @@ function App() {
         <Route path="/dang-ky" element={<><Navbar /><DangKy /></>} />
         <Route path="/sua-ho-so/:id" element={<><Navbar /><DangKy /></>} />
         <Route path="/ho-so/:id" element={<><Navbar /><ChiTietHoSo /></>} />
+        <Route path="/in-ho-so/:id" element={<HoSoPrintTemplate />} />
+        <Route path="/in-ho-so-jp/:id" element={<HoSoPrintTemplateJP />} />
+        <Route path="/in-danh-sach-pv/:id" element={<DanhSachThiTuyenPrint />} />
 
         {/* ADMIN ROUTES - Dùng AdminLayout riêng */}
         <Route path="/admin" element={<AdminLayout />}>
           <Route index element={<DashboardHome />} />
+          <Route path="yeu-cau-tu-van" element={<YeuCauTuVanManager />} />
           <Route path="ho-so" element={<HoSoManager />} />
           <Route path="don-hang" element={<DonHangManager />} />
           <Route path="ghep-don" element={<OrderMatching />} />

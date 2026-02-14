@@ -5,7 +5,7 @@ import { supabase } from '../../supabaseClient'
 export default function DashboardHome() {
     const [stats, setStats] = useState({ totalActive: 0, newToday: 0, pending: 0, consultationReq: 0 })
     const [recentProfiles, setRecentProfiles] = useState([])
-    const [consultationRequests, setConsultationRequests] = useState([])
+    const [recentOrders, setRecentOrders] = useState([])
     const [loading, setLoading] = useState(true)
 
     useEffect(() => {
@@ -26,19 +26,20 @@ export default function DashboardHome() {
             // 3. Hồ sơ chờ xử lý (Chưa có trạng thái hoặc Mới)
             const { count: pendingCount } = await supabase.from('ho_so').select('*', { count: 'exact', head: true }).is('trang_thai', null)
 
-            // 4. Yêu cầu tư vấn (Lọc theo trạng thái 'Chờ tư vấn')
-            const { count: consultCount, data: consultData } = await supabase
-                .from('ho_so')
+            // 4. Số lượng Yêu cầu tư vấn (Để hiển thị StatCard) - Chỉ lấy count
+            const { count: consultCount } = await supabase.from('yeu_cau_tu_van').select('*', { count: 'exact', head: true })
+
+            // 5. Đơn hàng mới nhất (Thay thế bảng Yêu cầu tư vấn)
+            const { data: orders } = await supabase
+                .from('don_hang')
                 .select('*')
-                .eq('trang_thai', 'Chờ tư vấn')
                 .order('created_at', { ascending: false })
                 .limit(10)
 
-            // 5. Vừa đăng ký (Lấy tất cả MỚI NHẤT, loại bỏ những cái là Yêu cầu tư vấn để không bị trùng lặp hiển thị bên kia)
+            // 6. Vừa đăng ký (Lấy tất cả hồ sơ MỚI NHẤT từ bảng ho_so)
             const { data: recent } = await supabase
                 .from('ho_so')
                 .select('*')
-                .neq('trang_thai', 'Chờ tư vấn')
                 .order('created_at', { ascending: false })
                 .limit(10)
 
@@ -50,7 +51,7 @@ export default function DashboardHome() {
                 consultationReq: consultCount || 0
             })
             setRecentProfiles(recent || [])
-            setConsultationRequests(consultData || [])
+            setRecentOrders(orders || [])
 
         } catch (error) {
             console.error('Error loading dashboard:', error)
@@ -82,7 +83,7 @@ export default function DashboardHome() {
                     <div className="flex items-center justify-between mb-6">
                         <h3 className="font-bold text-gray-800 text-xl flex items-center gap-2">
                             <span className="material-icons-outlined text-green-500">fiber_new</span>
-                            Vừa đăng ký
+                            Vừa trả lời
                         </h3>
                         <Link to="/admin/ho-so" className="text-xs font-bold text-primary-600 hover:text-white bg-primary-50 px-3 py-1.5 rounded-lg hover:bg-primary-600 transition-colors">Xem tất cả</Link>
                     </div>
@@ -90,7 +91,7 @@ export default function DashboardHome() {
                         {recentProfiles.map(profile => (
                             <Link key={profile.id} to={`/ho-so/${profile.id}`} className="flex items-center gap-4 p-3 hover:bg-gray-50 rounded-xl transition-all border border-transparent hover:border-gray-100 group cursor-pointer">
                                 <div className="relative shrink-0">
-                                    <img src={profile.anh_ho_so || `https://ui-avatars.com/api/?name=${profile.ho_ten.replace(' ', '+')}&background=random`} alt="" className="w-12 h-12 rounded-xl object-cover border-2 border-white shadow-md group-hover:scale-105 transition-transform" />
+                                    <img src={profile.anh_ho_so || (profile.gioi_tinh === 'Nữ' ? `https://avatar.iran.liara.run/public/girl?username=${profile.ho_ten}` : `https://avatar.iran.liara.run/public/boy?username=${profile.ho_ten}`)} alt="" className="w-12 h-12 rounded-xl object-cover border-2 border-white shadow-md group-hover:scale-105 transition-transform" />
                                 </div>
                                 <div className="flex-1 min-w-0">
                                     <p className="font-bold text-gray-800 truncate text-base group-hover:text-primary-700 transition-colors">{profile.ho_ten}</p>
@@ -107,36 +108,47 @@ export default function DashboardHome() {
                     </div>
                 </div>
 
-                {/* Cot 2: Yeu cau Tu van */}
+                {/* Cot 2: Don Hang (Thay the Yeu cau Tu van) */}
                 <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col h-full min-h-[400px]">
                     <div className="flex items-center justify-between mb-6">
                         <h3 className="font-bold text-gray-800 text-xl flex items-center gap-2">
-                            <span className="material-icons-outlined text-purple-500">support_agent</span>
-                            Yêu cầu Tư Vấn
+                            <span className="material-icons-outlined text-blue-500">work_outline</span>
+                            Đơn hàng mới
                         </h3>
-                        <span className="text-xs font-bold text-purple-600 bg-purple-50 px-3 py-1.5 rounded-lg border border-purple-100">Mới nhất</span>
+                        <Link to="/admin/don-hang" className="text-xs font-bold text-blue-600 bg-blue-50 px-3 py-1.5 rounded-lg hover:bg-blue-600 hover:text-white transition-colors">Xem tất cả</Link>
                     </div>
                     <div className="space-y-4 flex-1 overflow-y-auto max-h-[500px] pr-2 scrollbar-thin scrollbar-thumb-gray-200">
-                        {consultationRequests.map(req => (
-                            <div key={req.id} className="flex items-start gap-4 p-4 bg-purple-50 hover:bg-purple-100/50 rounded-xl transition-all border border-purple-100 group cursor-pointer relative overflow-hidden">
-                                <div className="absolute top-0 left-0 w-1 h-full bg-purple-500 rounded-l-xl"></div>
-                                <div className="w-10 h-10 rounded-full bg-white text-purple-600 flex items-center justify-center shrink-0 shadow-sm">
-                                    <span className="material-icons-outlined text-xl">call</span>
+                        {recentOrders.map(order => (
+                            <div key={order.id} className="flex items-start gap-4 p-4 bg-blue-50/50 hover:bg-blue-100/50 rounded-xl transition-all border border-blue-100 group cursor-pointer relative overflow-hidden">
+                                <div className="absolute top-0 left-0 w-1 h-full bg-blue-500 rounded-l-xl"></div>
+                                <div className="w-10 h-10 rounded-full bg-white text-blue-600 flex items-center justify-center shrink-0 shadow-sm font-bold text-xs uppercase border border-blue-100">
+                                    {order.dia_chi_lam_viec ? order.dia_chi_lam_viec.substring(0, 2) : 'NB'}
                                 </div>
                                 <div className="flex-1 min-w-0">
                                     <div className="flex justify-between items-start mb-1">
-                                        <p className="font-bold text-gray-800 truncate text-base">{req.ho_ten}</p>
-                                        <span className="text-[10px] text-gray-400">{new Date(req.created_at).toLocaleDateString('vi-VN')}</span>
+                                        <p className="font-bold text-gray-800 truncate text-base">{order.ten_don_hang}</p>
+                                        <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${order.trang_thai === 'Đang tuyển' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
+                                            {order.trang_thai}
+                                        </span>
                                     </div>
-                                    <div className="flex items-center gap-2 mb-2">
-                                        <span className="material-icons-outlined text-[14px] text-purple-500">phone</span>
-                                        <p className="text-sm text-gray-700 font-bold">{req.so_dien_thoai}</p>
+                                    <div className="flex items-center gap-3 mb-1 text-sm text-gray-600">
+                                        <div className="flex items-center gap-1">
+                                            <span className="material-icons-outlined text-[14px] text-blue-400">place</span>
+                                            <span className="truncate max-w-[100px]">{order.dia_chi_lam_viec}</span>
+                                        </div>
+                                        <div className="flex items-center gap-1">
+                                            <span className="material-icons-outlined text-[14px] text-green-500">attach_money</span>
+                                            <span className="font-bold text-green-600">{order.luong_co_ban ? parseInt(order.luong_co_ban).toLocaleString('vi-VN') : 0}¥</span>
+                                        </div>
                                     </div>
-                                    {req.ghi_chu && <p className="text-xs text-gray-500 bg-white p-2 rounded border border-purple-100 italic leading-relaxed line-clamp-2">{req.ghi_chu}</p>}
+                                    <div className="text-xs text-gray-400 flex justify-between items-center mt-2 border-t border-blue-100/50 pt-2">
+                                        <span>Tuyển: {order.so_luong_tuyen || 0} nam/nữ</span>
+                                        <span>{new Date(order.created_at).toLocaleDateString('vi-VN')}</span>
+                                    </div>
                                 </div>
                             </div>
                         ))}
-                        {consultationRequests.length === 0 && <EmptyState message="Chưa có yêu cầu tư vấn mới" />}
+                        {recentOrders.length === 0 && <EmptyState message="Chưa có đơn hàng nào" />}
                     </div>
                 </div>
 
