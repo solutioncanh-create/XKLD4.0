@@ -201,16 +201,26 @@ export default function OrderMatching() {
                                     <span className="flex items-center gap-1"><span className="material-icons-outlined text-sm">group</span> Cần tuyển: {selectedOrder.so_luong_tuyen}</span>
                                 </div>
                             </div>
-                            <div>
+                            <div className="flex gap-2">
                                 <Link
-                                    to={`/in-danh-sach-pv/${selectedOrder.id}`}
+                                    to={`/print-candidate-list/${selectedOrder.id}`}
                                     target="_blank"
-                                    className={`px-4 py-2 text-white rounded-lg font-bold shadow flex items-center gap-2 transition-colors
+                                    className={`px-3 py-2 text-white rounded-lg font-bold shadow flex items-center gap-2 transition-colors
                                         ${matchedCandidates.length === 0 ? 'bg-gray-400 cursor-not-allowed pointer-events-none' : 'bg-blue-600 hover:bg-blue-700'}
                                     `}
                                 >
-                                    <span className="material-icons-outlined">print</span>
-                                    In Danh Sách
+                                    <span className="material-icons-outlined">list_alt</span>
+                                    In DS
+                                </Link>
+                                <Link
+                                    to={`/batch-print-profiles/${selectedOrder.id}`}
+                                    target="_blank"
+                                    className={`px-3 py-2 text-white rounded-lg font-bold shadow flex items-center gap-2 transition-colors
+                                        ${matchedCandidates.length === 0 ? 'bg-gray-400 cursor-not-allowed pointer-events-none' : 'bg-teal-600 hover:bg-teal-700'}
+                                    `}
+                                >
+                                    <span className="material-icons-outlined">folder_shared</span>
+                                    In Hồ Sơ (JP)
                                 </Link>
                             </div>
                         </div>

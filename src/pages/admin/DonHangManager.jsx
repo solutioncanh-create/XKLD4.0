@@ -283,6 +283,7 @@ export default function DonHangManager() {
                                     </td>
                                     <td className="px-6 py-4 text-right">
                                         <div className="flex justify-end gap-2">
+
                                             <button onClick={() => handleEdit(o)} className="p-2 text-primary-600 hover:bg-primary-50 rounded-lg transition-colors border border-transparent hover:border-primary-100" title="Sửa">
                                                 <span className="material-icons-outlined">edit</span>
                                             </button>

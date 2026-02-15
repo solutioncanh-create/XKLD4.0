@@ -75,7 +75,9 @@ export default function YeuCauTuVanManager() {
                                 <th className="p-4 font-semibold">Ngày gửi</th>
                                 <th className="p-4 font-semibold">Họ Tên</th>
                                 <th className="p-4 font-semibold">Số điện thoại</th>
+                                <th className="p-4 font-semibold">Email</th>
                                 <th className="p-4 font-semibold">Tuổi</th>
+                                <th className="p-4 font-semibold">Giới tính</th>
                                 <th className="p-4 font-semibold">Quê quán</th>
                                 <th className="p-4 font-semibold">Nội dung quan tâm</th>
                                 <th className="p-4 font-semibold">Trạng thái</th>
@@ -85,14 +87,14 @@ export default function YeuCauTuVanManager() {
                         <tbody className="divide-y divide-gray-100">
                             {loading ? (
                                 <tr>
-                                    <td colSpan="8" className="p-8 text-center text-gray-500">
+                                    <td colSpan="10" className="p-8 text-center text-gray-500">
                                         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600 mx-auto mb-2"></div>
                                         Đang tải dữ liệu...
                                     </td>
                                 </tr>
                             ) : leads.length === 0 ? (
                                 <tr>
-                                    <td colSpan="8" className="p-8 text-center text-gray-500">Chưa có yêu cầu tư vấn nào.</td>
+                                    <td colSpan="10" className="p-8 text-center text-gray-500">Chưa có yêu cầu tư vấn nào.</td>
                                 </tr>
                             ) : (
                                 leads.map((lead) => (
@@ -102,7 +104,9 @@ export default function YeuCauTuVanManager() {
                                         </td>
                                         <td className="p-4 font-bold text-gray-800">{lead.ho_ten}</td>
                                         <td className="p-4 font-mono text-primary-600 font-medium">{lead.so_dien_thoai}</td>
+                                        <td className="p-4 text-gray-600 text-sm max-w-[150px] truncate" title={lead.email}>{lead.email || '-'}</td>
                                         <td className="p-4 text-gray-600">{lead.tuoi || '-'}</td>
+                                        <td className="p-4 text-gray-600">{lead.gioi_tinh || '-'}</td>
                                         <td className="p-4 text-gray-600">{lead.que_quan}</td>
                                         <td className="p-4 text-gray-600 max-w-xs truncate" title={lead.ghi_chu}>
                                             {lead.ghi_chu}

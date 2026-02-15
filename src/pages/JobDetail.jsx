@@ -135,8 +135,8 @@ export default function JobDetail() {
                             <p className="text-sm text-secondary-500 text-center mb-6">Điền thông tin để được tư vấn miễn phí về đơn hàng này.</p>
 
                             {job.trang_thai === 'Đang tuyển' ? (
-                                <Link to={`/dang-ky?don_hang=${job.id}`} className="block w-full bg-primary-600 text-white font-bold py-4 rounded-xl text-center hover:bg-primary-700 shadow-lg shadow-primary-500/30 transition-all mb-4 transform hover:-translate-y-1">
-                                    NỘP HỒ SƠ NGAY
+                                <Link to={`/yeu-cau-tu-van?don_hang=${job.id}`} className="block w-full bg-primary-600 text-white font-bold py-4 rounded-xl text-center hover:bg-primary-700 shadow-lg shadow-primary-500/30 transition-all mb-4 transform hover:-translate-y-1">
+                                    ĐĂNG KÝ TƯ VẤN NGAY
                                 </Link>
                             ) : (
                                 <button disabled className="block w-full bg-secondary-200 text-secondary-500 font-bold py-4 rounded-xl text-center cursor-not-allowed mb-4">

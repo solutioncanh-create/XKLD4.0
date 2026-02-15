@@ -8,6 +8,28 @@ export default function ChiTietHoSo() {
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState(null)
     const navigate = useNavigate()
+    const [maHoSoInput, setMaHoSoInput] = useState('')
+
+    useEffect(() => {
+        if (hoSo) setMaHoSoInput(hoSo.ma_ho_so || '')
+    }, [hoSo])
+
+    const handleSaveMaHoSo = async () => {
+        if (!hoSo || maHoSoInput === hoSo.ma_ho_so) return
+        try {
+            const { error } = await supabase
+                .from('ho_so')
+                .update({ ma_ho_so: maHoSoInput.toUpperCase() })
+                .eq('id', id)
+
+            if (error) throw error
+            setHoSo({ ...hoSo, ma_ho_so: maHoSoInput.toUpperCase() })
+            // Optional: Show toast
+        } catch (error) {
+            console.error('Error updating Ma Ho So:', error)
+            alert('Lỗi cập nhật Mã Hồ Sơ: ' + error.message)
+        }
+    }
 
     useEffect(() => {
         const fetchChiTiet = async () => {
@@ -92,6 +114,20 @@ export default function ChiTietHoSo() {
                 {/* Cover & Avatar Header */}
                 <div className="h-40 bg-gradient-to-r from-primary-600 to-primary-800 relative">
                     <div className="absolute inset-0 bg-pattern opacity-10"></div>
+                    <div className="absolute top-4 right-6 flex flex-col items-end gap-1">
+                        <div className="bg-white/20 px-3 py-1 rounded backdrop-blur-sm shadow-sm border border-white/20 flex items-center gap-2">
+                            <span className="text-white font-mono text-xs opacity-80">MÃ HỒ SƠ:</span>
+                            <input
+                                value={maHoSoInput}
+                                onChange={(e) => setMaHoSoInput(e.target.value.toUpperCase())}
+                                onBlur={handleSaveMaHoSo}
+                                onKeyDown={(e) => e.key === 'Enter' && e.target.blur()}
+                                className="bg-transparent text-white font-bold font-mono outline-none w-48 text-right placeholder-white/50 border-b border-white/30 focus:border-white transition-colors uppercase"
+                                placeholder="###"
+                            />
+                        </div>
+                        <span className="text-[10px] text-white/80 italic pr-1">Người giới thiệu, Quản lý...</span>
+                    </div>
                 </div>
                 <div className="px-8 relative flex flex-col sm:flex-row items-end -mt-10 mb-8">
                     <div className="w-32 h-32 rounded-full border-4 border-white bg-gray-200 overflow-hidden shadow-2xl flex-shrink-0 relative group">

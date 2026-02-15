@@ -41,7 +41,7 @@ export default function HoSoPrintTemplate() {
 
     return (
 
-        <div className="bg-gray-100 min-h-screen p-8 print:p-0 print:bg-white font-sans text-blue-900 leading-snug">
+        <div className="bg-gray-100 min-h-screen p-8 print:p-0 print:bg-white print:min-h-0 font-sans text-blue-900 leading-snug">
             <style>{`
                 @import url('https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,300;0,400;0,500;0,700;1,300;1,400&display=swap');
                 @media print {
@@ -58,15 +58,25 @@ export default function HoSoPrintTemplate() {
                     }
                     .print-container {
                         width: 210mm;
-                        min-height: 297mm;
-                        padding: 15mm;
-                        padding-top: 5mm; /* Lề trên nhỏ nhất */
+                        height: 297mm; /* Force A4 Height */
+                        padding: 10mm !important;
                         margin: 0 auto;
+                        overflow: hidden !important; /* Prevent page 2 */
+                        zoom: 0.95; /* Slight scale down to fit */
+                    }
+                    /* Ensure body doesn't generate extra pages */
+                    html, body { height: 100%; overflow: hidden; }
                         border: 1px solid #e5e7eb;
                     }
                     @media screen {
+                        body {
+                            min-width: 220mm; /* Force desktop width on mobile */
+                            overflow-x: auto;
+                        }
                         .print-container {
                             border: 1px solid #e5e7eb;
+                            width: 210mm !important;
+                            min-width: 210mm !important;
                         }
                     }
                     /* Override tailwind text sizes for fixed print sizes */
@@ -93,21 +103,16 @@ export default function HoSoPrintTemplate() {
             <div className="print-container max-w-[210mm] mx-auto bg-white shadow-2xl print:shadow-none print:w-full print:max-w-none p-[15mm] print:p-[15mm] min-h-[297mm]">
 
                 {/* --- HEADER --- */}
-                <div className="flex justify-between items-start mb-4 border-b-2 border-blue-900 pb-3">
+                <div className="flex justify-between items-start mb-2 border-b-2 border-blue-900 pb-2">
                     <div className="flex-1">
                         <h1 className="text-2xl font-bold uppercase mb-1">Phiếu Thông Tin Ứng Viên</h1>
                         <p className="text-xs font-semibold italic text-gray-600">JAPAN LABOR SUPPLY APPLICATION FORM</p>
                         <div className="mt-3 flex flex-col gap-2 text-xs">
                             <p className="text-gray-500"><strong>Ngày lập:</strong> {new Date().toLocaleDateString('vi-VN')}</p>
-                            <div className="flex items-center gap-2">
-                                <span className="font-bold text-blue-900 text-sm">MÃ SỐ (ID):</span>
-                                <span className="text-2xl font-black text-blue-900 border-2 border-blue-900 px-3 py-1 rounded bg-white shadow-sm tracking-wider">
-                                    {hoSo.ma_ho_so || (hoSo.id ? String(hoSo.id).substring(0, 8).toUpperCase() : '---')}
-                                </span>
-                            </div>
+
                         </div>
                     </div>
-                    <div className="w-[3cm] h-[4cm] border border-blue-300 overflow-hidden flex items-center justify-center bg-blue-50 ml-4 relative">
+                    <div className="w-[2.4cm] h-[3.2cm] border border-blue-300 overflow-hidden flex items-center justify-center bg-blue-50 ml-4 relative">
                         {hoSo.anh_ho_so ? (
                             <img src={hoSo.anh_ho_so} className="w-full h-full object-cover absolute inset-0" alt="Avatar" />
                         ) : (
@@ -283,6 +288,15 @@ export default function HoSoPrintTemplate() {
                     </table>
                 </div>
 
+                {/* --- FOOTER SIGNATURE --- */}
+                <div className="mt-2 flex justify-end pr-8">
+                    <div className="text-center">
+                        <p className="italic text-xs mb-0">............., ngày ..... tháng ..... năm 20.....</p>
+                        <p className="font-bold uppercase text-xs">Người làm đơn</p>
+                        <p className="text-[10px] italic mb-6">(Ký và ghi rõ họ tên)</p>
+                        <p className="font-bold uppercase text-xs">{hoSo.ho_ten}</p>
+                    </div>
+                </div>
             </div>
         </div>
     )

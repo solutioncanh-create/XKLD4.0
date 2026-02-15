@@ -15,7 +15,9 @@ import HoSoManager from './pages/admin/HoSoManager'
 import DonHangManager from './pages/admin/DonHangManager'
 import OrderMatching from './pages/admin/OrderMatching'
 import YeuCauTuVanManager from './pages/admin/YeuCauTuVanManager'
-import DanhSachThiTuyenPrint from './pages/admin/DanhSachThiTuyenPrint'
+
+import PrintCandidateList from './pages/admin/PrintCandidateList'
+import PrintBatchProfile from './pages/admin/PrintBatchProfile'
 import CandidateKanban from './pages/admin/CandidateKanban'
 
 import YeuCauTuVan from './pages/YeuCauTuVan'
@@ -34,7 +36,9 @@ function App() {
         <Route path="/ho-so/:id" element={<><Navbar /><ChiTietHoSo /></>} />
         <Route path="/in-ho-so/:id" element={<HoSoPrintTemplate />} />
         <Route path="/in-ho-so-jp/:id" element={<HoSoPrintTemplateJP />} />
-        <Route path="/in-danh-sach-pv/:id" element={<DanhSachThiTuyenPrint />} />
+
+        <Route path="/print-candidate-list/:id" element={<PrintCandidateList />} />
+        <Route path="/batch-print-profiles/:id" element={<PrintBatchProfile />} />
 
         {/* ADMIN ROUTES - Dùng AdminLayout riêng */}
         <Route path="/admin" element={<AdminLayout />}>

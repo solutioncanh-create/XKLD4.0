@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../supabaseClient'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, Link } from 'react-router-dom'
 
 export default function DangKy() {
     const { id } = useParams()
@@ -865,6 +865,21 @@ export default function DangKy() {
 
     return (
         <div className="max-w-4xl mx-auto px-4 py-8 pb-32"> {/* pb-32 để tránh nút che nội dung cuối */}
+
+            {/* Header Difference Notice */}
+            <div className="bg-blue-50 border-l-4 border-blue-500 p-4 mb-6 rounded-r shadow-sm">
+                <div className="flex">
+                    <div className="flex-shrink-0">
+                        <span className="material-icons-outlined text-blue-400">info</span>
+                    </div>
+                    <div className="ml-3">
+                        <p className="text-sm text-blue-700">
+                            <strong>HỒ SƠ ĐĂNG KÝ CHÍNH THỨC</strong> (Dành cho ứng viên nộp hồ sơ đầy đủ).<br />
+                            Nếu bạn chỉ muốn nhận tư vấn sơ bộ, vui lòng <Link to="/yeu-cau-tu-van" className="font-bold underline hover:text-blue-800">bấm vào đây để đăng ký tư vấn nhanh</Link>.
+                        </p>
+                    </div>
+                </div>
+            </div>
 
             {/* Progress Stepper 1-5 */}
             <div className="sticky top-0 bg-white z-30 pt-4 pb-4 mb-6 border-b shadow-sm -mx-4 px-4 md:mx-0 md:px-0">

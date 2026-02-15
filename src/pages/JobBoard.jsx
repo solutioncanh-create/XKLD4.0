@@ -1,15 +1,12 @@
 import { useState, useEffect } from 'react'
+import { useNavigate, Link } from 'react-router-dom'
 import { supabase } from '../supabaseClient'
-import ConsultationModal from '../components/ConsultationModal'
 
 export default function JobBoard() {
+    const navigate = useNavigate()
     const [jobs, setJobs] = useState([])
     const [loading, setLoading] = useState(true)
     const [filters, setFilters] = useState({ nganh_nghe: '', dia_diem: '' })
-
-    // Modal State
-    const [selectedJob, setSelectedJob] = useState(null)
-    const [isModalOpen, setModalOpen] = useState(false)
 
     useEffect(() => {
         fetchJobs()
@@ -39,8 +36,7 @@ export default function JobBoard() {
     const industries = ['Cơ khí', 'Xây dựng', 'Nông nghiệp', 'Chế biến thực phẩm', 'May mặc', 'Điện tử']
 
     const handleJobClick = (job) => {
-        setSelectedJob(job)
-        setModalOpen(true)
+        navigate(`/viec-lam/${job.id}`)
     }
 
     return (
@@ -119,7 +115,7 @@ export default function JobBoard() {
                             <span className="material-icons-outlined text-4xl mb-2">stars</span>
                             <h4 className="font-bold text-xl mb-2">Đăng Ký Trực Tuyến</h4>
                             <p className="text-sm opacity-90 mb-4">Nộp hồ sơ ngay để được ưu tiên phỏng vấn sớm nhất!</p>
-                            <button onClick={() => { setSelectedJob(null); setModalOpen(true); }} className="inline-block bg-white text-accent-600 font-bold px-6 py-2 rounded-lg shadow-md hover:bg-orange-50 transition-colors text-sm">
+                            <button onClick={() => navigate('/yeu-cau-tu-van')} className="inline-block bg-white text-accent-600 font-bold px-6 py-2 rounded-lg shadow-md hover:bg-orange-50 transition-colors text-sm">
                                 Đăng Ký Ngay
                             </button>
                         </div>
@@ -162,7 +158,7 @@ export default function JobBoard() {
             </div>
 
             {/* MODAL */}
-            {isModalOpen && <ConsultationModal job={selectedJob} onClose={() => setModalOpen(false)} />}
+
         </div>
     )
 }

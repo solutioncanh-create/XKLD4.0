@@ -1,9 +1,9 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import ConsultationModal from '../components/ConsultationModal'
+
 
 export default function HomePage() {
-    const [isModalOpen, setModalOpen] = useState(false)
+
 
     return (
         <div className="font-sans text-secondary-800 bg-white selection:bg-primary-100 selection:text-primary-900">
@@ -43,9 +43,9 @@ export default function HomePage() {
                                 Khai Form Online
                                 <span className="material-icons-outlined ml-2 group-hover:translate-x-1 transition-transform">arrow_forward</span>
                             </Link>
-                            <button onClick={() => setModalOpen(true)} className="w-full sm:w-auto inline-flex items-center justify-center px-6 py-4 text-lg font-bold text-primary-900 transition-all duration-300 bg-white border border-secondary-200 rounded-xl hover:bg-secondary-50 hover:border-primary-200 focus:outline-none hover:shadow-md hover:-translate-y-0.5">
+                            <Link to="/yeu-cau-tu-van" className="w-full sm:w-auto inline-flex items-center justify-center px-6 py-4 text-lg font-bold text-primary-900 transition-all duration-300 bg-white border border-secondary-200 rounded-xl hover:bg-secondary-50 hover:border-primary-200 focus:outline-none hover:shadow-md hover:-translate-y-0.5">
                                 Yêu Cầu Tư Vấn
-                            </button>
+                            </Link>
                         </div>
                     </div>
                 </div>
@@ -120,7 +120,7 @@ export default function HomePage() {
             </footer>
 
             {/* CONSULTATION MODAL */}
-            {isModalOpen && <ConsultationModal onClose={() => setModalOpen(false)} />}
+
         </div>
     )
 }
