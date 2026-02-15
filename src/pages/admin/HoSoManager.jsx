@@ -16,7 +16,7 @@ export default function HoSoManager() {
     const fetchProfiles = async () => {
         setLoadingList(true)
         try {
-            let query = supabase.from('ho_so').select('*').order('created_at', { ascending: false })
+            let query = supabase.from('ho_so').select('*, nickname').order('created_at', { ascending: false })
             if (search) {
                 query = query.ilike('ho_ten', `%${search}%`)
             }
@@ -95,7 +95,10 @@ export default function HoSoManager() {
                                             <span className={`absolute bottom-0 right-0 w-3.5 h-3.5 border-2 border-white rounded-full ${p.gioi_tinh === 'Nữ' ? 'bg-pink-500' : 'bg-blue-500'}`}></span>
                                         </div>
                                         <div>
-                                            <div className="font-bold text-gray-800 text-base">{p.ho_ten}</div>
+                                            <div className="font-bold text-gray-800 text-base">
+                                                {p.ho_ten}
+                                                {p.nickname && <span className="ml-2 text-xs text-gray-500 font-normal">({p.nickname})</span>}
+                                            </div>
                                             <div className="text-xs text-gray-500 flex items-center gap-1 mt-0.5">
                                                 <span className="material-icons-outlined text-[8px] text-gray-400">person</span> {p.gioi_tinh} • {new Date().getFullYear() - (p.ngay_sinh ? new Date(p.ngay_sinh).getFullYear() : 2000)} tuổi
                                             </div>

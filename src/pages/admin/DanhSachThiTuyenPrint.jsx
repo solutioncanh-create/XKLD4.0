@@ -31,7 +31,7 @@ export default function DanhSachThiTuyenPrint() {
                     .from('lien_ket_don_hang_ho_so')
                     .select(`
                         id, sbd, created_at,
-                        ho_so:ho_so_id ( id, ho_ten, ngay_sinh, que_quan, anh_ho_so, hon_nhan, chieu_cao, can_nang, hut_thuoc )
+                        ho_so:ho_so_id ( id, ho_ten, nickname, ngay_sinh, que_quan, anh_ho_so, hon_nhan, chieu_cao, can_nang, hut_thuoc )
                     `)
                     .eq('don_hang_id', id)
                     .order('sbd', { ascending: true })
@@ -205,6 +205,7 @@ export default function DanhSachThiTuyenPrint() {
                                         <div className="font-bold text-xl uppercase text-blue-900 leading-tight">
                                             {candidate.ho_ten}
                                         </div>
+                                        {candidate.nickname && <div className="text-sm text-gray-600 mt-1">({candidate.nickname})</div>}
                                     </td>
 
                                     <td className="border border-blue-300 p-2 align-middle">

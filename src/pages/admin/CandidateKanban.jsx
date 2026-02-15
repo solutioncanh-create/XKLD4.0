@@ -74,6 +74,7 @@ const CandidateCard = ({ id, candidate }) => {
                 <div className="flex-1 min-w-0">
                     <div className="font-bold text-gray-800 truncate text-sm leading-tight group-hover:text-blue-600 transition-colors pt-1">
                         {candidate.ho_ten}
+                        {candidate.nickname && <span className="text-xs text-gray-500 font-normal ml-1">({candidate.nickname})</span>}
                     </div>
 
                     <div className="flex flex-col gap-1 mt-1.5">
@@ -151,7 +152,7 @@ export default function CandidateKanban() {
             setLoading(true);
             const { data, error } = await supabase
                 .from('ho_so')
-                .select(`id, ho_ten, so_dien_thoai, trang_thai, created_at, anh_ho_so, que_quan`)
+                .select(`id, ho_ten, nickname, so_dien_thoai, trang_thai, created_at, anh_ho_so, que_quan`)
                 .order('created_at', { ascending: false });
 
             if (error) throw error;

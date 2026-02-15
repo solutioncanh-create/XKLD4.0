@@ -184,7 +184,7 @@ export default function DangKy() {
             so_cccd: 'Số CCCD',
             ngay_cap_cccd: 'Ngày cấp CCCD',
             noi_cap_cccd: 'Nơi cấp CCCD',
-            anh_ho_so: 'Ảnh chân dung',
+            anh_chan_dung: 'Ảnh chân dung',
             anh_cccd_mat_truoc: 'Ảnh mặt trước CCCD',
             anh_cccd_mat_sau: 'Ảnh mặt sau CCCD',
             nguoi_bao_lanh: 'Họ tên người bảo lãnh',
@@ -237,9 +237,6 @@ export default function DangKy() {
         }
 
         const payload = cleanData(formData)
-        // Đã update DB, cho phép lưu nickname bình thường
-
-
 
         try {
             if (id) {

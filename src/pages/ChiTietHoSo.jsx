@@ -104,7 +104,10 @@ export default function ChiTietHoSo() {
                         )}
                     </div>
                     <div className="mt-4 sm:ml-6 sm:mb-2 flex-grow text-center sm:text-left">
-                        <h1 className="text-3xl font-bold text-gray-900 mb-1">{hoSo.ho_ten}</h1>
+                        <h1 className="text-3xl font-bold text-gray-900 mb-1">
+                            {hoSo.ho_ten}
+                            {hoSo.nickname && <span className="text-lg font-normal text-gray-500 ml-2">({hoSo.nickname})</span>}
+                        </h1>
                         <div className="flex flex-wrap items-center justify-center sm:justify-start gap-4 text-sm text-gray-400">
                             <span className="flex items-center gap-1"><span className="material-icons-outlined text-base">cake</span> {hoSo.ngay_sinh ? new Date(hoSo.ngay_sinh).getFullYear() : 'N/A'}</span>
                             <span className="flex items-center gap-1"><span className="material-icons-outlined text-base">wc</span> {hoSo.gioi_tinh}</span>
@@ -360,21 +363,28 @@ function StatusBadge({ label, value }) {
 
 function formatTimeRange(rangeString) {
     if (!rangeString) return '---';
-    if (!rangeString.includes(' - ')) return rangeString;
 
-    // Tách chuỗi "yyyy-mm-dd - yyyy-mm-dd"
-    const [start, end] = rangeString.split(' - ');
+    // Nếu chuỗi đã ở dạng "MM/YYYY - MM/YYYY" hoặc chỉ là "MM/YYYY", trả về luôn (vì form Đăng Ký lưu text này)
+    if (rangeString.includes('/') && !rangeString.includes('-') && rangeString.length < 10) return rangeString; // Single month/year
 
-    const formatDate = (dStr) => {
-        if (!dStr) return '?';
+    // Xử lý chuỗi range
+    const parts = rangeString.includes(' - ') ? rangeString.split(' - ') : [rangeString, ''];
+    const start = parts[0];
+    const end = parts[1];
+
+    const formatDate = (str) => {
+        if (!str || str === '/') return '?';
+        // Nếu đã là MM/YYYY
+        if (str.includes('/') && str.length <= 7) return str;
+        // Nếu là YYYY-MM-DD
         try {
-            const d = new Date(dStr);
-            if (isNaN(d.getTime())) return dStr;
-            // Format: mm/yyyy
+            const d = new Date(str);
+            if (isNaN(d.getTime())) return str;
             return `${d.getMonth() + 1}/${d.getFullYear()}`;
-        } catch { return dStr; }
+        } catch { return str; }
     };
 
+    if (!end || end === '/') return formatDate(start);
     return `${formatDate(start)} - ${formatDate(end)}`;
 }
 
