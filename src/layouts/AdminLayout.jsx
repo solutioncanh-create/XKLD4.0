@@ -1,76 +1,82 @@
 import { Link, Outlet, useLocation } from 'react-router-dom'
 import { useState } from 'react'
+import { getUserRole } from '../utils/auth'
 
-export default function AdminLayout({ adminStats }) {
+const MenuItem = ({ to, icon, label, badge, onClick }) => {
     const location = useLocation()
     const currentPath = location.pathname
-    const [isMobileSidebarOpen, setMobileSidebarOpen] = useState(false)
+    const isActive = currentPath === to || (to !== '/admin' && currentPath.startsWith(to))
 
-    const MenuItem = ({ to, icon, label, badge, onClick }) => {
-        const isActive = currentPath === to || (to !== '/admin' && currentPath.startsWith(to))
-        return (
-            <Link
-                to={to}
-                onClick={onClick}
-                className={`flex items-center gap-3 px-4 py-3.5 rounded-xl cursor-pointer transition-all duration-200 mb-1.5 group font-medium
-                ${isActive ? 'bg-primary-50 text-primary-700 shadow-sm ring-1 ring-primary-100' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'}
-            `}>
-                <span className={`material-icons-outlined text-2xl transition-transform group-hover:scale-110 ${isActive ? 'text-primary-600' : 'text-gray-400 group-hover:text-primary-500'}`}>{icon}</span>
-                <span className="flex-1 text-sm md:text-base">{label}</span>
-                {badge && <span className="bg-red-500 text-white text-xs px-2 py-0.5 rounded-full font-bold shadow-sm">{badge}</span>}
-            </Link>
-        )
-    }
+    return (
+        <Link
+            to={to}
+            onClick={onClick}
+            className={`flex items-center gap-3 px-4 py-3.5 rounded-xl cursor-pointer transition-all duration-200 mb-1.5 group font-medium
+            ${isActive ? 'bg-primary-50 text-primary-700 shadow-sm ring-1 ring-primary-100' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'}
+        `}>
+            <span className={`material-icons-outlined text-2xl transition-transform group-hover:scale-110 ${isActive ? 'text-primary-600' : 'text-gray-400 group-hover:text-primary-500'}`}>{icon}</span>
+            <span className="flex-1 text-sm md:text-base">{label}</span>
+            {badge && <span className="bg-red-500 text-white text-xs px-2 py-0.5 rounded-full font-bold shadow-sm">{badge}</span>}
+        </Link>
+    )
+}
 
-    const SidebarContent = ({ onClose }) => (
-        <div className="flex flex-col h-full">
-            <Link to="/" className="h-20 flex items-center px-6 border-b border-gray-100 shrink-0 bg-white/50 backdrop-blur-sm group hover:bg-gray-50 transition-colors">
-                <span className="text-3xl font-black text-gray-800 tracking-tighter group-hover:text-primary-700 transition-colors">XKLD <span className="inline-block bg-gradient-to-r from-yellow-400 to-red-600 text-transparent bg-clip-text">ADMIN</span></span>
-            </Link>
+const SidebarContent = ({ onClose, adminStats, role }) => (
+    <div className="flex flex-col h-full">
+        <Link to="/" className="h-20 flex items-center px-6 border-b border-gray-100 shrink-0 bg-white/50 backdrop-blur-sm group hover:bg-gray-50 transition-colors">
+            <span className="text-3xl font-black text-gray-800 tracking-tighter group-hover:text-primary-700 transition-colors">XKLD <span className="inline-block bg-gradient-to-r from-yellow-400 to-red-600 text-transparent bg-clip-text">ADMIN</span></span>
+        </Link>
 
-            <div className="flex-1 overflow-y-auto py-6 px-4 scrollbar-hide space-y-8">
-                <div>
-                    <p className="px-4 text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Tổng quan</p>
-                    <MenuItem to="/admin" icon="dashboard" label="Dashboard" onClick={onClose} />
-                </div>
+        <div className="flex-1 overflow-y-auto py-6 px-4 scrollbar-hide space-y-8">
+            <div>
+                <p className="px-4 text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Quản lý</p>
+                <MenuItem to="/admin/yeu-cau-tu-van" icon="mark_email_unread" label="Yêu cầu tư vấn" onClick={onClose} />
+                <MenuItem to="/admin/ho-so" icon="people" label="Hồ sơ ứng viên" badge={adminStats?.pending > 0 ? adminStats.pending : null} onClick={onClose} />
+                <MenuItem to="/admin/don-hang" icon="work_outline" label="Đơn hàng" onClick={onClose} />
+                <MenuItem to="/admin/ghep-don" icon="group_add" label="Ghép đơn thi" onClick={onClose} />
 
-                <div>
-                    <p className="px-4 text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Quản lý</p>
-                    <MenuItem to="/admin/yeu-cau-tu-van" icon="mark_email_unread" label="Yêu cầu tư vấn" onClick={onClose} />
-                    <MenuItem to="/admin/ho-so" icon="people" label="Hồ sơ ứng viên" badge={adminStats?.pending > 0 ? adminStats.pending : null} onClick={onClose} />
-                    <MenuItem to="/admin/don-hang" icon="work_outline" label="Đơn hàng" onClick={onClose} />
-                    <MenuItem to="/admin/ghep-don" icon="group_add" label="SETUP Phỏng vấn" onClick={onClose} />
-                    <MenuItem to="/admin/quan-ly-trang-thai" icon="view_column" label="Quản lý Trạng thái" onClick={onClose} />
-                </div>
-
-                <div>
-                    <p className="px-4 text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Hệ thống</p>
-                    <MenuItem to="/" icon="home" label="Về Trang Chủ" onClick={onClose} />
-                    <MenuItem to="/admin/tai-khoan" icon="manage_accounts" label="Tài khoản" onClick={onClose} />
-                    <MenuItem to="/admin/cai-dat" icon="settings" label="Cài đặt" onClick={onClose} />
-                </div>
             </div>
 
-            <div className="p-5 border-t border-gray-100 shrink-0 bg-gray-50/30">
-                <div className="flex items-center gap-3 group cursor-pointer hover:bg-white p-2 rounded-xl transition-all hover:shadow-sm">
-                    <div className="relative">
-                        <img src="https://ui-avatars.com/api/?name=Admin&background=0d9488&color=fff" alt="Admin" className="w-12 h-12 rounded-xl shadow-sm group-hover:scale-105 transition-transform object-cover" />
-                        <span className="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-green-500 border-2 border-white rounded-full"></span>
-                    </div>
-                    <div>
-                        <p className="text-sm font-bold text-gray-900 group-hover:text-primary-700 transition-colors">Quản trị viên</p>
-                        <p className="text-xs text-gray-500 font-medium truncate w-32">superadmin@xkld.vn</p>
-                    </div>
+            <div>
+                <p className="px-4 text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Hệ thống</p>
+                <MenuItem to="/" icon="home" label="Home" onClick={onClose} />
+                <MenuItem to="/admin/tai-khoan" icon="manage_accounts" label="Tài khoản" onClick={onClose} />
+                <MenuItem to="/admin/cai-dat" icon="settings" label="Cài đặt" onClick={onClose} />
+                <MenuItem to="/admin/login" icon="logout" label="Đăng xuất" onClick={() => {
+                    // Add logout logic here (e.g., supabase.auth.signOut())
+                    localStorage.removeItem('sb-access-token'); // Simple clear for now if using local storage
+                    onClose && onClose()
+                }} />
+            </div>
+        </div>
+
+        <div className="p-5 border-t border-gray-100 shrink-0 bg-gray-50/30">
+            <div
+                className="flex items-center gap-3 p-2 rounded-xl"
+            >
+                <div className="relative">
+                    <img src={`https://ui-avatars.com/api/?name=${role === 'super_admin' ? 'Super Admin' : 'Admin'}&background=${role === 'super_admin' ? '0d9488' : '6366f1'}&color=fff`} alt="Admin" className="w-12 h-12 rounded-xl shadow-sm object-cover" />
+                    <span className={`absolute -bottom-1 -right-1 w-3.5 h-3.5 border-2 border-white rounded-full ${role === 'super_admin' ? 'bg-green-500' : 'bg-gray-400'}`}></span>
+                </div>
+                <div>
+                    <p className="text-sm font-bold text-gray-900 uppercase text-xs tracking-wider">
+                        {role === 'super_admin' ? 'Quản trị cấp cao' : 'Quản trị viên'}
+                    </p>
                 </div>
             </div>
         </div>
-    )
+    </div>
+)
+
+export default function AdminLayout({ adminStats }) {
+    const [isMobileSidebarOpen, setMobileSidebarOpen] = useState(false)
+    const [role, setRole] = useState(getUserRole())
 
     return (
         <div className="flex h-screen bg-gray-50 overflow-hidden font-sans text-gray-800">
             {/* --- SIDEBAR DESKTOP --- */}
             <aside className="w-72 bg-white border-r border-gray-100 flex-col hidden md:flex shrink-0 z-20 shadow-xl shadow-gray-200/50">
-                <SidebarContent />
+                <SidebarContent adminStats={adminStats} role={role} />
             </aside>
 
             {/* --- SIDEBAR MOBILE OVERLAY --- */}
@@ -81,7 +87,7 @@ export default function AdminLayout({ adminStats }) {
                         <button onClick={() => setMobileSidebarOpen(false)} className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-600">
                             <span className="material-icons-outlined text-2xl">close</span>
                         </button>
-                        <SidebarContent onClose={() => setMobileSidebarOpen(false)} />
+                        <SidebarContent onClose={() => setMobileSidebarOpen(false)} adminStats={adminStats} role={role} />
                     </aside>
                 </div>
             )}

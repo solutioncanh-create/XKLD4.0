@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate, useParams } from 'react-router-dom'
 import DangKy from './pages/DangKy'
 import ChiTietHoSo from './pages/ChiTietHoSo'
 import HomePage from './pages/HomePage'
@@ -10,17 +10,21 @@ import Navbar from './Navbar'
 
 // Admin Pages
 import AdminLayout from './layouts/AdminLayout'
-import DashboardHome from './pages/admin/DashboardHome'
 import HoSoManager from './pages/admin/HoSoManager'
 import DonHangManager from './pages/admin/DonHangManager'
 import OrderMatching from './pages/admin/OrderMatching'
 import YeuCauTuVanManager from './pages/admin/YeuCauTuVanManager'
+import AdminLogin from './pages/admin/AdminLogin'
 
 import PrintCandidateList from './pages/admin/PrintCandidateList'
 import PrintBatchProfile from './pages/admin/PrintBatchProfile'
-import CandidateKanban from './pages/admin/CandidateKanban'
+
 
 import YeuCauTuVan from './pages/YeuCauTuVan'
+
+import ProtectedAdminRoute from './components/ProtectedAdminRoute'
+
+// ... existing imports ...
 
 function App() {
   return (
@@ -29,7 +33,7 @@ function App() {
         {/* PUBLIC ROUTES - Có Navbar */}
         <Route path="/" element={<><Navbar /><HomePage /></>} />
         <Route path="/viec-lam" element={<><Navbar /><JobBoard /></>} />
-        <Route path="/viec-lam/:id" element={<><Navbar /><JobDetail /></>} />
+        <Route path="/viec-lam/:id" element={<RedirectToConsultation />} />
         <Route path="/yeu-cau-tu-van" element={<YeuCauTuVan />} />
         <Route path="/dang-ky" element={<><Navbar /><DangKy /></>} />
         <Route path="/sua-ho-so/:id" element={<><Navbar /><DangKy /></>} />
@@ -40,18 +44,22 @@ function App() {
         <Route path="/print-candidate-list/:id" element={<PrintCandidateList />} />
         <Route path="/batch-print-profiles/:id" element={<PrintBatchProfile />} />
 
-        {/* ADMIN ROUTES - Dùng AdminLayout riêng */}
-        <Route path="/admin" element={<AdminLayout />}>
-          <Route index element={<DashboardHome />} />
-          <Route path="yeu-cau-tu-van" element={<YeuCauTuVanManager />} />
-          <Route path="ho-so" element={<HoSoManager />} />
-          <Route path="don-hang" element={<DonHangManager />} />
-          <Route path="ghep-don" element={<OrderMatching />} />
-          <Route path="quan-ly-trang-thai" element={<CandidateKanban />} />
+        <Route path="/admin/login" element={<AdminLogin />} />
 
-          <Route path="thong-ke" element={<div className="text-center py-20 bg-white m-6 rounded-xl shadow-sm"><span className="material-icons-outlined text-6xl text-gray-200 block mb-4">insights</span><h3 className="text-xl font-bold text-gray-400">Đang xây dựng Thống kê</h3></div>} />
-          <Route path="tai-khoan" element={<div className="text-center py-20 bg-white m-6 rounded-xl shadow-sm"><span className="material-icons-outlined text-6xl text-gray-200 block mb-4">manage_accounts</span><h3 className="text-xl font-bold text-gray-400">Đang xây dựng Quản lý Tài khoản</h3></div>} />
-          <Route path="cai-dat" element={<div className="text-center py-20 bg-white m-6 rounded-xl shadow-sm"><span className="material-icons-outlined text-6xl text-gray-200 block mb-4">settings</span><h3 className="text-xl font-bold text-gray-400">Đang xây dựng Cấu hình</h3></div>} />
+        {/* ADMIN ROUTES - Protected */}
+        <Route element={<ProtectedAdminRoute />}>
+          <Route path="/admin" element={<AdminLayout />}>
+            <Route index element={<HoSoManager />} />
+            <Route path="yeu-cau-tu-van" element={<YeuCauTuVanManager />} />
+            <Route path="ho-so" element={<HoSoManager />} />
+            <Route path="don-hang" element={<DonHangManager />} />
+            <Route path="ghep-don" element={<OrderMatching />} />
+
+
+            <Route path="thong-ke" element={<div className="text-center py-20 bg-white m-6 rounded-xl shadow-sm"><span className="material-icons-outlined text-6xl text-gray-200 block mb-4">insights</span><h3 className="text-xl font-bold text-gray-400">Đang xây dựng Thống kê</h3></div>} />
+            <Route path="tai-khoan" element={<div className="text-center py-20 bg-white m-6 rounded-xl shadow-sm"><span className="material-icons-outlined text-6xl text-gray-200 block mb-4">manage_accounts</span><h3 className="text-xl font-bold text-gray-400">Đang xây dựng Quản lý Tài khoản</h3></div>} />
+            <Route path="cai-dat" element={<div className="text-center py-20 bg-white m-6 rounded-xl shadow-sm"><span className="material-icons-outlined text-6xl text-gray-200 block mb-4">settings</span><h3 className="text-xl font-bold text-gray-400">Đang xây dựng Cấu hình</h3></div>} />
+          </Route>
         </Route>
       </Routes>
     </BrowserRouter>
@@ -59,3 +67,8 @@ function App() {
 }
 
 export default App
+
+function RedirectToConsultation() {
+  const { id } = useParams()
+  return <Navigate to={`/yeu-cau-tu-van?don_hang=${id}`} replace />
+}

@@ -32,7 +32,7 @@ export default function Navbar() {
                     {/* RIGHT ACTIONS (Desktop) */}
                     <div className="flex items-center gap-3">
                         <Link
-                            to="/admin"
+                            to="/admin/login"
                             className="hidden sm:flex text-gray-500 hover:text-primary-700 px-4 py-2 rounded-full text-sm font-bold items-center gap-2 transition-all hover:bg-gray-100 border border-transparent hover:border-gray-200"
                         >
                             <span className="material-icons-outlined text-xl">admin_panel_settings</span>
@@ -61,7 +61,7 @@ export default function Navbar() {
 
                     <div className="border-t border-gray-100 my-2 pt-2">
                         <Link
-                            to="/admin"
+                            to="/admin/login"
                             className="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-500 font-bold hover:bg-gray-50 transition-colors"
                             onClick={() => setMobileMenuOpen(false)}
                         >

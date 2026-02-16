@@ -36,7 +36,7 @@ export default function JobBoard() {
     const industries = ['Cơ khí', 'Xây dựng', 'Nông nghiệp', 'Chế biến thực phẩm', 'May mặc', 'Điện tử']
 
     const handleJobClick = (job) => {
-        navigate(`/viec-lam/${job.id}`)
+        navigate(`/yeu-cau-tu-van?don_hang=${job.id}`)
     }
 
     return (

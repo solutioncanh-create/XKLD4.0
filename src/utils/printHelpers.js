@@ -18,7 +18,7 @@ export function mapMarital(val) {
 }
 
 export function mapReligion(val) {
-    if (!val || val === 'Không') return 'なし';
+    if (!val || val === 'Không') return '無宗教';
     if (val.includes('Phật')) return '仏教';
     if (val.includes('Thiên Chúa') || val.includes('Công giáo')) return 'キリスト教';
     return val;
@@ -29,6 +29,7 @@ export function mapYesNo(val) {
     if (val === false || val === 'Không') return 'なし';
     if (typeof val === 'string' && val.toLowerCase().includes('có')) return 'あり';
     if (typeof val === 'string' && val.toLowerCase().includes('không')) return 'なし';
+    if (typeof val === 'string' && val.toLowerCase() === 'chưa') return 'なし';
     return val || 'なし';
 }
 
@@ -88,11 +89,12 @@ export function mapLicense(val) {
 
 export function mapPurpose(val) {
     if (!val) return '...';
-    if (val.includes('Kiếm thu nhập')) return '家族を支えるため、資金を稼ぐ';
+    if (val.includes('Kiếm thu nhập') || val.includes('Kiếm tiền')) return '家族を支えるため、資金を稼ぐ';
     if (val.includes('Học hỏi kỹ năng')) return '日本の技術と働き方を学ぶため';
     if (val.includes('Trải nghiệm văn hóa')) return '日本の文化と生活を体験するため';
     if (val.includes('Phát triển bản thân')) return '自己成長と将来のチャンスを探すため';
     if (val.includes('Nâng cao trình độ')) return '日本語能力を向上させるため';
+    if (val.includes('Phụ giúp gia đình')) return '家族を経済的に支えるため';
     return val;
 }
 
@@ -118,7 +120,12 @@ export function mapStrength(val) {
         "Cẩn thận, tỉ mỉ": "注意深く、几帳面",
         "Tinh thần trách nhiệm cao": "責任感が強い",
         "Hòa đồng, giao tiếp tốt": "社交的でコミュニケーションが得意",
-        "Gọn gàng, ngăn nắp": "整理整頓が得意"
+        "Gọn gàng, ngăn nắp": "整理整頓が得意",
+        "Nấu ăn giỏi": "料理が得意",
+        "Vui vẻ": "明るい性格",
+        "Hòa đồng": "協調性がある",
+        "Nhanh nhẹn": "テキパキと行動できる",
+        "Ham học hỏi": "向上心がある"
     };
     Object.keys(map).forEach(k => {
         res = res.replaceAll(k, map[k]);
@@ -136,7 +143,10 @@ export function mapWeakness(val) {
         "Vội vàng, hấp tấp": "せっかち",
         "Tính cách thẳng thắn": "率直すぎる性格",
         "Không chịu được áp lực": "プレッシャーに弱い",
-        "Dễ nổi nóng, mất bình tĩnh": "短気"
+        "Dễ nổi nóng, mất bình tĩnh": "短気",
+        "Chưa biết": "特になし",
+        "Tiếng Nhật kém": "日本語がまだ苦手",
+        "Ít nói": "口数が少ない"
     };
     Object.keys(map).forEach(k => {
         res = res.replaceAll(k, map[k]);
@@ -284,8 +294,14 @@ export function mapJapaneseLevel(l) {
     if (lower.includes('trung cấp') || lower.includes('trung cap')) return '中級';
     if (lower.includes('cao cấp') || lower.includes('cao cap')) return '上級';
     if (lower.includes('nhập môn') || lower.includes('nhap mon')) return '入門';
-    if (lower.includes('hội thoại') || lower.includes('hoi thoai')) return '会話';
+    if (lower.includes('hội thoại') || lower.includes('hoi thoai')) return '会話のみ';
+    if (lower.includes('giới thiệu') || lower.includes('gioi thieu')) return '自己紹介程度';
     if (lower.includes('chưa biết') || lower.includes('chua biet')) return '未学習';
+    if (lower.includes('n5')) return 'JLPT N5';
+    if (lower.includes('n4')) return 'JLPT N4';
+    if (lower.includes('n3')) return 'JLPT N3';
+    if (lower.includes('n2')) return 'JLPT N2';
+    if (lower.includes('n1')) return 'JLPT N1';
 
     return s;
 }

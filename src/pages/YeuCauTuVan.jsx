@@ -22,6 +22,21 @@ export default function YeuCauTuVan() {
         note: ''
     })
 
+    const INTEREST_TAGS = [
+        "Chế biến thực phẩm", "Cơm hộp", "Xây dựng", "May mặc",
+        "Cơ khí/Hàn", "Nông nghiệp", "Sửa chữa ô tô", "Điện tử",
+        "Chi phí thấp", "Bay nhanh", "Vay vốn", "Học tiếng tại nguồn"
+    ]
+
+    const addInterest = (tag) => {
+        setFormData(prev => {
+            const current = prev.note || ''
+            if (current.includes(tag)) return prev
+            const newNote = current ? `${current}, ${tag}` : tag
+            return { ...prev, note: newNote }
+        })
+    }
+
     useEffect(() => {
         if (donHangId) {
             fetchJobInfo()
@@ -64,7 +79,7 @@ export default function YeuCauTuVan() {
             const currentYear = new Date().getFullYear()
             const age = formData.birthYear ? (currentYear - parseInt(formData.birthYear)) : null
 
-            const noteContent = `[Giới tính: ${formData.gender}] [Email: ${formData.email || 'Không có'}] ${job ? `Quan tâm đơn: ${job.ten_don_hang}` : ''} - ${formData.note || ''}`
+            const noteContent = `[Giới tính: ${formData.gender}] ${job ? `[Đơn: ${job.ten_don_hang}] ` : ''}${formData.note || ''}`
 
             const { error } = await supabase.from('yeu_cau_tu_van').insert([{
                 ho_ten: formData.fullName,
@@ -211,8 +226,8 @@ export default function YeuCauTuVan() {
 
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
-                                        <label className="block text-xs font-bold text-secondary-700 mb-1 uppercase tracking-wider">Năm sinh</label>
-                                        <input type="number" min="1980" max="2010"
+                                        <label className="block text-xs font-bold text-secondary-700 mb-1 uppercase tracking-wider">Năm sinh <span className="text-red-500">*</span></label>
+                                        <input type="number" min="1980" max="2010" required
                                             className="w-full px-4 py-3 rounded-lg bg-secondary-50 border border-secondary-200 focus:bg-white focus:ring-2 focus:ring-primary-100 focus:border-primary-500 transition-all outline-none font-medium"
                                             placeholder="2000"
                                             value={formData.birthYear}
@@ -233,8 +248,8 @@ export default function YeuCauTuVan() {
                                 </div>
 
                                 <div>
-                                    <label className="block text-xs font-bold text-secondary-700 mb-1 uppercase tracking-wider">Quê quán</label>
-                                    <input type="text"
+                                    <label className="block text-xs font-bold text-secondary-700 mb-1 uppercase tracking-wider">Quê quán <span className="text-red-500">*</span></label>
+                                    <input type="text" required
                                         className="w-full px-4 py-3 rounded-lg bg-secondary-50 border border-secondary-200 focus:bg-white focus:ring-2 focus:ring-primary-100 focus:border-primary-500 transition-all outline-none font-medium placeholder-secondary-400"
                                         placeholder="Tỉnh/Thành phố"
                                         value={formData.hometown}
@@ -243,13 +258,30 @@ export default function YeuCauTuVan() {
                                 </div>
 
                                 <div>
-                                    <label className="block text-xs font-bold text-secondary-700 mb-1 uppercase tracking-wider">Ghi chú (Nếu có)</label>
-                                    <textarea rows="2"
-                                        className="w-full px-4 py-3 rounded-lg bg-secondary-50 border border-secondary-200 focus:bg-white focus:ring-2 focus:ring-primary-100 focus:border-primary-500 transition-all outline-none font-medium placeholder-secondary-400"
-                                        placeholder="Ví dụ: Mong muốn đi đơn Nông nghiệp..."
+                                    <label className="block text-xs font-bold text-secondary-700 mb-2 uppercase tracking-wider">
+                                        Nội dung quan tâm <span className="text-red-500">*</span> <span className="text-secondary-400 font-normal lowercase italic">(Ghi chú chi tiết)</span>
+                                    </label>
+
+                                    <textarea rows="3" required
+                                        className="w-full px-4 py-3 rounded-lg bg-secondary-50 border border-secondary-200 focus:bg-white focus:ring-2 focus:ring-primary-100 focus:border-primary-500 transition-all outline-none font-medium placeholder-secondary-400 text-sm"
+                                        placeholder="Nhập nội dung bạn cần tư vấn..."
                                         value={formData.note}
                                         onChange={e => setFormData({ ...formData, note: e.target.value })}
                                     ></textarea>
+
+                                    <div className="mt-2.5 flex flex-wrap gap-2">
+                                        <span className="text-xs text-secondary-400 font-medium self-center mr-1">Gợi ý nhanh:</span>
+                                        {INTEREST_TAGS.map(tag => (
+                                            <button
+                                                key={tag}
+                                                type="button"
+                                                onClick={() => addInterest(tag)}
+                                                className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-secondary-100 text-secondary-600 hover:bg-primary-50 hover:text-primary-700 transition-colors border border-secondary-200 hover:border-primary-200 active:scale-95"
+                                            >
+                                                + {tag}
+                                            </button>
+                                        ))}
+                                    </div>
                                 </div>
 
                                 <button type="submit" disabled={submitting}

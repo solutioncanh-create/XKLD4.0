@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../supabaseClient'
+import { callGeminiAPI } from '../utils/ocr'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 
 export default function DangKy() {
@@ -8,16 +9,17 @@ export default function DangKy() {
     const [loading, setLoading] = useState(false)
     const [step, setStep] = useState(1)
 
-    // Tổng số bước: 5
-    // 1: Cá nhân & Giấy tờ
-    // 2: Gia đình
-    // 3: Sức khỏe
-    // 4: Học vấn & Kinh nghiệm
-    // 5: Kỹ năng & Nguyện vọng
+    const steps = [
+        { num: 1, label: 'Cá nhân & Giấy tờ', icon: 'person_outline' },
+        { num: 2, label: 'Gia đình', icon: 'people_outline' },
+        { num: 3, label: 'Sức khỏe', icon: 'medical_services' },
+        { num: 4, label: 'Học vấn & Kinh nghiệm', icon: 'school' },
+        { num: 5, label: 'Nguyện vọng & Kỹ năng', icon: 'work_outline' }
+    ]
 
     const [formData, setFormData] = useState({
         // --- BƯỚC 1: CÁ NHÂN & GIẤY TỜ ---
-        ma_ho_so: '', // Mã hồ sơ tùy chỉnh
+        nguon: '', // Nguồn hồ sơ (thay thế mã hồ sơ)
         ho_ten: '',
         ngay_sinh: '',
         gioi_tinh: 'Nam',
@@ -104,9 +106,24 @@ export default function DangKy() {
         }
     }, [id])
 
+    // Hàm chuyển đổi Tiếng Việt có dấu -> Không dấu In Hoa
+    const toUpperNoAccent = (str) => {
+        if (!str) return '';
+        return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+            .replace(/đ/g, "d").replace(/Đ/g, "D")
+            .toUpperCase();
+    }
+
     const handleChange = (e) => {
         const { name, value, type, checked } = e.target
-        setFormData(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }))
+        let finalValue = type === 'checkbox' ? checked : value
+
+        // Tự động format cho các trường cần thiết
+        if (name === 'ho_ten' || name === 'que_quan' || name === 'noi_o_hien_tai' || name === 'noi_cap_cccd') {
+            finalValue = toUpperNoAccent(finalValue)
+        }
+
+        setFormData(prev => ({ ...prev, [name]: finalValue }))
     }
 
     // Tự động thêm sẵn 1 dòng nhập liệu cho các bảng nếu chưa có (khi tạo mới)
@@ -211,6 +228,8 @@ export default function DangKy() {
             const val = formData[key]
             if (val === null || val === undefined || String(val).trim() === '') {
                 missing.push(label)
+            } else if (typeof val === 'string' && (val.includes('--') || val.startsWith('-') || val.endsWith('-'))) {
+                missing.push(label + ' (Ngày tháng chưa đầy đủ)')
             }
         })
 
@@ -256,8 +275,74 @@ export default function DangKy() {
         finally { setLoading(false) }
     }
 
-    // --- Upload Ảnh ---
+    // --- Upload Ảnh & AI OCR ---
     const [uploading, setUploading] = useState(false)
+    const [isScanning, setIsScanning] = useState(false) // Trạng thái quét AI
+
+    // Hàm gọi AI Gemini (Flash Model) - Tối ưu cho CCCD
+    const analyzeCCCD = async (fileInput) => {
+        setIsScanning(true)
+        console.log('Bắt đầu phân tích ảnh với Gemini...')
+
+        try {
+            const extractedData = await callGeminiAPI(fileInput)
+
+            if (!extractedData || Object.keys(extractedData).length === 0) {
+                // FALLBACK MOCK DATA NẾU KEY LỖI HOẶC AI KHÔNG ĐỌC ĐƯỢC
+                if (!import.meta.env.VITE_GOOGLE_CLOUD_API_KEY) {
+                    await new Promise(resolve => setTimeout(resolve, 1500))
+                    const mockData = {
+                        ho_ten: 'NGUYEN VAN A',
+                        ngay_sinh: '2000-05-20',
+                        so_cccd: '038000000123',
+                        que_quan: 'Xã A, Huyện B, Tỉnh Nam Định',
+                        noi_o_hien_tai: 'Quận Cầu Giấy, Hà Nội',
+                        gioi_tinh: 'Nam'
+                    }
+                    setFormData(prev => ({ ...prev, ...mockData }))
+                    alert('⚠️ Chưa có API Key! Đang dùng dữ liệu giả lập.')
+                } else {
+                    // Show raw error/null for debugging
+                    console.error("Gemini returned null/empty");
+                    alert(`Không đọc được thông tin. Vui lòng kiểm tra lại ảnh.\n(Chi tiết: Dữ liệu trả về rỗng hoặc lỗi API Key)`);
+                }
+                return
+            }
+
+            console.log('Gemini Extracted:', extractedData)
+
+            // CHỈ CẬP NHẬT CÁC TRƯỜNG CÓ DỮ LIỆU THỰC (Tránh ghi đè null/rỗng lên dữ liệu cũ)
+            const cleanData = {}
+            Object.keys(extractedData).forEach(key => {
+                let val = extractedData[key]
+                if (val && val !== '' && val !== 'null' && val !== 'N/A') {
+                    // Áp dụng format cho AI data
+                    if (key === 'ho_ten' || key === 'que_quan' || key === 'noi_o_hien_tai' || key === 'noi_cap_cccd') {
+                        val = val.normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+                            .replace(/đ/g, "d").replace(/Đ/g, "D")
+                            .toUpperCase();
+                    }
+                    cleanData[key] = val
+                }
+            })
+
+            if (Object.keys(cleanData).length > 0) {
+                setFormData(prev => ({
+                    ...prev,
+                    ...cleanData
+                }))
+                alert('✨ Gemini AI đã cập nhật thêm thông tin!')
+            } else {
+                alert('Không tìm thấy thông tin mới nào rõ ràng.')
+            }
+
+        } catch (error) {
+            console.error('AI Error:', error)
+            alert('Lỗi xử lý ảnh: ' + error.message)
+        } finally {
+            setIsScanning(false)
+        }
+    }
 
     const handleUploadImage = async (event, fieldName) => {
         try {
@@ -285,6 +370,11 @@ export default function DangKy() {
             // Cập nhật vào form
             setFormData(prev => ({ ...prev, [fieldName]: data.publicUrl }))
 
+            // Nếu là ảnh mặt trước HOẶC mặt sau -> Kích hoạt AI Scan (Dùng FILE gốc)
+            if (fieldName === 'anh_cccd_mat_truoc' || fieldName === 'anh_cccd_mat_sau') {
+                analyzeCCCD(file)
+            }
+
         } catch (error) {
             alert('Lỗi tải ảnh: ' + error.message)
         } finally {
@@ -299,7 +389,80 @@ export default function DangKy() {
 
     const Step1_CaNhan = () => (
         <div className="space-y-6 animate-fade-in">
-            <h3 className="section-title">I. THÔNG TIN CÁ NHÂN & LIÊN HỆ</h3>
+            {/* PHẦN 1: AI SCANNER - UPLOAD CCCD TRƯỚC */}
+            <div className="bg-gradient-to-r from-teal-50 to-blue-50 p-4 rounded-xl border border-teal-100 shadow-sm relative overflow-hidden">
+                <div className="flex justify-between items-center mb-4">
+                    <h3 className="section-title !mb-0 !border-0 text-teal-800 flex items-center gap-2">
+                        <span className="material-icons-outlined">document_scanner</span>
+                        1. Tải ảnh CCCD/CMT
+                    </h3>
+                    <span className="text-xs font-bold text-teal-600 bg-white px-2 py-1 rounded-full shadow-sm border border-teal-100">
+                        ✨ AI Tự động điền
+                    </span>
+                </div>
+
+                {/* Ảnh CCCD 2 mặt (Đưa lên đầu) */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Mặt trước */}
+                    <div>
+                        <label className="label mb-2 text-teal-700">Ảnh mặt trước (Có ảnh chân dung)</label>
+                        <div className={`border-2 border-dashed rounded-xl h-48 flex flex-col items-center justify-center text-gray-500 hover:bg-white/80 bg-white relative overflow-hidden cursor-pointer group transition-all
+                            ${isScanning ? 'border-teal-400 ring-4 ring-teal-50' : 'border-gray-300'}`}
+                            onClick={() => document.getElementById('file-upload-cccd-truoc').click()}>
+
+                            {uploading && !formData.anh_cccd_mat_truoc ? (
+                                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
+                            ) : isScanning ? (
+                                <div className="absolute inset-0 bg-white/90 z-20 flex flex-col items-center justify-center">
+                                    <div className="w-12 h-12 border-4 border-teal-200 border-t-teal-600 rounded-full animate-spin mb-2"></div>
+                                    <p className="text-teal-700 font-bold text-sm animate-pulse">Đang quét thông tin...</p>
+                                </div>
+                            ) : formData.anh_cccd_mat_truoc ? (
+                                <img src={formData.anh_cccd_mat_truoc} alt="CCCD Trước" className="w-full h-full object-contain p-2" />
+                            ) : (
+                                <>
+                                    <span className="material-icons-outlined text-4xl text-teal-400 mb-2">add_a_photo</span>
+                                    <span className="text-sm font-medium text-gray-500">Tải ảnh mặt trước</span>
+                                </>
+                            )}
+                            <input type="file" id="file-upload-cccd-truoc" accept="image/*" className="hidden"
+                                onChange={(e) => handleUploadImage(e, 'anh_cccd_mat_truoc')} disabled={uploading || isScanning} />
+                        </div>
+                    </div>
+
+                    {/* Mặt sau */}
+                    <div>
+                        <label className="label mb-2 text-teal-700">Ảnh mặt sau</label>
+                        <div className="border-2 border-dashed border-gray-300 rounded-xl h-48 flex flex-col items-center justify-center text-gray-500 hover:bg-white/80 bg-white relative overflow-hidden cursor-pointer group transition-all"
+                            onClick={() => document.getElementById('file-upload-cccd-sau').click()}>
+                            {uploading && !formData.anh_cccd_mat_sau ? (
+                                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
+                            ) : formData.anh_cccd_mat_sau ? (
+                                <img src={formData.anh_cccd_mat_sau} alt="CCCD Sau" className="w-full h-full object-contain p-2" />
+                            ) : (
+                                <>
+                                    <span className="material-icons-outlined text-4xl text-gray-400 mb-2">add_a_photo</span>
+                                    <span className="text-sm font-medium text-gray-500">Tải ảnh mặt sau</span>
+                                </>
+                            )}
+                            <input type="file" id="file-upload-cccd-sau" accept="image/*" className="hidden"
+                                onChange={(e) => handleUploadImage(e, 'anh_cccd_mat_sau')} disabled={uploading} />
+                        </div>
+                    </div>
+                </div>
+
+                {/* Các trường thông tin trích xuất ID (Ẩn bớt nếu muốn gọn hoặc để hiện cho user check) */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6 pt-4 border-t border-teal-100/50">
+                    <div><label className="label">Số CCCD / CMND <span className="text-red-500 ml-1">*</span></label><input name="so_cccd" value={formData.so_cccd} onChange={handleChange} className={vCls(formData.so_cccd)} placeholder="AI sẽ tự điền..." /></div>
+                    <div className="z-0 relative">
+                        <label className="label">Ngày cấp <span className="text-red-500 ml-1">*</span></label>
+                        <FullDateSelect name="ngay_cap_cccd" value={formData.ngay_cap_cccd} onChange={handleChange} startYear={2000} endYear={new Date().getFullYear()} />
+                    </div>
+                    <div><label className="label">Nơi cấp <span className="text-red-500 ml-1">*</span></label><input name="noi_cap_cccd" value={formData.noi_cap_cccd} onChange={handleChange} className={vCls(formData.noi_cap_cccd)} placeholder="Cục CS QLHC..." /></div>
+                </div>
+            </div>
+
+            <h3 className="section-title pt-4 border-t border-dashed">2. KIỂM TRA & BỔ SUNG THÔNG TIN</h3>
 
             {/* Ảnh & Tên */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
@@ -328,18 +491,22 @@ export default function DangKy() {
                         </div>
                     )}
                 </div>
-                <div className="md:col-span-3 grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="md:col-span-2 grid grid-cols-3 gap-2">
-                        <div className="col-span-2">
-                            <label className="label">Họ và Tên <span className="text-red-500 ml-1">*</span> <span className="text-[10px] text-red-500">(Viết hoa không dấu)</span></label>
+                <div className="md:col-span-3 grid grid-cols-1 gap-4">
+                    <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-2">
+                        <div className="md:col-span-3">
+                            <label className="label">Họ và Tên <span className="text-red-500 ml-1">*</span> <span className="text-[10px] text-red-500 font-normal italic">(VIẾT HOA KHÔNG DẤU)</span></label>
                             <input name="ho_ten" value={formData.ho_ten} onChange={handleChange} className={vCls(formData.ho_ten) + " uppercase"} placeholder="NGUYEN VAN A" />
                         </div>
-                        <div className="col-span-1">
-                            <label className="label">Nickname <span className="text-[10px] text-gray-400 font-normal">(Nếu có)</span></label>
+                        {/* Nickname input hidden requested by user */}
+                        {/* <div className="col-span-1">
+                            <label className="label">Nickname <span className="text-red-500 ml-1">*</span></label>
                             <input name="nickname" value={formData.nickname || ''} onChange={handleChange} className={vCls(formData.nickname)} placeholder="Tên thường gọi" />
-                        </div>
+                        </div> */}
                     </div>
-                    <div><label className="label">Ngày sinh <span className="text-red-500 ml-1">*</span></label><input type="date" name="ngay_sinh" value={formData.ngay_sinh} onChange={handleChange} className={vCls(formData.ngay_sinh)} /></div>
+                    <div className="z-10 relative">
+                        <label className="label">Ngày sinh <span className="text-red-500 ml-1">*</span></label>
+                        <FullDateSelect name="ngay_sinh" value={formData.ngay_sinh} onChange={handleChange} startYear={1970} endYear={2010} />
+                    </div>
                     <div>
                         <label className="label">Giới tính <span className="text-red-500 ml-1">*</span></label>
                         <div className="flex gap-4 mt-1">
@@ -364,7 +531,7 @@ export default function DangKy() {
                 <div><label className="label">Nơi ở hiện tại (Để liên hệ) <span className="text-red-500 ml-1">*</span></label><input name="noi_o_hien_tai" value={formData.noi_o_hien_tai} onChange={handleChange} className={vCls(formData.noi_o_hien_tai)} placeholder="Số nhà, đường..." /></div>
             </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pb-4 border-b border-gray-100">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 pb-4 border-b border-gray-100">
                 <div><label className="label">Tôn giáo <span className="text-red-500 ml-1">*</span></label>
                     <select name="ton_giao" value={formData.ton_giao} onChange={handleChange} className={vCls(formData.ton_giao, true)}>
                         <option value="" disabled>-- Chọn --</option>
@@ -405,55 +572,8 @@ export default function DangKy() {
                 </div>
             </div>
 
-            <h3 className="section-title pt-4">II. GIẤY TỜ TÙY THÂN</h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div><label className="label">Số CCCD / CMND <span className="text-red-500 ml-1">*</span></label><input name="so_cccd" value={formData.so_cccd} onChange={handleChange} className={vCls(formData.so_cccd)} /></div>
-                <div><label className="label">Ngày cấp <span className="text-red-500 ml-1">*</span></label><input type="date" name="ngay_cap_cccd" value={formData.ngay_cap_cccd} onChange={handleChange} className={vCls(formData.ngay_cap_cccd)} /></div>
-                <div><label className="label">Nơi cấp <span className="text-red-500 ml-1">*</span></label><input name="noi_cap_cccd" value={formData.noi_cap_cccd} onChange={handleChange} className={vCls(formData.noi_cap_cccd)} placeholder="Cục CS QLHC..." /></div>
-            </div>
 
-            {/* Ảnh CCCD 2 mặt */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Mặt trước */}
-                <div>
-                    <label className="label mb-2">Ảnh mặt trước CCCD</label>
-                    <div className="border-2 border-dashed border-gray-300 rounded-lg h-40 flex flex-col items-center justify-center text-gray-500 hover:bg-gray-50 bg-white relative overflow-hidden cursor-pointer group transition-colors"
-                        onClick={() => document.getElementById('file-upload-cccd-truoc').click()}>
-                        {uploading ? (
-                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
-                        ) : formData.anh_cccd_mat_truoc ? (
-                            <img src={formData.anh_cccd_mat_truoc} alt="CCCD Trước" className="w-full h-full object-contain" />
-                        ) : (
-                            <>
-                                <span className="material-icons-outlined text-3xl text-gray-400">badge</span>
-                                <span className="text-xs mt-1">Chọn ảnh mặt trước</span>
-                            </>
-                        )}
-                        <input type="file" id="file-upload-cccd-truoc" accept="image/*" className="hidden"
-                            onChange={(e) => handleUploadImage(e, 'anh_cccd_mat_truoc')} disabled={uploading} />
-                    </div>
-                </div>
 
-                {/* Mặt sau */}
-                <div>
-                    <label className="label mb-2">Ảnh mặt sau CCCD</label>
-                    <div className="border-2 border-dashed border-gray-300 rounded-lg h-40 flex flex-col items-center justify-center text-gray-500 hover:bg-gray-50 bg-white relative overflow-hidden cursor-pointer group transition-colors"
-                        onClick={() => document.getElementById('file-upload-cccd-sau').click()}>
-                        {uploading ? (
-                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
-                        ) : formData.anh_cccd_mat_sau ? (
-                            <img src={formData.anh_cccd_mat_sau} alt="CCCD Sau" className="w-full h-full object-contain" />
-                        ) : (
-                            <>
-                                <span className="material-icons-outlined text-3xl text-gray-400">badge</span>
-                                <span className="text-xs mt-1">Chọn ảnh mặt sau</span>
-                            </>
-                        )}
-                        <input type="file" id="file-upload-cccd-sau" accept="image/*" className="hidden"
-                            onChange={(e) => handleUploadImage(e, 'anh_cccd_mat_sau')} disabled={uploading} />
-                    </div>
-                </div>
-            </div>
 
 
         </div>
@@ -465,9 +585,11 @@ export default function DangKy() {
             <p className="text-sm text-gray-500 italic mb-2">(*) Khai đầy đủ thông tin: Bố, Mẹ, Vợ/Chồng, Con cái (Bắt buộc để xin Visa).</p>
 
             {formData.thong_tin_gia_dinh.map((mem, idx) => (
-                <div key={idx} className="bg-gray-50 p-3 rounded-lg border border-gray-200 relative mb-3">
-                    <button type="button" onClick={() => removeItem('thong_tin_gia_dinh', idx)} className="absolute top-2 right-2 text-red-500 hover:text-red-700 font-bold" title="Xóa dòng này">✕</button>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <div key={idx} className="bg-gray-50 p-4 rounded-lg border border-gray-200 relative mb-4 shadow-sm">
+                    <button type="button" onClick={() => removeItem('thong_tin_gia_dinh', idx)} className="absolute top-2 right-2 text-red-500 hover:text-red-700 font-bold bg-white rounded-full p-1" title="Xóa dòng này">
+                        <span className="material-icons-outlined text-lg">close</span>
+                    </button>
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4 pt-2">
                         <div>
                             <label className="text-xs text-gray-500 block mb-1">Quan hệ <span className="text-red-500">*</span></label>
                             <select className={`input-sm w-full font-medium ${!mem.quan_he ? 'text-gray-400' : '!bg-white'}`} value={mem.quan_he} onChange={(e) => handleArrayChange('thong_tin_gia_dinh', idx, 'quan_he', e.target.value)}>
@@ -476,7 +598,7 @@ export default function DangKy() {
                             </select>
                         </div>
                         <div className="md:col-span-1">
-                            <label className="text-xs text-gray-500 block mb-1">Họ và Tên <span className="text-red-500">*</span> <span className="text-[10px] text-red-500">(Viết hoa không dấu)</span></label>
+                            <label className="text-xs text-gray-500 block mb-1">Họ và Tên <span className="text-red-500">*</span> <span className="text-[10px] text-red-500 font-normal italic">(VIẾT HOA KHÔNG DẤU)</span></label>
                             <input placeholder="NGUYEN VAN A" value={mem.ho_ten} onChange={(e) => handleArrayChange('thong_tin_gia_dinh', idx, 'ho_ten', e.target.value)} className={`input-sm uppercase ${!mem.ho_ten ? '' : '!bg-white'}`} />
                         </div>
                         <div>
@@ -519,7 +641,7 @@ export default function DangKy() {
             <div className="bg-primary-50 p-4 rounded text-center mb-4">
                 <span className="text-lg font-bold text-primary-800">BMI: {bmi || '--'}</span>
             </div>
-            <div className="grid grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                     <label className="label">Chiều cao (cm) <span className="text-red-500 ml-1">*</span></label>
                     <select name="chieu_cao" value={formData.chieu_cao} onChange={handleChange} className={vCls(formData.chieu_cao, true) + " text-center font-bold"}>
@@ -539,7 +661,7 @@ export default function DangKy() {
                     </select>
                 </div>
             </div>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div><label className="label">Nhóm máu <span className="text-red-500 ml-1">*</span></label><select name="nhom_mau" value={formData.nhom_mau} onChange={handleChange} className={vCls(formData.nhom_mau, true)}><option value="" disabled>-- Chọn --</option><option>A</option><option>B</option><option>O</option><option>AB</option></select></div>
                 <div><label className="label">Tay thuận <span className="text-red-500 ml-1">*</span></label><select name="tay_thuan" value={formData.tay_thuan} onChange={handleChange} className={vCls(formData.tay_thuan, true)}><option value="" disabled>-- Chọn --</option><option>Phải</option><option>Trái</option><option>Hai tay</option></select></div>
                 <div><label className="label">Thị lực (Trái) <span className="text-red-500 ml-1">*</span></label>
@@ -632,31 +754,91 @@ export default function DangKy() {
         const { month, year } = getMonthYear(arrayName, index, point)
         const years = Array.from({ length: 45 }, (_, i) => 2030 - i) // 2030 -> 1986
 
-        // Helper style riêng cho component nhỏ này
-        const style = (val) => `input-sm px-1 py-1 text-center text-sm ${val && String(val).trim() !== '' ? '!bg-white' : 'text-gray-500'}`
-
         return (
-            <div className="flex gap-1">
+            <div className="grid grid-cols-2 gap-2 min-w-[140px]">
                 <select
-                    className={`${style(month)} w-[55px]`}
+                    className={`input-sm appearance-none ${month ? '!bg-white' : 'text-gray-500'}`}
                     value={month}
                     onChange={(e) => handleMonthYearChange(arrayName, index, point, 'month', e.target.value)}
                 >
-                    <option value="" className="text-gray-500">Tháng</option>
+                    <option value="">Tháng</option>
                     {Array.from({ length: 12 }, (_, i) => i + 1).map(m => (
                         <option key={m} value={m < 10 ? `0${m}` : m}>{m}</option>
                     ))}
                 </select>
-                <span className="text-gray-400 self-center">/</span>
                 <select
-                    className={`${style(year)} w-[70px]`}
+                    className={`input-sm appearance-none ${year ? '!bg-white' : 'text-gray-500'}`}
                     value={year}
                     onChange={(e) => handleMonthYearChange(arrayName, index, point, 'year', e.target.value)}
                 >
-                    <option value="" className="text-gray-500">Năm</option>
+                    <option value="">Năm</option>
                     {years.map(y => (
                         <option key={y} value={y}>{y}</option>
                     ))}
+                </select>
+            </div>
+        )
+    }
+
+    // Component chọn Ngày/Tháng/Năm đầy đủ (Cho Ngày sinh, Ngày cấp...)
+    const FullDateSelect = ({ name, value, onChange, startYear = 1960, endYear = 2015 }) => {
+        // Value format: YYYY-MM-DD (might be partial like 1990--05)
+        const [yStr, mStr, dStr] = (value || '--').split('-')
+
+        const clean = (v) => v ? parseInt(v).toString() : ''
+
+        const y = clean(yStr)
+        const m = clean(mStr)
+        const d = clean(dStr)
+
+        const days = Array.from({ length: 31 }, (_, i) => i + 1)
+        const months = Array.from({ length: 12 }, (_, i) => i + 1)
+        const years = Array.from({ length: endYear - startYear + 1 }, (_, i) => endYear - i)
+
+        const handleChangePart = (part, val) => {
+            let newY = part === 'y' ? val : yStr
+            let newM = part === 'm' ? (val ? val.padStart(2, '0') : '') : mStr
+            let newD = part === 'd' ? (val ? val.padStart(2, '0') : '') : dStr
+
+            // Auto-fix invalid days (e.g. Feb 31)
+            if (newY && newM && newD) {
+                const maxDay = new Date(parseInt(newY), parseInt(newM), 0).getDate()
+                if (parseInt(newD) > maxDay) newD = maxDay.toString().padStart(2, '0')
+            }
+
+            // Construct new value (allow partial)
+            const finalVal = `${newY || ''}-${newM || ''}-${newD || ''}`
+
+            // If completely empty
+            if (finalVal === '--') onChange({ target: { name, value: '' } })
+            else onChange({ target: { name, value: finalVal } })
+        }
+
+        return (
+            <div className="grid grid-cols-3 gap-2">
+                <select
+                    className={`input-sm appearance-none ${d ? '!bg-white' : 'text-gray-500'}`}
+                    value={d}
+                    onChange={(e) => handleChangePart('d', e.target.value)}
+                >
+                    <option value="">Ngày</option>
+                    {days.map(d => <option key={d} value={d}>{d}</option>)}
+                </select>
+                <select
+                    className={`input-sm appearance-none ${m ? '!bg-white' : 'text-gray-500'}`}
+                    value={m}
+                    onChange={(e) => handleChangePart('m', e.target.value)}
+                >
+                    <option value="">Tháng</option>
+                    {months.map(m => <option key={m} value={m}>{m}</option>)}
+                </select>
+                <select
+                    className={`input-sm appearance-none ${y ? '!bg-white' : 'text-gray-500'}`}
+                    value={y}
+                    onChange={(e) => handleChangePart('y', e.target.value)}
+                >
+                    <option value="">Năm</option>
+                    {years.map(y => <option key={y} value={y}>{y}</option>)}
                 </select>
             </div>
         )
@@ -676,17 +858,18 @@ export default function DangKy() {
                                 {/* Thời gian */}
                                 <div className="w-full md:w-auto flex flex-col items-start">
                                     <label className="text-xs text-gray-500 block mb-1 font-semibold">Thời gian</label>
-                                    <div className="flex items-center gap-2 bg-white border border-gray-300 rounded px-2 py-1">
+                                    <div className="flex flex-col md:flex-row gap-2 w-full md:items-center bg-gray-50 md:bg-transparent rounded md:rounded-none p-2 md:p-0">
                                         <MonthYearSelect arrayName="qua_trinh_hoc_tap" index={0} point="start" />
-                                        <span className="text-gray-400 font-bold">➔</span>
+                                        <div className="text-gray-400 text-xs text-center md:hidden">đến</div>
+                                        <span className="text-gray-400 font-bold hidden md:block">➔</span>
                                         <MonthYearSelect arrayName="qua_trinh_hoc_tap" index={0} point="end" />
                                     </div>
                                 </div>
 
                                 {/* Thông tin */}
-                                <div className="flex-1 grid grid-cols-2 gap-2 w-full">
+                                <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
                                     <div className="col-span-1">
-                                        <label className="text-xs text-gray-500 block mb-1">Tên trường <span className="text-red-500 ml-1">*</span> <span className="text-[10px] text-red-500">(Viết hoa không dấu)</span></label>
+                                        <label className="text-xs text-gray-500 block mb-1">Tên trường <span className="text-red-500 ml-1">*</span> <span className="text-[10px] text-red-500 font-normal italic">(VIẾT HOA KHÔNG DẤU)</span></label>
                                         <input placeholder="THPT NGUYEN TRAI" className={`input-sm font-medium uppercase w-full ${!formData.qua_trinh_hoc_tap[0].ten_truong ? '' : '!bg-white'}`}
                                             value={formData.qua_trinh_hoc_tap[0].ten_truong}
                                             onChange={(e) => handleArrayChange('qua_trinh_hoc_tap', 0, 'ten_truong', e.target.value)}
@@ -715,23 +898,26 @@ export default function DangKy() {
                     <p className="text-xs text-gray-500 mb-2">(*) Khai 3 công việc gần nhất (nếu có).</p>
 
                     {formData.kinh_nghiem_lam_viec.map((item, idx) => (
-                        <div key={idx} className="bg-gray-50 p-3 rounded-lg border border-gray-200 relative mb-3">
-                            <button type="button" onClick={() => removeItem('kinh_nghiem_lam_viec', idx)} className="absolute -top-2 -right-2 bg-red-100 text-red-500 rounded-full w-6 h-6 flex items-center justify-center font-bold shadow-sm hover:bg-red-200">✕</button>
-                            <div className="flex flex-col md:flex-row gap-3 items-center">
+                        <div key={idx} className="bg-gray-50 p-4 rounded-lg border border-gray-200 relative mb-4 shadow-sm">
+                            <button type="button" onClick={() => removeItem('kinh_nghiem_lam_viec', idx)} className="absolute top-2 right-2 text-red-500 hover:text-red-700 font-bold bg-white rounded-full p-1" title="Xóa dòng này">
+                                <span className="material-icons-outlined text-lg">close</span>
+                            </button>
+                            <div className="flex flex-col md:flex-row gap-4 items-start pt-2">
                                 {/* Thời gian */}
-                                <div className="w-full md:w-auto flex flex-col items-start">
+                                <div className="w-full md:w-auto flex flex-col items-start pb-2 border-b md:border-b-0 border-gray-200 mb-2 md:mb-0">
                                     <label className="text-xs text-gray-500 block mb-1 font-semibold">Thời gian</label>
-                                    <div className="flex items-center gap-2 bg-white border border-gray-300 rounded px-2 py-1">
+                                    <div className="flex flex-col md:flex-row gap-2 w-full md:items-center bg-gray-50 md:bg-transparent rounded md:rounded-none p-2 md:p-0">
                                         <MonthYearSelect arrayName="kinh_nghiem_lam_viec" index={idx} point="start" />
-                                        <span className="text-gray-400 font-bold">➔</span>
+                                        <div className="text-gray-400 text-xs text-center md:hidden">đến</div>
+                                        <span className="text-gray-400 font-bold hidden md:block">➔</span>
                                         <MonthYearSelect arrayName="kinh_nghiem_lam_viec" index={idx} point="end" />
                                     </div>
                                 </div>
 
                                 {/* Thông tin */}
-                                <div className="flex-1 grid grid-cols-2 gap-2 w-full">
+                                <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
                                     <div>
-                                        <label className="text-xs text-gray-500 block mb-1">Tên công ty <span className="text-red-500 ml-1">*</span> <span className="text-[10px] text-red-500">(Viết hoa không dấu)</span></label>
+                                        <label className="text-xs text-gray-500 block mb-1">Tên công ty <span className="text-red-500 ml-1">*</span> <span className="text-[10px] text-red-500 font-normal italic">(VIẾT HOA KHÔNG DẤU)</span></label>
                                         <input placeholder="CONG TY ABC" className={`input-sm font-medium w-full uppercase ${!item.cong_ty ? '' : '!bg-white'}`}
                                             value={item.cong_ty}
                                             onChange={(e) => handleArrayChange('kinh_nghiem_lam_viec', idx, 'cong_ty', e.target.value)}
@@ -881,34 +1067,49 @@ export default function DangKy() {
                 </div>
             </div>
 
-            {/* Progress Stepper 1-5 */}
-            <div className="sticky top-0 bg-white z-30 pt-4 pb-4 mb-6 border-b shadow-sm -mx-4 px-4 md:mx-0 md:px-0">
-                <div className="max-w-3xl mx-auto">
-                    <div className="flex items-center justify-between relative">
-                        {/* Connecting Line */}
-                        <div className="absolute left-0 right-0 top-4 h-0.5 bg-gray-200 -z-10"></div>
-                        <div className="absolute left-0 top-4 h-0.5 bg-teal-600 -z-10 transition-all duration-300" style={{ width: `${((step - 1) / 4) * 100}%` }}></div>
+            {/* Progress Stepper - Redesigned */}
+            <div className="mb-6">
+                <div className="max-w-3xl mx-auto py-3 md:py-4">
 
-                        {/* Steps */}
-                        {[
-                            { num: 1, label: 'Cá nhân', icon: 'person_outline' },
-                            { num: 2, label: 'Gia đình', icon: 'people_outline' },
-                            { num: 3, label: 'Sức khỏe', icon: 'medical_services' },
-                            { num: 4, label: 'Học vấn', icon: 'school' },
-                            { num: 5, label: 'Nguyện vọng', icon: 'work_outline' }
-                        ].map((s) => (
-                            <div key={s.num} className="flex flex-col items-center group cursor-pointer" onClick={() => step > s.num && setStep(s.num)}>
-                                <div className={`w-10 h-10 rounded-full flex items-center justify-center border-2 transition-all duration-300 z-10
-                                    ${step > s.num ? 'bg-teal-50 border-teal-600 text-teal-700' : ''} 
-                                    ${step === s.num ? 'bg-teal-600 border-teal-600 text-white shadow-lg scale-110' : ''}
-                                    ${step < s.num ? 'bg-white border-gray-300 text-gray-400' : ''}
+                    {/* MOBILE VIEW: Compact Header */}
+                    <div className="md:hidden">
+                        <div className="flex justify-between items-end mb-3">
+                            <div>
+                                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Bước {step}/{steps.length}</span>
+                                <h2 className="text-lg font-extrabold text-teal-700 leading-none mt-1">{steps[step - 1].label}</h2>
+                            </div>
+                            <div className="w-10 h-10 rounded-full bg-teal-50 flex items-center justify-center text-teal-600 border border-teal-100 shadow-sm">
+                                <span className="material-icons-outlined text-xl">{steps[step - 1].icon}</span>
+                            </div>
+                        </div>
+                        {/* Segmented Bar */}
+                        <div className="flex gap-1 h-1.5">
+                            {steps.map(s => (
+                                <div key={s.num} className={`flex-1 rounded-full transition-all duration-500 ${s.num <= step ? 'bg-teal-500' : 'bg-gray-200'}`}></div>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* DESKTOP VIEW: Full Stepper */}
+                    <div className="hidden md:flex justify-between relative items-center px-4">
+                        {/* Connecting Lines */}
+                        <div className="absolute top-1/2 left-4 right-4 h-1 bg-gray-100 -z-10 rounded"></div>
+                        <div className="absolute top-1/2 left-4 h-1 bg-teal-500 -z-10 rounded transition-all duration-500" style={{ width: `${((step - 1) / (steps.length - 1)) * 100}%` }}></div>
+
+                        {steps.map((s) => (
+                            <div key={s.num}
+                                onClick={() => step > s.num && setStep(s.num)}
+                                className={`cursor-pointer flex flex-col items-center gap-2 transition-all duration-300 group ${s.num === step ? 'scale-110' : 'hover:opacity-80'}`}
+                            >
+                                <div className={`w-12 h-12 rounded-xl flex items-center justify-center border-[3px] shadow-sm transition-all duration-300 z-10
+                                    ${s.num <= step ? 'bg-teal-600 border-teal-600 text-white' : 'bg-white border-gray-200 text-gray-300'}
+                                    ${s.num === step ? 'ring-4 ring-teal-100' : ''}
                                 `}>
-                                    <span className="material-icons-outlined text-lg">{s.icon}</span>
+                                    <span className="material-icons-outlined text-xl">{s.icon}</span>
                                 </div>
-                                <span className={`text-[10px] md:text-xs mt-2 font-medium bg-white px-2 py-0.5 rounded-full transition-colors duration-200
-                                    ${step === s.num ? 'text-teal-700 font-bold shadow-sm' : 'text-gray-500'}`}>
-                                    {s.label}
-                                </span>
+                                <span className={`absolute -bottom-6 text-xs font-bold whitespace-nowrap bg-white px-2 py-0.5 rounded transition-all duration-300
+                                    ${s.num === step ? 'text-teal-700 opacity-100 translate-y-0' : 'text-gray-400 opacity-0 translate-y-1 group-hover:opacity-100 group-hover:translate-y-0'}
+                                `}>{s.label}</span>
                             </div>
                         ))}
                     </div>
@@ -916,7 +1117,7 @@ export default function DangKy() {
             </div>
 
             <div className="bg-white shadow-xl rounded-xl border border-gray-100 overflow-hidden min-h-[500px]">
-                <form className="p-6 md:p-8">
+                <form className="p-4 md:p-8">
                     {step === 1 && Step1_CaNhan()}
                     {step === 2 && Step2_GiaDinh()}
                     {step === 3 && Step3_SucKhoe()}
@@ -925,29 +1126,63 @@ export default function DangKy() {
                 </form>
             </div>
 
-            {/* Floating Action Buttons */}
-            <div className="fixed bottom-0 left-0 right-0 bg-white border-t p-4 shadow-lg flex justify-center gap-4 z-20">
-                <button type="button" onClick={() => { if (step > 1) { setStep(s => s - 1); window.scrollTo(0, 0) } else navigate('/') }}
-                    className="px-6 py-3 rounded-lg border border-gray-300 font-medium hover:bg-gray-50 text-gray-700 min-w-[120px]">
-                    {step === 1 ? 'Hủy bỏ' : 'Quay lại'}
+            {/* Action Buttons (Centered at Bottom) */}
+            <div className="mt-10 flex flex-col md:flex-row justify-center items-center gap-4 pb-12">
+                <button type="button" onClick={() => {
+                    if (step > 1) {
+                        setStep(s => s - 1);
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                    } else {
+                        navigate('/');
+                    }
+                }}
+                    className="w-full md:w-auto px-8 py-3 rounded-xl border-2 border-gray-200 font-bold text-gray-500 hover:text-gray-700 hover:border-gray-300 hover:bg-gray-50 transition-all uppercase text-sm min-w-[150px]">
+                    {step === 1 ? 'Hủy' : 'Quay lại'}
                 </button>
 
-                <button type="button" onClick={(e) => { if (step < 5) { setStep(s => s + 1); window.scrollTo(0, 0) } else handleSubmit(e) }}
-                    className="px-8 py-3 rounded-lg bg-primary-600 text-white font-bold hover:bg-primary-700 shadow-lg min-w-[150px] flex items-center justify-center">
-                    {step === 5 ? (loading ? 'ĐANG GỬI...' : <><span className="material-icons-outlined mr-2">send</span> Gửi hồ sơ</>) : 'TIẾP THEO →'}
+                <button type="button" onClick={(e) => {
+                    if (step < 5) {
+                        setStep(s => s + 1);
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                    } else {
+                        handleSubmit(e);
+                    }
+                }}
+                    className="w-full md:w-auto px-10 py-3 rounded-xl bg-gradient-to-r from-teal-600 to-teal-500 text-white font-bold shadow-lg shadow-teal-500/30 hover:shadow-teal-500/40 hover:-translate-y-0.5 active:translate-y-0 transition-all uppercase text-sm min-w-[200px] flex items-center justify-center gap-2">
+                    {step === 5 ? (
+                        loading ? <><span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span> ĐANG GỬI...</>
+                            : <><span className="material-icons-outlined">send</span> Gửi hồ sơ</>
+                    ) : (
+                        <>Tiếp theo <span className="material-icons-outlined text-lg">arrow_forward</span></>
+                    )}
                 </button>
             </div>
 
             {/* CSS Utility Classes embedded for this component */}
             <style>{`
-        .label { display: block; font-size: 0.875rem; font-weight: 500; color: #374151; margin-bottom: 0.25rem; }
-        .input { display: block; width: 100%; border-radius: 0.5rem; border: 1px solid #e5e7eb; padding: 0.75rem; font-size: 0.95rem; background-color: #f0fdfa; box-shadow: none; }
-        .input:focus { outline: 2px solid #0d9488; border-color: transparent; background-color: #ffffff; }
-        .input-sm { display: block; width: 100%; border-radius: 0.375rem; border: 1px solid #e5e7eb; padding: 0.5rem; font-size: 0.875rem; background-color: #f0fdfa; box-shadow: none; }
-        .input-sm:focus { outline: 2px solid #0d9488; border-color: transparent; background-color: #ffffff; }
-        .section-title { font-size: 1.1rem; font-weight: 700; color: #115e59; text-transform: uppercase; border-bottom: 2px solid #ccfbf1; padding-bottom: 0.5rem; margin-bottom: 1rem; }
-        .btn-add { margin-top: 0.5rem; font-size: 0.875rem; font-weight: 600; color: #0d9488; display: flex; align-items: center; gap: 0.25rem; }
-        .btn-add:hover { text-decoration: underline; }
+        .label { display: block; font-size: 0.9rem; font-weight: 600; color: #374151; margin-bottom: 0.35rem; }
+        .input { 
+            display: block; width: 100%; max-width: 100%; box-sizing: border-box;
+            border-radius: 0.75rem; border: 1px solid #e2e8f0; 
+            padding: 0.75rem 1rem; font-size: 16px; line-height: 1.5; /* iOS zoom prevention */
+            background-color: #f8fafc; transition: all 0.2s;
+            min-height: 50px; /* Touch target */
+        }
+        .input:focus { outline: none; border-color: #0d9488; background-color: #ffffff; ring: 2px solid rgba(13, 148, 136, 0.1); box-shadow: 0 0 0 4px rgba(13, 148, 136, 0.1); }
+        
+        .input-sm { 
+            display: block; width: 100%; border-radius: 0.5rem; border: 1px solid #e2e8f0; 
+            padding: 0.5rem 0.75rem; font-size: 16px; /* iOS zoom prevention */
+            background-color: #f8fafc; min-height: 44px;
+        }
+        .input-sm:focus { outline: none; border-color: #0d9488; background-color: #ffffff; }
+
+        .section-title { font-size: 1.25rem; font-weight: 800; color: #115e59; text-transform: uppercase; letter-spacing: -0.025em; padding-bottom: 0.75rem; border-bottom: 2px dashed #ccfbf1; margin-bottom: 1.5rem; }
+        .btn-add { margin-top: 0.75rem; padding: 0.5rem 1rem; background-color: #f0fdfa; border-radius: 0.5rem; color: #0d9488; font-weight: 600; display: inline-flex; align-items: center; gap: 0.5rem; transition: all 0.2s; }
+        .btn-add:active { background-color: #ccfbf1; transform: scale(0.98); }
+
+        /* Safe area for iPhone X+ */
+        .safe-area-bottom { padding-bottom: env(safe-area-inset-bottom, 20px); }
       `}</style>
         </div>
     )

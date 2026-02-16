@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { supabase } from '../supabaseClient'
 
@@ -7,7 +7,6 @@ export default function HoSoPrintTemplate() {
     const [hoSo, setHoSo] = useState(null)
     const [loading, setLoading] = useState(true)
 
-    const printRef = useRef(false)
 
     useEffect(() => {
         const fetchChiTiet = async () => {

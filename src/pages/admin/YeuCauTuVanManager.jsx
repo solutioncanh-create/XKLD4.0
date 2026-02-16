@@ -4,6 +4,8 @@ import { supabase } from '../../supabaseClient'
 export default function YeuCauTuVanManager() {
     const [leads, setLeads] = useState([])
     const [loading, setLoading] = useState(true)
+    const [filterStatus, setFilterStatus] = useState('All')
+    const [searchTerm, setSearchTerm] = useState('')
 
     const fetchLeads = async () => {
         try {
@@ -17,7 +19,6 @@ export default function YeuCauTuVanManager() {
             setLeads(data || [])
         } catch (error) {
             console.error('Lỗi tải dữ liệu:', error.message)
-            // alert('Lỗi tải danh sách yêu cầu tư vấn!')
         } finally {
             setLoading(false)
         }
@@ -28,16 +29,21 @@ export default function YeuCauTuVanManager() {
     }, [])
 
     const handleStatusChange = async (id, newStatus) => {
+        // Optimistic update
+        setLeads(leads.map(lead => lead.id === id ? { ...lead, trang_thai: newStatus } : lead))
+
         try {
             const { error } = await supabase
                 .from('yeu_cau_tu_van')
                 .update({ trang_thai: newStatus })
                 .eq('id', id)
 
-            if (error) throw error
-            fetchLeads() // Reload lại để cập nhật UI
+            if (error) {
+                fetchLeads() // Revert if error
+                throw error
+            }
         } catch (error) {
-            alert('Lỗi cập nhật trạng thái: ' + error.message)
+            alert('Lỗi cập nhật: ' + error.message)
         }
     }
 
@@ -46,102 +52,213 @@ export default function YeuCauTuVanManager() {
         try {
             const { error } = await supabase.from('yeu_cau_tu_van').delete().eq('id', id)
             if (error) throw error
-            fetchLeads()
+            setLeads(leads.filter(lead => lead.id !== id))
         } catch (error) {
             alert('Lỗi xóa: ' + error.message)
         }
     }
 
+    const filteredLeads = leads.filter(l => {
+        const matchesStatus = filterStatus === 'All' || l.trang_thai === filterStatus
+        const matchesSearch = l.ho_ten?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            l.so_dien_thoai?.includes(searchTerm) ||
+            l.email?.toLowerCase().includes(searchTerm.toLowerCase())
+        return matchesStatus && matchesSearch
+    })
+
+    const stats = {
+        total: leads.length,
+        new: leads.filter(l => l.trang_thai === 'Chờ tư vấn').length,
+        contacted: leads.filter(l => l.trang_thai === 'Đã liên hệ').length,
+        done: leads.filter(l => l.trang_thai === 'Đã chốt').length
+    }
+
+    const STATUS_OPTIONS = ['Chờ tư vấn', 'Đã liên hệ', 'Đã chốt', 'Hủy']
+
     return (
-        <div className="h-full flex flex-col">
-            {/* Header */}
-            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 mb-6 flex justify-between items-center">
-                <div>
-                    <h1 className="text-2xl font-bold text-gray-800">Yêu Cầu Tư Vấn</h1>
-                    <p className="text-gray-500 mt-1">Danh sách khách hàng tiềm năng từ Form & Modal</p>
-                </div>
-                <button onClick={fetchLeads} className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors">
-                    <span className="material-icons-outlined text-lg">refresh</span>
-                    <span>Làm mới</span>
-                </button>
+        <div className="bg-gray-50 min-h-screen font-sans pb-20">
+            {/* Header Stats - Hidden on Mobile */}
+            <div className="hidden md:flex overflow-x-auto gap-3 pb-2 mb-4 px-4 pt-4 no-scrollbar snap-x">
+                <div className="min-w-[140px] snap-center"><StatCard label="Tổng yêu cầu" count={stats.total} icon="list_alt" color="bg-blue-500" /></div>
+                <div className="min-w-[140px] snap-center"><StatCard label="Chờ tư vấn" count={stats.new} icon="notifications_active" color="bg-yellow-500" /></div>
+                <div className="min-w-[140px] snap-center"><StatCard label="Đã liên hệ" count={stats.contacted} icon="phone_in_talk" color="bg-purple-500" /></div>
+                <div className="min-w-[140px] snap-center"><StatCard label="Đã chốt đơn" count={stats.done} icon="check_circle" color="bg-green-500" /></div>
             </div>
 
-            {/* Table */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 flex-1 overflow-hidden flex flex-col">
-                <div className="overflow-x-auto flex-1">
-                    <table className="w-full text-left border-collapse">
-                        <thead>
-                            <tr className="bg-gray-50 border-b border-gray-100 text-gray-500 text-sm uppercase tracking-wider">
-                                <th className="p-4 font-semibold">Ngày gửi</th>
-                                <th className="p-4 font-semibold">Họ Tên</th>
-                                <th className="p-4 font-semibold">Số điện thoại</th>
-                                <th className="p-4 font-semibold">Email</th>
-                                <th className="p-4 font-semibold">Tuổi</th>
-                                <th className="p-4 font-semibold">Giới tính</th>
-                                <th className="p-4 font-semibold">Quê quán</th>
-                                <th className="p-4 font-semibold">Nội dung quan tâm</th>
-                                <th className="p-4 font-semibold">Trạng thái</th>
-                                <th className="p-4 font-semibold text-right">Thao tác</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-100">
-                            {loading ? (
-                                <tr>
-                                    <td colSpan="10" className="p-8 text-center text-gray-500">
-                                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600 mx-auto mb-2"></div>
-                                        Đang tải dữ liệu...
-                                    </td>
-                                </tr>
-                            ) : leads.length === 0 ? (
-                                <tr>
-                                    <td colSpan="10" className="p-8 text-center text-gray-500">Chưa có yêu cầu tư vấn nào.</td>
-                                </tr>
-                            ) : (
-                                leads.map((lead) => (
-                                    <tr key={lead.id} className="hover:bg-gray-50 transition-colors">
-                                        <td className="p-4 text-gray-500 text-sm whitespace-nowrap">
-                                            {new Date(lead.created_at).toLocaleString('vi-VN')}
-                                        </td>
-                                        <td className="p-4 font-bold text-gray-800">{lead.ho_ten}</td>
-                                        <td className="p-4 font-mono text-primary-600 font-medium">{lead.so_dien_thoai}</td>
-                                        <td className="p-4 text-gray-600 text-sm max-w-[150px] truncate" title={lead.email}>{lead.email || '-'}</td>
-                                        <td className="p-4 text-gray-600">{lead.tuoi || '-'}</td>
-                                        <td className="p-4 text-gray-600">{lead.gioi_tinh || '-'}</td>
-                                        <td className="p-4 text-gray-600">{lead.que_quan}</td>
-                                        <td className="p-4 text-gray-600 max-w-xs truncate" title={lead.ghi_chu}>
-                                            {lead.ghi_chu}
-                                        </td>
-                                        <td className="p-4">
-                                            <select
-                                                value={lead.trang_thai || 'Chờ tư vấn'}
-                                                onChange={(e) => handleStatusChange(lead.id, e.target.value)}
-                                                className={`px-3 py-1 rounded-full text-xs font-bold border-0 cursor-pointer focus:ring-2 focus:ring-offset-1 outline-none
-                                                    ${lead.trang_thai === 'Đã liên hệ' ? 'bg-green-100 text-green-700' :
-                                                        lead.trang_thai === 'Đã chốt' ? 'bg-blue-100 text-blue-700' :
-                                                            lead.trang_thai === 'Hủy' ? 'bg-red-100 text-red-700' :
-                                                                'bg-yellow-100 text-yellow-700'}`}
-                                            >
-                                                <option value="Chờ tư vấn">Chờ tư vấn</option>
-                                                <option value="Đã liên hệ">Đã liên hệ</option>
-                                                <option value="Đã chốt">Đã chốt</option>
-                                                <option value="Hủy">Hủy</option>
-                                            </select>
-                                        </td>
-                                        <td className="p-4 text-right">
-                                            <button
-                                                onClick={() => deleteLead(lead.id)}
-                                                className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                                                title="Xóa"
-                                            >
-                                                <span className="material-icons-outlined">delete</span>
-                                            </button>
-                                        </td>
-                                    </tr>
-                                ))
-                            )}
-                        </tbody>
-                    </table>
+            {/* Toolbar - Natural Scroll */}
+            <div className="bg-gray-50 px-3 pt-3 md:px-4 mb-4">
+                {/* Search Bar & Action Buttons */}
+                <div className="flex gap-2 items-center mb-3">
+                    {/* Client Search - Hidden on Mobile */}
+                    <div className="hidden md:block relative flex-1">
+                        <span className="material-icons-outlined absolute left-3 top-2.5 text-gray-400">search</span>
+                        <input
+                            type="text"
+                            placeholder="Tìm tên, SĐT, email..."
+                            value={searchTerm}
+                            onChange={e => setSearchTerm(e.target.value)}
+                            className="w-full pl-10 pr-4 py-2 bg-white border-none rounded-lg text-sm font-medium focus:ring-2 focus:ring-primary-500/50 outline-none transition-all shadow-sm"
+                        />
+                    </div>
+                    <button onClick={fetchLeads} className="hidden md:flex w-10 h-10 items-center justify-center bg-white border border-gray-200 rounded-lg text-gray-500 hover:bg-gray-50 active:scale-95 transition-all shadow-sm ml-auto">
+                        <span className="material-icons-outlined">refresh</span>
+                    </button>
                 </div>
+
+                {/* Filter Buttons - Grid Layout */}
+                <div className="grid grid-cols-2 md:flex md:flex-wrap gap-2 mb-2">
+                    {['All', ...STATUS_OPTIONS].map(status => (
+                        <button
+                            key={status}
+                            onClick={() => setFilterStatus(status)}
+                            className={`px-2 py-2 md:px-4 md:py-2 rounded-lg text-xs md:text-sm font-bold transition-all border shadow-sm truncate ${filterStatus === status
+                                ? 'bg-primary-50 text-primary-700 border-primary-200 ring-1 ring-primary-100'
+                                : 'bg-white text-gray-500 border-gray-200 hover:bg-gray-50'
+                                }`}
+                        >
+                            {status === 'All' ? 'Tất cả' : status}
+                        </button>
+                    ))}
+                </div>
+            </div>
+
+            {/* Content Area - Natural Scroll */}
+            <div className="px-3 md:px-4 no-scrollbar">
+                {/* Grid Content */}
+                {loading ? (
+                    <div className="flex justify-center py-10"><span className="animate-spin w-8 h-8 border-2 border-primary-600 rounded-full border-t-transparent"></span></div>
+                ) : (filteredLeads.length === 0 ? (
+                    <div className="text-center py-20 text-gray-500 bg-white rounded-xl border border-dashed border-gray-300">
+                        <span className="material-icons-outlined text-4xl mb-2 text-gray-300">search_off</span>
+                        <p>Không tìm thấy yêu cầu nào.</p>
+                    </div>
+                ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                        {filteredLeads.map(lead => (
+                            <LeadCard
+                                key={lead.id}
+                                lead={lead}
+                                onStatusChange={handleStatusChange}
+                                onDelete={() => deleteLead(lead.id)}
+                            />
+                        ))}
+                    </div>
+                ))}
+            </div>
+        </div>
+    )
+}
+
+function StatCard({ label, count, icon, color }) {
+    return (
+        <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
+            <div>
+                <p className="text-xs text-gray-500 uppercase font-bold mb-1">{label}</p>
+                <p className="text-2xl font-black text-gray-800">{count}</p>
+            </div>
+            <div className={`w-10 h-10 rounded-lg ${color} flex items-center justify-center text-white shadow-md bg-opacity-90`}>
+                <span className="material-icons-outlined">{icon}</span>
+            </div>
+        </div>
+    )
+}
+
+function LeadCard({ lead, onStatusChange, onDelete }) {
+    const statusColors = {
+        'Chờ tư vấn': 'bg-yellow-500',
+        'Đã liên hệ': 'bg-purple-500',
+        'Đã chốt': 'bg-green-500',
+        'Hủy': 'bg-red-500'
+    }
+
+    const currentStatusColor = statusColors[lead.trang_thai] || 'bg-gray-400'
+    const STATUS_OPTIONS = ['Chờ tư vấn', 'Đã liên hệ', 'Đã chốt', 'Hủy']
+
+    return (
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col relative overflow-hidden transition-all active:scale-[0.99] hover:shadow-md h-full">
+            {/* Status Bar */}
+            <div className={`h-1.5 w-full ${currentStatusColor}`}></div>
+
+            <div className="p-4 flex-1 flex flex-col">
+                <div className="flex justify-between items-start mb-3">
+                    <div>
+                        <h3 className="font-bold text-gray-900 text-base leading-tight mb-0.5" title={lead.ho_ten}>{lead.ho_ten}</h3>
+                        <span className="text-[10px] text-gray-400 font-medium flex items-center gap-1">
+                            <span className="material-icons-outlined text-[10px]">schedule</span>
+                            {new Date(lead.created_at).toLocaleString('vi-VN')}
+                        </span>
+                    </div>
+                    <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded text-white whitespace-nowrap ${currentStatusColor}`}>
+                        {lead.trang_thai}
+                    </span>
+                </div>
+
+                <div className="space-y-3 flex-1">
+                    {/* Phone Block */}
+                    <div className="bg-blue-50 rounded-lg p-2.5 flex items-center justify-between group cursor-pointer hover:bg-blue-100 transition-colors" onClick={() => window.open(`tel:${lead.so_dien_thoai}`)}>
+                        <div className="flex items-center gap-2">
+                            <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center text-blue-600 shadow-sm border border-blue-100">
+                                <span className="material-icons-outlined text-sm">phone_in_talk</span>
+                            </div>
+                            <div>
+                                <p className="text-[9px] text-blue-400 font-bold uppercase tracking-wider">Số điện thoại</p>
+                                <p className="font-mono font-black text-blue-700 text-sm tracking-tight">{lead.so_dien_thoai}</p>
+                            </div>
+                        </div>
+                        <span className="material-icons-outlined text-blue-300 group-active:text-blue-600">call</span>
+                    </div>
+
+                    {/* Metadata */}
+                    <div className="flex flex-wrap gap-2 text-xs text-gray-600">
+                        {lead.email && (
+                            <div className="flex items-center gap-1 bg-gray-50 px-2 py-1 rounded border border-gray-100 max-w-full">
+                                <span className="material-icons-outlined text-[12px] text-gray-400">email</span>
+                                <span className="truncate">{lead.email}</span>
+                            </div>
+                        )}
+                        <div className="flex items-center gap-1 bg-gray-50 px-2 py-1 rounded border border-gray-100">
+                            <span className="material-icons-outlined text-[12px] text-gray-400">person_outline</span>
+                            <span>{lead.gioi_tinh || '?'} • {lead.tuoi ? `${lead.tuoi}t` : '?'} • {lead.que_quan || '??'}</span>
+                        </div>
+                    </div>
+
+                    {lead.ghi_chu && (
+                        <div className="bg-gray-50 p-2.5 rounded-lg border border-gray-100 mt-2">
+                            <div className="flex items-center gap-1 mb-1">
+                                <span className="material-icons-outlined text-[10px] text-gray-400">sticky_note_2</span>
+                                <p className="text-[9px] font-bold text-gray-400 uppercase">Nội dung quan tâm</p>
+                            </div>
+                            <p className="text-gray-700 text-xs line-clamp-3 leading-relaxed break-words">
+                                {lead.ghi_chu}
+                            </p>
+                        </div>
+                    )}
+                </div>
+            </div>
+
+            {/* Footer Actions */}
+            <div className="grid grid-cols-3 border-t border-gray-100 divide-x divide-gray-100 bg-gray-50/50">
+                <a href={`tel:${lead.so_dien_thoai}`} className="flex flex-col items-center justify-center gap-1 py-3 hover:bg-white transition-colors group">
+                    <span className="material-icons-outlined text-green-500 text-xl group-hover:scale-110 transition-transform">call</span>
+                    <span className="text-[9px] font-bold text-green-600 uppercase">Gọi</span>
+                </a>
+
+                <div className="relative group flex flex-col items-center justify-center gap-1 py-3 hover:bg-white transition-colors cursor-pointer">
+                    <span className="material-icons-outlined text-purple-500 text-xl group-hover:text-primary-600 group-hover:scale-110 transition-transform">change_circle</span>
+                    <span className="text-[9px] font-bold text-purple-600 uppercase group-hover:text-primary-600">Trạng thái</span>
+                    <select
+                        value={lead.trang_thai}
+                        onChange={(e) => onStatusChange(lead.id, e.target.value)}
+                        className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                    >
+                        {STATUS_OPTIONS.map(s => <option key={s} value={s}>{s}</option>)}
+                    </select>
+                </div>
+
+                <button onClick={() => onDelete(lead.id)} className="flex flex-col items-center justify-center gap-1 py-3 hover:bg-white transition-colors group">
+                    <span className="material-icons-outlined text-red-400 text-xl group-hover:scale-110 transition-transform">delete</span>
+                    <span className="text-[9px] font-bold text-red-500 uppercase">Xóa</span>
+                </button>
             </div>
         </div>
     )

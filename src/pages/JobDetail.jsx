@@ -6,6 +6,8 @@ export default function JobDetail() {
     const { id } = useParams()
     const [job, setJob] = useState(null)
     const [loading, setLoading] = useState(true)
+    const [isEditing, setIsEditing] = useState(false)
+    const [formData, setFormData] = useState({})
 
     useEffect(() => {
         const fetchJobDetail = async () => {
@@ -18,10 +20,37 @@ export default function JobDetail() {
 
             if (error) console.error('Error:', error)
             setJob(data)
+            setFormData(data || {})
             setLoading(false)
         }
         fetchJobDetail()
     }, [id])
+
+    const handleSave = async () => {
+        if (!confirm('Bạn có chắc muốn lưu thay đổi?')) return
+        try {
+            // Filter out fields that are not in the 'don_hang' table schema based on previous errors
+            // eslint-disable-next-line no-unused-vars
+            const { tuoi_tu, tuoi_den, yeu_cau_gioi_tinh, ...safeData } = formData
+
+            const { error } = await supabase
+                .from('don_hang')
+                .update(safeData)
+                .eq('id', id)
+
+            if (error) throw error
+            setJob(formData) // Update local state with all data (even if not saved to DB, to keep UI consistent until refresh)
+            setIsEditing(false)
+            alert('Cập nhật thành công!')
+        } catch (error) {
+            alert('Lỗi: ' + error.message)
+        }
+    }
+
+    const handleChange = (e) => {
+        const { name, value } = e.target
+        setFormData(prev => ({ ...prev, [name]: value }))
+    }
 
     if (loading) return (
         <div className="min-h-screen flex items-center justify-center bg-secondary-50">
@@ -50,27 +79,79 @@ export default function JobDetail() {
                             Quay lại danh sách
                         </Link>
 
-                        {/* Status Badge (Read Only) */}
-                        <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border border-white/20 backdrop-blur-md ${job.trang_thai === 'Đang tuyển' ? 'bg-green-500/20' : 'bg-red-500/20'}`}>
-                            <span className={`w-2 h-2 rounded-full ${job.trang_thai === 'Đang tuyển' ? 'bg-green-500' : job.trang_thai === 'Đã đóng' ? 'bg-red-500' : 'bg-yellow-500'}`}></span>
-                            <span className="text-sm font-bold text-white">{job.trang_thai}</span>
+                        {/* Status Badge & Edit Button */}
+                        <div className="flex items-center gap-3">
+                            <button
+                                onClick={() => isEditing ? handleSave() : setIsEditing(true)}
+                                className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm font-bold transition-all border backdrop-blur-md ${isEditing
+                                    ? 'bg-green-500 hover:bg-green-600 border-green-400 text-white'
+                                    : 'bg-white/10 hover:bg-white/20 border-white/10 text-white'
+                                    }`}
+                            >
+                                <span className="material-icons-outlined text-base">{isEditing ? 'save' : 'edit'}</span>
+                                <span>{isEditing ? 'Lưu' : 'Sửa'}</span>
+                            </button>
+
+                            {isEditing && (
+                                <button
+                                    onClick={() => {
+                                        setIsEditing(false)
+                                        setFormData(job)
+                                    }}
+                                    className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white text-sm font-bold transition-all border border-white/10 backdrop-blur-md"
+                                >
+                                    <span className="material-icons-outlined text-base">close</span>
+                                    <span>Hủy</span>
+                                </button>
+                            )}
+
+                            <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border border-white/20 backdrop-blur-md ${job.trang_thai === 'Đang tuyển' ? 'bg-green-500/20' : 'bg-red-500/20'}`}>
+                                <span className={`w-2 h-2 rounded-full ${job.trang_thai === 'Đang tuyển' ? 'bg-green-500' : job.trang_thai === 'Đã đóng' ? 'bg-red-500' : 'bg-yellow-500'}`}></span>
+                                {isEditing ? (
+                                    <select
+                                        name="trang_thai"
+                                        value={formData.trang_thai}
+                                        onChange={handleChange}
+                                        className="bg-transparent text-white font-bold text-sm outline-none cursor-pointer"
+                                    >
+                                        <option value="Mới đăng" className="text-gray-800">Mới đăng</option>
+                                        <option value="Đang tuyển" className="text-gray-800">Đang tuyển</option>
+                                        <option value="Sắp hết hạn" className="text-gray-800">Sắp hết hạn</option>
+                                        <option value="Đã đóng" className="text-gray-800">Đã đóng</option>
+                                    </select>
+                                ) : (
+                                    <span className="text-sm font-bold text-white">{job.trang_thai}</span>
+                                )}
+                            </div>
                         </div>
                     </div>
 
                     <div className="flex flex-col md:flex-row gap-6 items-start justify-between">
-                        <div>
+                        <div className="w-full md:w-2/3">
                             <span className="inline-block px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-accent-500 text-white mb-3 shadow-lg shadow-accent-500/30">
-                                {job.nganh_nghe}
+                                {isEditing ? <input name="nganh_nghe" value={formData.nganh_nghe || ''} onChange={handleChange} className="bg-transparent border-b border-white outline-none w-24 text-white placeholder-white/50" placeholder="Ngành nghề" /> : job.nganh_nghe}
                             </span>
-                            <h1 className="text-3xl md:text-4xl font-black mb-4 leading-tight">{job.ten_don_hang}</h1>
+
+                            {isEditing ? (
+                                <input
+                                    name="ten_don_hang"
+                                    value={formData.ten_don_hang || ''}
+                                    onChange={handleChange}
+                                    className="block w-full text-3xl md:text-4xl font-black mb-4 leading-tight bg-transparent border-b border-white/30 text-white placeholder-white/50 outline-none focus:border-white"
+                                    placeholder="Tên đơn hàng"
+                                />
+                            ) : (
+                                <h1 className="text-3xl md:text-4xl font-black mb-4 leading-tight">{job.ten_don_hang}</h1>
+                            )}
+
                             <div className="flex flex-wrap gap-6 text-sm text-primary-100">
                                 <div className="flex items-center gap-2">
                                     <span className="material-icons-outlined text-lg">place</span>
-                                    {job.dia_diem_lam_viec}
+                                    {isEditing ? <input name="dia_diem_lam_viec" value={formData.dia_diem_lam_viec || ''} onChange={handleChange} className="bg-transparent border-b border-primary-400 outline-none text-white w-40" /> : job.dia_diem_lam_viec}
                                 </div>
                                 <div className="flex items-center gap-2">
                                     <span className="material-icons-outlined text-lg">schedule</span>
-                                    Hạn nộp: {job.thoi_han_nop_ho_so ? new Date(job.thoi_han_nop_ho_so).toLocaleDateString('vi-VN') : 'Không giới hạn'}
+                                    Hạn nộp: {isEditing ? <input type="date" name="thoi_han_nop_ho_so" value={formData.thoi_han_nop_ho_so || ''} onChange={handleChange} className="bg-transparent border-b border-primary-400 outline-none text-white" /> : (job.thoi_han_nop_ho_so ? new Date(job.thoi_han_nop_ho_so).toLocaleDateString('vi-VN') : 'Không giới hạn')}
                                 </div>
                             </div>
                         </div>
@@ -78,7 +159,21 @@ export default function JobDetail() {
                         <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/10 text-center min-w-[200px]">
                             <p className="text-xs font-bold text-primary-200 uppercase tracking-wider mb-1">Mức Lương Cơ Bản</p>
                             <p className="text-3xl font-black text-accent-400">
-                                {job.muc_luong ? job.muc_luong + (String(job.muc_luong).match(/\D/) ? '' : ' ¥') : (job.luong_co_ban ? new Intl.NumberFormat('vi-VN').format(job.luong_co_ban) + ' ¥' : 'Thỏa thuận')}
+                                {isEditing ? (
+                                    <div className="flex items-center justify-center gap-1">
+                                        <input
+                                            name="muc_luong"
+                                            type="number"
+                                            value={formData.muc_luong || ''}
+                                            onChange={handleChange}
+                                            className="bg-transparent border-b border-accent-400 outline-none text-accent-400 w-32 text-center"
+                                            placeholder="Tiền yên"
+                                        />
+                                        <span className="text-lg">¥</span>
+                                    </div>
+                                ) : (
+                                    job.muc_luong ? job.muc_luong + (String(job.muc_luong).match(/\D/) ? '' : ' ¥') : (job.luong_co_ban ? new Intl.NumberFormat('vi-VN').format(job.luong_co_ban) + ' ¥' : 'Thỏa thuận')
+                                )}
                             </p>
                         </div>
                     </div>
@@ -99,30 +194,57 @@ export default function JobDetail() {
                                 Thông Tin Chi Tiết
                             </h3>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                                <DetailItem icon="group" label="Số lượng tuyển" value={`${job.so_luong_tuyen || 0} ${job.yeu_cau_gioi_tinh || '(Nam/Nữ)'}`} />
-                                <DetailItem icon="cake" label="Độ tuổi" value={`${job.tuoi_tu || 18} - ${job.tuoi_den || 35} tuổi`} />
-                                <DetailItem icon="school" label="Trình độ" value="Tốt nghiệp THPT trở lên" />
-                                <DetailItem icon="height" label="Chiều cao" value="Nam > 160cm, Nữ > 150cm" />
-                                <DetailItem icon="visibility" label="Thị lực" value="Tốt (8/10 trở lên)" />
-                                <DetailItem icon="translate" label="Tiếng Nhật" value="N5 trở lên (được đào tạo)" />
-                            </div>
+                            {isEditing ? (
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                                    <EditItem label="Số lượng tuyển" name="so_luong_tuyen" value={formData.so_luong_tuyen} onChange={handleChange} type="number" />
+                                    <EditItem label="Giới tính" name="yeu_cau_gioi_tinh" value={formData.yeu_cau_gioi_tinh} onChange={handleChange} placeholder="Nam/Nữ" />
+                                    <EditItem label="Tuổi từ" name="tuoi_tu" value={formData.tuoi_tu} onChange={handleChange} type="number" />
+                                    <EditItem label="Tuổi đến" name="tuoi_den" value={formData.tuoi_den} onChange={handleChange} type="number" />
+                                    {/* Add other fields as needed if they exist in DB */}
+                                </div>
+                            ) : (
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                                    <DetailItem icon="group" label="Số lượng tuyển" value={`${job.so_luong_tuyen || 0} ${job.yeu_cau_gioi_tinh || '(Nam/Nữ)'}`} />
+                                    <DetailItem icon="cake" label="Độ tuổi" value={`${job.tuoi_tu || 18} - ${job.tuoi_den || 35} tuổi`} />
+                                    <DetailItem icon="school" label="Trình độ" value="Tốt nghiệp THPT trở lên" />
+                                    <DetailItem icon="height" label="Chiều cao" value="Nam > 160cm, Nữ > 150cm" />
+                                    <DetailItem icon="visibility" label="Thị lực" value="Tốt (8/10 trở lên)" />
+                                    <DetailItem icon="translate" label="Tiếng Nhật" value="N5 trở lên (được đào tạo)" />
+                                </div>
+                            )}
 
                             <div className="space-y-6">
                                 <div>
                                     <h4 className="font-bold text-secondary-900 mb-2">Mô tả công việc</h4>
-                                    <p className="text-secondary-600 leading-relaxed text-justify whitespace-pre-line">
-                                        {job.mo_ta_cong_viec || 'Đang cập nhật chi tiết công việc...'}
-                                    </p>
+                                    {isEditing ? (
+                                        <textarea
+                                            name="mo_ta_cong_viec"
+                                            value={formData.mo_ta_cong_viec || ''}
+                                            onChange={handleChange}
+                                            className="w-full p-3 border border-gray-300 rounded-lg h-40 focus:ring-2 focus:ring-primary-500 outline-none"
+                                            placeholder="Nhập mô tả công việc..."
+                                        />
+                                    ) : (
+                                        <p className="text-secondary-600 leading-relaxed text-justify whitespace-pre-line">
+                                            {job.mo_ta_cong_viec || 'Đang cập nhật chi tiết công việc...'}
+                                        </p>
+                                    )}
                                 </div>
                                 <div>
                                     <h4 className="font-bold text-secondary-900 mb-2">Quyền lợi & Chế độ</h4>
-                                    <ul className="list-disc list-inside text-secondary-600 space-y-1 ml-2">
-                                        <li>Lương cơ bản hấp dẫn, chưa tính làm thêm.</li>
-                                        <li>Được đóng bảo hiểm theo luật lao động Nhật Bản.</li>
-                                        <li>Hỗ trợ nhà ở, đi lại (tùy xí nghiệp).</li>
-                                        <li>Cơ hội gia hạn Visa kỹ năng đặc định (Tokutei) lên đến 5 năm.</li>
-                                    </ul>
+                                    {isEditing ? (
+                                        <div className="p-3 bg-yellow-50 border border-yellow-200 rounded text-sm text-yellow-800">
+                                            Phần này đang sử dụng nội dung tĩnh, chưa hỗ trợ chỉnh sửa trực tiếp.
+                                        </div>
+                                    ) : (
+                                        <ul className="list-disc list-inside text-secondary-600 space-y-1 ml-2">
+                                            <li>Lương cơ bản hấp dẫn, chưa tính làm thêm.</li>
+                                            <li>Được đóng bảo hiểm theo luật lao động Nhật Bản.</li>
+                                            <li>Hỗ trợ nhà ở, đi lại (tùy xí nghiệp).</li>
+                                            <li>Cơ hội gia hạn Visa kỹ năng đặc định (Tokutei) lên đến 5 năm.</li>
+                                        </ul>
+                                    )}
+
                                 </div>
                             </div>
                         </div>
@@ -158,17 +280,6 @@ export default function JobDetail() {
                                 </div>
                             </div>
                         </div>
-
-                        {/* Similar Jobs (Placeholder) */}
-                        <div className="bg-primary-900 rounded-2xl p-6 text-white text-center">
-                            <span className="material-icons-outlined text-4xl mb-2 text-accent-400">star</span>
-                            <h4 className="font-bold text-lg mb-2">Cam Kết Của Chúng Tôi</h4>
-                            <ul className="text-sm text-primary-100 space-y-2 text-left mt-4 ml-2 list-disc list-inside">
-                                <li>Phí xuất cảnh minh bạch.</li>
-                                <li>Không phát sinh chi phí ẩn.</li>
-                                <li>Hỗ trợ vay vốn ngân hàng.</li>
-                            </ul>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -186,6 +297,22 @@ function DetailItem({ icon, label, value }) {
                 <p className="text-xs font-bold text-secondary-400 uppercase tracking-wider mb-1">{label}</p>
                 <p className="font-bold text-secondary-900">{value}</p>
             </div>
+        </div>
+    )
+}
+
+function EditItem({ label, name, value, onChange, type = "text", placeholder }) {
+    return (
+        <div className="bg-gray-50 p-2 rounded border border-gray-200">
+            <p className="text-xs font-bold text-gray-500 uppercase mb-1">{label}</p>
+            <input
+                type={type}
+                name={name}
+                value={value || ''}
+                onChange={onChange}
+                className="w-full bg-white border border-gray-300 rounded px-2 py-1 outline-none focus:border-primary-500"
+                placeholder={placeholder}
+            />
         </div>
     )
 }

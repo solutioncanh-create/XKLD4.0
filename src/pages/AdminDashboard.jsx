@@ -357,6 +357,9 @@ export default function AdminDashboard() {
                                         <button onClick={() => navigate(`/ho-so/${p.id}`)} className="text-blue-600 hover:text-blue-800 font-bold text-sm border border-blue-200 px-3 py-1 rounded bg-blue-50 hover:bg-blue-100 transition-colors">
                                             Xem Chi Tiết
                                         </button>
+                                        <button onClick={() => handleDelete(p.id)} className="text-red-600 hover:text-red-800 font-bold text-sm border border-red-200 px-3 py-1 rounded bg-red-50 hover:bg-red-100 transition-colors">
+                                            Xóa
+                                        </button>
                                     </td>
                                 </tr>
                             ))}

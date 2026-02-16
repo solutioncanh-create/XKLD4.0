@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react'
-import { useParams, Link, useNavigate } from 'react-router-dom'
+import { useState, useEffect } from 'react'
 import { supabase } from '../supabaseClient'
+import { useParams, useNavigate, Link } from 'react-router-dom'
+import { hasPermission, Permissions } from '../utils/auth'
 
 export default function ChiTietHoSo() {
     const { id } = useParams()
@@ -8,26 +9,25 @@ export default function ChiTietHoSo() {
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState(null)
     const navigate = useNavigate()
-    const [maHoSoInput, setMaHoSoInput] = useState('')
+    const [nguonInput, setNguonInput] = useState('')
 
     useEffect(() => {
-        if (hoSo) setMaHoSoInput(hoSo.ma_ho_so || '')
+        if (hoSo) setNguonInput(hoSo.nguon || '')
     }, [hoSo])
 
-    const handleSaveMaHoSo = async () => {
-        if (!hoSo || maHoSoInput === hoSo.ma_ho_so) return
+    const handleSaveNguon = async () => {
+        if (!hoSo || nguonInput === hoSo.nguon) return
         try {
             const { error } = await supabase
                 .from('ho_so')
-                .update({ ma_ho_so: maHoSoInput.toUpperCase() })
+                .update({ nguon: nguonInput.toUpperCase() })
                 .eq('id', id)
 
             if (error) throw error
-            setHoSo({ ...hoSo, ma_ho_so: maHoSoInput.toUpperCase() })
-            // Optional: Show toast
+            setHoSo({ ...hoSo, nguon: nguonInput.toUpperCase() })
         } catch (error) {
-            console.error('Error updating Ma Ho So:', error)
-            alert('Lỗi cập nhật Mã Hồ Sơ: ' + error.message)
+            console.error('Error updating Nguon:', error)
+            alert('Lỗi cập nhật Nguồn: ' + error.message)
         }
     }
 
@@ -72,12 +72,16 @@ export default function ChiTietHoSo() {
     if (error) return <div className="text-center p-10 text-red-500 font-bold">Lỗi: {error}</div>
     if (!hoSo) return <div className="text-center p-10 text-red-500 font-bold">Không tìm thấy hồ sơ!</div>
 
+
+
+    const canPrint = hasPermission(Permissions.PRINT_EXPORT)
+
     return (
         <div className="max-w-5xl mx-auto px-4 py-8 mt-[10px]">
             {/* Header & Navigation */}
             <div className="mb-6 flex flex-col sm:flex-row items-center justify-between gap-4 animate-fade-in-up">
-                <Link to="/admin" className="text-gray-500 hover:text-primary-600 flex items-center gap-2 font-medium transition-colors group">
-                    <span className="group-hover:-translate-x-1 transition-transform">←</span> Quay lại Dashboard
+                <Link to="/admin/ho-so" className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 font-bold flex items-center gap-2 shadow-md hover:shadow-lg transition-all group">
+                    <span className="group-hover:-translate-x-1 transition-transform material-icons-outlined text-sm">arrow_back</span> Lưu lại và về home
                 </Link>
 
                 <div className="flex flex-wrap gap-2 justify-center sm:justify-end">
@@ -93,18 +97,22 @@ export default function ChiTietHoSo() {
                     >
                         <span className="material-icons-outlined text-base">edit</span> Sửa
                     </Link>
-                    <button
-                        onClick={() => window.open(`/in-ho-so/${id}`, '_blank')}
-                        className="px-3 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 font-medium flex items-center gap-2 shadow-md hover:shadow-lg transition-all text-sm"
-                    >
-                        <span className="material-icons-outlined text-base">print</span> In HS
-                    </button>
-                    <button
-                        onClick={() => window.open(`/in-ho-so-jp/${id}`, '_blank')}
-                        className="px-3 py-2 bg-white border border-primary-200 text-primary-700 rounded-lg hover:bg-primary-50 font-medium flex items-center gap-2 shadow-sm transition-colors text-sm"
-                    >
-                        <span className="material-icons-outlined text-base">language</span> In Tiếng Nhật
-                    </button>
+                    {canPrint && (
+                        <button
+                            onClick={() => window.open(`/in-ho-so/${id}`, '_blank')}
+                            className="px-3 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 font-medium flex items-center gap-2 shadow-md hover:shadow-lg transition-all text-sm"
+                        >
+                            <span className="material-icons-outlined text-base">print</span> In HS
+                        </button>
+                    )}
+                    {canPrint && (
+                        <button
+                            onClick={() => window.open(`/in-ho-so-jp/${id}`, '_blank')}
+                            className="px-3 py-2 bg-white border border-primary-200 text-primary-700 rounded-lg hover:bg-primary-50 font-medium flex items-center gap-2 shadow-sm transition-colors text-sm"
+                        >
+                            <span className="material-icons-outlined text-base">language</span> In Tiếng Nhật
+                        </button>
+                    )}
                 </div>
             </div>
 
@@ -112,21 +120,73 @@ export default function ChiTietHoSo() {
             <div className="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100 animate-fade-in">
 
                 {/* Cover & Avatar Header */}
-                <div className="h-40 bg-gradient-to-r from-primary-600 to-primary-800 relative">
+                <div className="h-[100px] bg-gradient-to-r from-primary-600 to-primary-800 relative">
                     <div className="absolute inset-0 bg-pattern opacity-10"></div>
-                    <div className="absolute top-4 right-6 flex flex-col items-end gap-1">
-                        <div className="bg-white/20 px-3 py-1 rounded backdrop-blur-sm shadow-sm border border-white/20 flex items-center gap-2">
-                            <span className="text-white font-mono text-xs opacity-80">MÃ HỒ SƠ:</span>
-                            <input
-                                value={maHoSoInput}
-                                onChange={(e) => setMaHoSoInput(e.target.value.toUpperCase())}
-                                onBlur={handleSaveMaHoSo}
-                                onKeyDown={(e) => e.key === 'Enter' && e.target.blur()}
-                                className="bg-transparent text-white font-bold font-mono outline-none w-48 text-right placeholder-white/50 border-b border-white/30 focus:border-white transition-colors uppercase"
-                                placeholder="###"
-                            />
+
+                    {/* Center Controls */}
+                    <div className="absolute top-4 left-0 right-0 hidden md:flex justify-center items-center gap-3 px-4 pointer-events-none">
+                        <div className="flex items-center gap-6 pointer-events-auto bg-white/10 backdrop-blur-md rounded-xl p-2 border border-white/20 shadow-lg min-w-[500px] justify-center">
+
+                            {/* 1. Job Select */}
+                            <div className="relative group flex-1">
+                                <select
+                                    value={hoSo.nganh_nghe_mong_muon || ''}
+                                    onChange={async (e) => {
+                                        const val = e.target.value;
+                                        try {
+                                            await supabase.from('ho_so').update({ nganh_nghe_mong_muon: val }).eq('id', id);
+                                            setHoSo({ ...hoSo, nganh_nghe_mong_muon: val });
+                                        } catch (err) { alert('Lỗi: ' + err.message) }
+                                    }}
+                                    className="w-full bg-white/10 text-white text-xs font-bold outline-none cursor-pointer appearance-none pl-4 pr-10 py-2 rounded-lg hover:bg-white/20 transition-colors [&>option]:text-gray-900 border border-transparent focus:border-white/30 truncate text-center min-w-[160px]"
+                                >
+                                    <option value="">-- Ngành nghề --</option>
+                                    {[
+                                        'Thực phẩm', 'Thủy sản', 'Cơ khí', 'Xây dựng', 'May mặc',
+                                        'Nông nghiệp', 'Đóng gói', 'Vệ sinh tòa nhà', 'Hộ lý', 'Kỹ sư', 'Khác'
+                                    ].map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                                </select>
+                                <span className="material-icons-outlined text-white text-[10px] absolute right-3 top-2.5 pointer-events-none">expand_more</span>
+                            </div>
+
+                            <div className="w-px h-6 bg-white/20"></div>
+
+                            {/* 2. Status Select */}
+                            <div className="relative group flex-1">
+                                <select
+                                    value={hoSo.trang_thai || ''}
+                                    onChange={async (e) => {
+                                        const val = e.target.value;
+                                        try {
+                                            await supabase.from('ho_so').update({ trang_thai: val }).eq('id', id);
+                                            setHoSo({ ...hoSo, trang_thai: val });
+                                        } catch (err) { alert('Lỗi: ' + err.message) }
+                                    }}
+                                    className="w-full bg-white/10 text-white text-xs font-bold outline-none cursor-pointer appearance-none pl-4 pr-10 py-2 rounded-lg hover:bg-white/20 transition-colors [&>option]:text-gray-900 border border-transparent focus:border-white/30 text-center"
+                                >
+                                    {[
+                                        'Mới đăng ký', 'Đã tư vấn', 'Đợi đơn', 'Chờ phỏng vấn',
+                                        'Đỗ đơn', 'Đã trúng tuyển', 'Đã xuất cảnh', 'Hủy hồ sơ', 'Rút đơn'
+                                    ].map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                                </select>
+                                <span className="material-icons-outlined text-white text-[10px] absolute right-3 top-2.5 pointer-events-none">expand_more</span>
+                            </div>
+
+                            <div className="w-px h-6 bg-white/20"></div>
+
+                            {/* 3. Nguồn */}
+                            <div className="bg-white/10 px-5 py-1.5 rounded-lg flex items-center gap-3 hover:bg-white/20 transition-colors">
+                                <span className="text-white font-mono text-xs opacity-90 whitespace-nowrap font-bold">Nguồn:</span>
+                                <input
+                                    value={nguonInput}
+                                    onChange={(e) => setNguonInput(e.target.value.toUpperCase())}
+                                    onBlur={handleSaveNguon}
+                                    onKeyDown={(e) => e.key === 'Enter' && e.target.blur()}
+                                    className="bg-transparent text-white font-bold font-mono outline-none w-20 text-center placeholder-white/50 border-b border-white/30 focus:border-white transition-colors uppercase text-sm"
+                                    placeholder="###"
+                                />
+                            </div>
                         </div>
-                        <span className="text-[10px] text-white/80 italic pr-1">Người giới thiệu, Quản lý...</span>
                     </div>
                 </div>
                 <div className="px-8 relative flex flex-col sm:flex-row items-end -mt-10 mb-8">
@@ -376,14 +436,6 @@ export default function ChiTietHoSo() {
 
 function StatusBadge({ label, value }) {
     if (!value && value !== false) return null;
-    const isPositive = value === 'Có' || value === true || (typeof value === 'string' && value.toLowerCase().includes('có'));
-    // Note: Với bệnh tật/thói quen xấu thì "Có" là Negative, "Không" là Positive. 
-    // Nhưng ở đây hiển thị trạng thái, ta cứ dùng màu trung tính hoặc alert.
-
-    // Logic màu:
-    // Có -> Red/Orange (Cảnh báo)
-    // Không -> Green/Gray (Tốt)
-    // Nhưng text ở đây là "Xăm hình", "Hút thuốc"
 
     let colorClass = 'bg-gray-100 text-gray-600';
     if (value === 'Không' || value === false) colorClass = 'bg-green-50 text-green-700 border border-green-100';

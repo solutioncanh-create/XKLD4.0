@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { supabase } from '../../supabaseClient'
 
 export default function DonHangManager() {
@@ -6,20 +7,34 @@ export default function DonHangManager() {
     const [loading, setLoading] = useState(true)
     const [isAdding, setIsAdding] = useState(false)
     const [editingId, setEditingId] = useState(null)
+    const [filterStatus, setFilterStatus] = useState('All')
+    const [searchTerm, setSearchTerm] = useState('')
+    const [searchParams] = useSearchParams()
 
-    // Initial State for Reset
+    // Initial State
     const initialOrderState = {
         ten_don_hang: '', nganh_nghe: 'Xây dựng', muc_luong: '',
         so_luong_tuyen: 1, dia_diem_lam_viec: '',
         thoi_han_nop_ho_so: '', ngay_tuyen_du_kien: '',
-        mo_ta_cong_viec: '', // Thêm mô tả
-        trang_thai: 'Đang tuyển',
+        mo_ta_cong_viec: '',
+        trang_thai: 'Mới đăng',
         yeu_cau_gioi_tinh: 'Không yêu cầu'
     }
 
     const [formData, setFormData] = useState(initialOrderState)
 
     useEffect(() => { fetchOrders() }, [])
+
+    useEffect(() => {
+        const editId = searchParams.get('edit')
+        if (editId && orders.length > 0 && !isAdding) {
+            const orderToEdit = orders.find(o => o.id === editId)
+            if (orderToEdit) {
+                handleEdit(orderToEdit)
+            }
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [orders, searchParams])
 
     const fetchOrders = async () => {
         setLoading(true)
@@ -38,46 +53,49 @@ export default function DonHangManager() {
         setFormData(order)
         setEditingId(order.id)
         setIsAdding(true)
-        // Scroll to form
         window.scrollTo({ top: 0, behavior: 'smooth' })
     }
 
     const handleSaveOrder = async (e) => {
         e.preventDefault()
         try {
-            // Tạm thời loại bỏ yeu_cau_gioi_tinh nếu cột chưa được tạo trong DB để tránh lỗi
-            // Khi nào chạy migration xong thì bỏ dòng destructuring này đi
+            // eslint-disable-next-line no-unused-vars
             const { yeu_cau_gioi_tinh, ...safePayload } = formData
 
             if (editingId) {
-                // UPDATE
                 const { error } = await supabase.from('don_hang').update(safePayload).eq('id', editingId)
                 if (error) throw error
+                fetchOrders() // Refresh grid
                 alert('Cập nhật đơn hàng thành công!')
             } else {
-                // INSERT
                 const { error } = await supabase.from('don_hang').insert([safePayload])
                 if (error) throw error
+                fetchOrders() // Refresh grid
                 alert('Thêm đơn hàng mới thành công!')
             }
-
-            // Reset & Refresh
-            setIsAdding(false)
-            setEditingId(null)
-            setFormData(initialOrderState)
-            fetchOrders()
-
+            handleCancel()
         } catch (error) { alert('Lỗi: ' + error.message) }
     }
 
     const handleDelete = async (id) => {
-        if (window.confirm('Bạn có chắc chắn muốn xóa đơn hàng này?')) {
-            try {
-                const { error } = await supabase.from('don_hang').delete().eq('id', id)
-                if (error) throw error
-                fetchOrders()
-            } catch (error) { alert('Lỗi xóa: ' + error.message) }
-        }
+        if (!confirm('Bạn có chắc chắn muốn xóa đơn hàng này?')) return
+        try {
+            const { error } = await supabase.from('don_hang').delete().eq('id', id)
+            if (error) throw error
+            setOrders(orders.filter(o => o.id !== id))
+        } catch (error) { alert('Lỗi xóa: ' + error.message) }
+    }
+
+    const handleStatusChange = async (id, newStatus) => {
+        // Optimistic update
+        setOrders(orders.map(o => o.id === id ? { ...o, trang_thai: newStatus } : o))
+        try {
+            const { error } = await supabase.from('don_hang').update({ trang_thai: newStatus }).eq('id', id)
+            if (error) {
+                fetchOrders() // Revert
+                throw error
+            }
+        } catch (error) { alert('Lỗi cập nhật trạng thái: ' + error.message) }
     }
 
     const handleCancel = () => {
@@ -86,221 +104,280 @@ export default function DonHangManager() {
         setFormData(initialOrderState)
     }
 
+    // Filter Logic Updated
+    const filteredOrders = orders.filter(o => {
+        const matchesStatus = filterStatus === 'All' || o.trang_thai === filterStatus
+        const matchesSearch = o.ten_don_hang?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            o.dia_diem_lam_viec?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            o.nganh_nghe?.toLowerCase().includes(searchTerm.toLowerCase())
+        return matchesStatus && matchesSearch
+    })
+
+    const stats = {
+        total: orders.length,
+        new: orders.filter(o => o.trang_thai === 'Mới đăng').length,
+        active: orders.filter(o => o.trang_thai === 'Đang tuyển').length,
+        urgent: orders.filter(o => o.trang_thai === 'Sắp hết hạn').length,
+        closed: orders.filter(o => o.trang_thai === 'Đã đóng').length
+    }
+
+    const STATUS_OPTIONS = ['Mới đăng', 'Đang tuyển', 'Sắp hết hạn', 'Đã đóng']
+    const JOB_CATEGORIES = ['Xây dựng', 'Thực phẩm', 'Cơ khí', 'May mặc', 'Nông nghiệp', 'Điều dưỡng', 'Vệ sinh tòa nhà', 'Khách sạn', 'IT/Kỹ sư', 'Khác']
+
     return (
-        <div className="space-y-6 animate-fade-in pb-20">
-            {/* Header Actions */}
-            <div className="flex justify-between items-center bg-white p-6 rounded-xl shadow-sm border border-secondary-100 mb-6 sticky top-0 z-20">
-                <div>
-                    <h2 className="text-2xl font-bold text-primary-900 flex items-center gap-2">
-                        <span className="material-icons-outlined text-primary-600">work_outline</span>
-                        Quản lý Đơn hàng
-                    </h2>
-                    <p className="text-secondary-500 text-sm mt-1">Danh sách các đơn hàng tuyển dụng hiện tại</p>
-                </div>
-                <button
-                    onClick={() => {
-                        if (isAdding) handleCancel()
-                        else setIsAdding(true)
-                    }}
-                    className={`px-5 py-2.5 rounded-lg font-bold shadow-lg flex items-center gap-2 transition-all transform hover:scale-105 active:scale-95
-                        ${isAdding ? 'bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 shadow-none' : 'bg-primary-600 text-white hover:bg-primary-700 shadow-primary-200'}
-                    `}
-                >
-                    <span className="material-icons-outlined">{isAdding ? 'close' : 'add_circle'}</span>
-                    {isAdding ? 'Đóng Form' : 'Thêm Đơn Mới'}
-                </button>
+        <div className="bg-gray-50 min-h-screen font-sans pb-20">
+            {/* Header Stats - Hidden on Mobile */}
+            <div className="hidden md:flex overflow-x-auto gap-3 pb-2 mb-4 px-4 pt-4 no-scrollbar snap-x">
+                <div className="min-w-[140px] snap-center"><StatCard label="Tổng đơn" count={stats.total} icon="work_outline" color="bg-blue-600" /></div>
+                <div className="min-w-[140px] snap-center"><StatCard label="Mới đăng" count={stats.new} icon="new_releases" color="bg-blue-400" /></div>
+                <div className="min-w-[140px] snap-center"><StatCard label="Đang tuyển" count={stats.active} icon="check_circle" color="bg-green-500" /></div>
+                <div className="min-w-[140px] snap-center"><StatCard label="Sắp hết" count={stats.urgent} icon="warning" color="bg-orange-500" /></div>
+                <div className="min-w-[140px] snap-center"><StatCard label="Đã đóng" count={stats.closed} icon="archive" color="bg-gray-500" /></div>
             </div>
 
-            {/* Form Thêm/Sửa */}
-            {isAdding && (
-                <div className="bg-white p-8 rounded-xl border border-primary-100 shadow-xl animate-fade-in-down mb-6 relative overflow-hidden">
-                    <div className="absolute top-0 left-0 w-1 h-full bg-primary-500"></div>
-                    <h3 className="font-bold text-xl mb-6 text-primary-800 flex items-center gap-2 border-b border-gray-100 pb-3">
-                        <span className="material-icons-outlined">{editingId ? 'edit_note' : 'post_add'}</span>
-                        {editingId ? 'Cập Nhật Đơn Hàng' : 'Thêm Đơn Hàng Mới'}
-                    </h3>
+            {/* Toolbar - Natural Scroll */}
+            <div className="bg-gray-50 px-3 pt-3 md:px-4 mb-4">
+                <div className="flex gap-2 items-center mb-3">
+                    {/* Search - Hidden on Mobile */}
+                    <div className="hidden md:block relative flex-1">
+                        <span className="material-icons-outlined absolute left-3 top-2.5 text-gray-400">search</span>
+                        <input
+                            type="text"
+                            placeholder="Tìm đơn hàng, địa điểm..."
+                            value={searchTerm}
+                            onChange={e => setSearchTerm(e.target.value)}
+                            className="w-full pl-10 pr-4 py-2 bg-white border-none rounded-lg text-sm font-medium focus:ring-2 focus:ring-primary-500/50 outline-none transition-all"
+                        />
+                    </div>
 
-                    <form onSubmit={handleSaveOrder} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                        <div className="md:col-span-2 group">
-                            <label className="text-xs font-bold text-secondary-500 uppercase tracking-wide mb-1.5 block">Tên đơn hàng <span className="text-red-500">*</span></label>
-                            <input required className="input-field w-full pl-4 py-2.5 bg-secondary-50 border border-secondary-200 rounded-lg focus:bg-white focus:border-primary-500 outline-none font-medium"
-                                placeholder="VD: Kỹ sư xây dựng cầu đường..."
-                                value={formData.ten_don_hang}
-                                onChange={e => setFormData({ ...formData, ten_don_hang: e.target.value })}
-                            />
-                        </div>
-
-                        <div className="group">
-                            <label className="text-xs font-bold text-secondary-500 uppercase tracking-wide mb-1.5 block">Ngành nghề</label>
-                            <select className="input-field w-full pl-4 py-2.5 bg-secondary-50 border border-secondary-200 rounded-lg focus:bg-white focus:border-primary-500 outline-none font-medium"
-                                value={formData.nganh_nghe}
-                                onChange={e => setFormData({ ...formData, nganh_nghe: e.target.value })}
-                            >
-                                {['Xây dựng', 'Thực phẩm', 'Cơ khí', 'May mặc', 'Nông nghiệp', 'Điều dưỡng', 'Vệ sinh tòa nhà', 'Khách sạn', 'IT/Kỹ sư', 'Khác'].map(n => <option key={n} value={n}>{n}</option>)}
-                            </select>
-                        </div>
-
-                        <div className="group">
-                            <label className="text-xs font-bold text-secondary-500 uppercase tracking-wide mb-1.5 block">Mức lương (¥) <span className="text-red-500">*</span></label>
-                            <input required type="number" className="input-field w-full pl-4 py-2.5 bg-secondary-50 border border-secondary-200 rounded-lg focus:bg-white focus:border-primary-500 outline-none font-medium"
-                                placeholder="VD: 180000"
-                                value={formData.muc_luong}
-                                onChange={e => setFormData({ ...formData, muc_luong: e.target.value })}
-                            />
-                        </div>
-
-                        <div className="group">
-                            <label className="text-xs font-bold text-secondary-500 uppercase tracking-wide mb-1.5 block">Số lượng <span className="text-red-500">*</span></label>
-                            <input type="number" min="1" className="input-field w-full pl-4 py-2.5 bg-secondary-50 border border-secondary-200 rounded-lg focus:bg-white focus:border-primary-500 outline-none font-medium"
-                                value={formData.so_luong_tuyen}
-                                onChange={e => setFormData({ ...formData, so_luong_tuyen: e.target.value })}
-                            />
-                        </div>
-
-                        <div className="group">
-                            <label className="text-xs font-bold text-secondary-500 uppercase tracking-wide mb-1.5 block">Yêu cầu giới tính</label>
-                            <select className="input-field w-full pl-4 py-2.5 bg-secondary-50 border border-secondary-200 rounded-lg focus:bg-white focus:border-primary-500 outline-none font-medium"
-                                value={formData.yeu_cau_gioi_tinh || 'Không yêu cầu'}
-                                onChange={e => setFormData({ ...formData, yeu_cau_gioi_tinh: e.target.value })}
-                            >
-                                <option value="Không yêu cầu">Không yêu cầu</option>
-                                <option value="Nam">Nam</option>
-                                <option value="Nữ">Nữ</option>
-                            </select>
-                        </div>
-
-                        <div className="group">
-                            <label className="text-xs font-bold text-secondary-500 uppercase tracking-wide mb-1.5 block">Địa điểm làm việc <span className="text-red-500">*</span></label>
-                            <input required className="input-field w-full pl-4 py-2.5 bg-secondary-50 border border-secondary-200 rounded-lg focus:bg-white focus:border-primary-500 outline-none font-medium"
-                                placeholder="VD: Tokyo, Osaka..."
-                                value={formData.dia_diem_lam_viec}
-                                onChange={e => setFormData({ ...formData, dia_diem_lam_viec: e.target.value })}
-                            />
-                        </div>
-
-                        <div className="bg-yellow-50 p-3 rounded-lg border border-yellow-200">
-                            <label className="text-xs font-bold text-yellow-800 uppercase tracking-wide mb-1.5 block">Hạn nộp hồ sơ <span className="text-red-500">*</span></label>
-                            <input type="date" required className="w-full px-3 py-2 bg-white border border-yellow-300 rounded font-medium text-gray-800 focus:outline-none"
-                                value={formData.thoi_han_nop_ho_so}
-                                onChange={e => setFormData({ ...formData, thoi_han_nop_ho_so: e.target.value })}
-                            />
-                        </div>
-
-                        <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
-                            <label className="text-xs font-bold text-blue-800 uppercase tracking-wide mb-1.5 block">Dự kiến thi tuyển</label>
-                            <input type="date" className="w-full px-3 py-2 bg-white border border-blue-300 rounded font-medium text-gray-800 focus:outline-none"
-                                value={formData.ngay_tuyen_du_kien}
-                                onChange={e => setFormData({ ...formData, ngay_tuyen_du_kien: e.target.value })}
-                            />
-                        </div>
-
-                        <div className="bg-green-50 p-3 rounded-lg border border-green-200">
-                            <label className="text-xs font-bold text-green-800 uppercase tracking-wide mb-1.5 block">Trạng thái</label>
-                            <select className="w-full px-3 py-2 bg-white border border-green-300 rounded font-medium text-gray-800 focus:outline-none cursor-pointer"
-                                value={formData.trang_thai}
-                                onChange={e => setFormData({ ...formData, trang_thai: e.target.value })}
-                            >
-                                <option value="Đang tuyển">Đang tuyển</option>
-                                <option value="Đã đóng">Đã đóng</option>
-                                <option value="Sắp hết hạn">Sắp hết hạn</option>
-                            </select>
-                        </div>
-
-                        <div className="md:col-span-2 lg:col-span-4 group">
-                            <label className="text-xs font-bold text-secondary-500 uppercase tracking-wide mb-1.5 block">Mô tả công việc</label>
-                            <textarea className="input-field w-full pl-4 py-2.5 bg-secondary-50 border border-secondary-200 rounded-lg focus:bg-white focus:border-primary-500 outline-none font-medium min-h-[100px]"
-                                placeholder="Mô tả chi tiết công việc, yêu cầu, quyền lợi..."
-                                value={formData.mo_ta_cong_viec || ''}
-                                onChange={e => setFormData({ ...formData, mo_ta_cong_viec: e.target.value })}
-                            />
-                        </div>
-
-                        <div className="flex items-center justify-end gap-4 md:col-span-2 lg:col-span-4 mt-4 pt-4 border-t border-secondary-100">
-                            <button type="button" onClick={handleCancel} className="px-6 py-2.5 text-secondary-500 font-bold hover:text-secondary-700 bg-secondary-100 hover:bg-secondary-200 rounded-lg transition-colors">Hủy bỏ</button>
-                            <button type="submit" className="px-8 py-2.5 bg-primary-600 text-white font-bold rounded-lg hover:bg-primary-700 shadow-lg shadow-primary-200 transition-all flex items-center gap-2">
-                                <span className="material-icons-outlined">save</span>
-                                {editingId ? 'Cập Nhật' : 'Lưu Đơn Hàng'}
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            )}
-
-            {/* Danh sách đơn hàng table */}
-            <div className="bg-white rounded-xl shadow-sm border border-secondary-100 overflow-hidden min-h-[500px] flex flex-col">
-                <div className="overflow-x-auto flex-1">
-                    <table className="w-full text-left border-collapse">
-                        <thead className="bg-secondary-50 text-secondary-500 text-xs uppercase tracking-wider sticky top-0 z-10">
-                            <tr>
-                                <th className="px-6 py-4 font-bold border-b border-secondary-200">Thông tin đơn hàng</th>
-                                <th className="px-6 py-4 font-bold border-b border-secondary-200">Lương & Số lượng</th>
-                                <th className="px-6 py-4 font-bold border-b border-secondary-200">Địa điểm</th>
-                                <th className="px-6 py-4 font-bold border-b border-secondary-200">Thời gian</th>
-                                <th className="px-6 py-4 font-bold border-b border-secondary-200">Trạng thái</th>
-                                <th className="px-6 py-4 font-bold border-b border-secondary-200 text-right">Thao tác</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-secondary-100 bg-white">
-                            {loading ? (
-                                <tr><td colSpan="6" className="p-12 text-center"><div className="inline-block animate-spin rounded-full h-10 w-10 border-b-4 border-primary-600"></div></td></tr>
-                            ) : orders.length === 0 ? (
-                                <tr>
-                                    <td colSpan="6" className="p-12 text-center text-secondary-400 flex flex-col items-center">
-                                        <span className="material-icons-outlined text-5xl mb-3 text-secondary-200 block w-full">folder_off</span>
-                                        <span className="text-lg">Chưa có đơn hàng nào.</span>
-                                        <button onClick={() => setIsAdding(true)} className="mt-4 text-primary-600 font-bold hover:underline">Thêm ngay</button>
-                                    </td>
-                                </tr>
-                            ) : orders.map(o => (
-                                <tr key={o.id} className="hover:bg-primary-50/30 transition-colors group">
-                                    <td className="px-6 py-4 max-w-xs">
-                                        <div className="font-bold text-primary-900 text-base mb-1 truncate" title={o.ten_don_hang}>{o.ten_don_hang}</div>
-                                        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-secondary-100 text-secondary-600 border border-secondary-200">
-                                            {o.nganh_nghe}
-                                        </span>
-                                    </td>
-                                    <td className="px-6 py-4">
-                                        <div className="font-bold text-accent-600 mb-1">{o.muc_luong || o.luong_co_ban} ¥</div>
-                                        <div className="text-xs text-secondary-500">
-                                            Tuyển: <span className="font-bold text-primary-700">{o.so_luong_tuyen}</span>
-                                        </div>
-                                    </td>
-                                    <td className="px-6 py-4 text-secondary-700 font-medium">
-                                        {o.dia_diem_lam_viec}
-                                    </td>
-                                    <td className="px-6 py-4 text-sm space-y-1">
-                                        <div className="text-red-500 text-xs font-bold flex items-center gap-1">
-                                            <span className="material-icons-outlined text-[14px]">event_busy</span>
-                                            {o.thoi_han_nop_ho_so ? new Date(o.thoi_han_nop_ho_so).toLocaleDateString('vi-VN') : '-'}
-                                        </div>
-                                    </td>
-                                    <td className="px-6 py-4">
-                                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold border ${o.trang_thai === 'Đang tuyển' ? 'bg-green-100 text-green-700 border-green-200' : 'bg-gray-100 text-gray-600 border-gray-200'
-                                            }`}>
-                                            <span className={`w-1.5 h-1.5 rounded-full mr-1.5 ${o.trang_thai === 'Đang tuyển' ? 'bg-green-500' : 'bg-gray-500'}`}></span>
-                                            {o.trang_thai || 'Đang tuyển'}
-                                        </span>
-                                    </td>
-                                    <td className="px-6 py-4 text-right">
-                                        <div className="flex justify-end gap-2">
-
-                                            <button onClick={() => handleEdit(o)} className="p-2 text-primary-600 hover:bg-primary-50 rounded-lg transition-colors border border-transparent hover:border-primary-100" title="Sửa">
-                                                <span className="material-icons-outlined">edit</span>
-                                            </button>
-                                            <button onClick={() => handleDelete(o.id)} className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors border border-transparent hover:border-red-100" title="Xóa">
-                                                <span className="material-icons-outlined">delete</span>
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
+                    <button
+                        onClick={() => {
+                            if (isAdding) handleCancel()
+                            else setIsAdding(true)
+                        }}
+                        className={` px-4 py-2 rounded-lg shadow-sm transition-all shrink-0 font-bold text-sm flex items-center gap-2
+                        ${isAdding ? 'bg-red-50 text-red-600 border border-red-100' : 'bg-primary-600 text-white active:scale-95 w-full md:w-auto justify-center'}
+                    `}
+                    >
+                        <span className="material-icons-outlined text-lg">{isAdding ? 'close' : 'add'}</span>
+                        <span>{isAdding ? 'Hủy' : 'Thêm Đơn Hàng'}</span>
+                    </button>
                 </div>
 
-                <div className="p-4 border-t border-secondary-100 bg-secondary-50 text-center text-xs text-secondary-400">
-                    Hiển thị {orders.length} kết quả
+                {/* Filter Buttons - Grid Layout */}
+                <div className="grid grid-cols-2 md:flex md:flex-wrap gap-2 mb-2">
+                    {['All', ...STATUS_OPTIONS].map(status => (
+                        <button
+                            key={status}
+                            onClick={() => setFilterStatus(status)}
+                            className={`px-2 py-2 md:px-4 md:py-2 rounded-lg text-xs md:text-sm font-bold transition-all border shadow-sm truncate ${filterStatus === status
+                                ? 'bg-primary-50 text-primary-700 border-primary-200 ring-1 ring-primary-100'
+                                : 'bg-white text-gray-500 border-gray-200 hover:bg-gray-50'
+                                }`}
+                        >
+                            {status === 'All' ? 'Tất cả' : status}
+                        </button>
+                    ))}
                 </div>
+            </div>
+
+            {/* Content Area - Natural Scroll */}
+            <div className="px-3 md:px-4 no-scrollbar">
+                {/* Adding Form */}
+                {isAdding ? (
+                    <div className="mb-6 bg-white p-5 rounded-xl border border-primary-100 shadow-md animate-scale-up">
+                        <h3 className="font-bold text-lg mb-4 text-primary-700 flex items-center gap-2">
+                            <span className="material-icons-outlined">{editingId ? 'edit_note' : 'post_add'}</span>
+                            {editingId ? 'Cập Nhật Đơn Hàng' : 'Thêm Đơn Hàng Mới'}
+                        </h3>
+                        <form onSubmit={handleSaveOrder} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                            <div className="md:col-span-2 group">
+                                <label className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5 block">Tên đơn hàng <span className="text-red-500">*</span></label>
+                                <input required className="input-field w-full pl-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:bg-white focus:border-primary-500 outline-none font-medium"
+                                    placeholder="VD: Kỹ sư xây dựng..."
+                                    value={formData.ten_don_hang}
+                                    onChange={e => setFormData({ ...formData, ten_don_hang: e.target.value })}
+                                />
+                            </div>
+
+                            <div className="group">
+                                <label className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5 block">Ngành nghề</label>
+                                <select className="input-field w-full pl-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:bg-white focus:border-primary-500 outline-none font-medium"
+                                    value={formData.nganh_nghe}
+                                    onChange={e => setFormData({ ...formData, nganh_nghe: e.target.value })}
+                                >
+                                    {JOB_CATEGORIES.map(n => <option key={n} value={n}>{n}</option>)}
+                                </select>
+                            </div>
+
+                            <div className="group">
+                                <label className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5 block">Mức lương (¥) <span className="text-red-500">*</span></label>
+                                <input required type="number" className="input-field w-full pl-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:bg-white focus:border-primary-500 outline-none font-medium"
+                                    placeholder="VD: 180000"
+                                    value={formData.muc_luong}
+                                    onChange={e => setFormData({ ...formData, muc_luong: e.target.value })}
+                                />
+                            </div>
+
+                            <div className="group">
+                                <label className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5 block">Số lượng <span className="text-red-500">*</span></label>
+                                <input type="number" min="1" className="input-field w-full pl-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:bg-white focus:border-primary-500 outline-none font-medium"
+                                    value={formData.so_luong_tuyen}
+                                    onChange={e => setFormData({ ...formData, so_luong_tuyen: e.target.value })}
+                                />
+                            </div>
+
+                            <div className="group">
+                                <label className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5 block">Địa điểm làm việc <span className="text-red-500">*</span></label>
+                                <input required className="input-field w-full pl-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:bg-white focus:border-primary-500 outline-none font-medium"
+                                    placeholder="VD: Tokyo, Osaka..."
+                                    value={formData.dia_diem_lam_viec}
+                                    onChange={e => setFormData({ ...formData, dia_diem_lam_viec: e.target.value })}
+                                />
+                            </div>
+
+                            <div className="group">
+                                <label className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5 block">Hạn nộp hồ sơ</label>
+                                <input type="date" className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg font-medium text-gray-800 focus:outline-none focus:border-primary-500"
+                                    value={formData.thoi_han_nop_ho_so}
+                                    onChange={e => setFormData({ ...formData, thoi_han_nop_ho_so: e.target.value })}
+                                />
+                            </div>
+
+                            <div className="group">
+                                <label className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5 block">Trạng thái</label>
+                                <select className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg font-medium text-gray-800 focus:outline-none focus:border-primary-500"
+                                    value={formData.trang_thai}
+                                    onChange={e => setFormData({ ...formData, trang_thai: e.target.value })}
+                                >
+                                    {STATUS_OPTIONS.map(s => <option key={s} value={s}>{s}</option>)}
+                                </select>
+                            </div>
+
+                            <div className="md:col-span-2 lg:col-span-4 group">
+                                <label className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5 block">Mô tả công việc</label>
+                                <textarea className="input-field w-full pl-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:bg-white focus:border-primary-500 outline-none font-medium min-h-[100px]"
+                                    placeholder="Mô tả chi tiết..."
+                                    value={formData.mo_ta_cong_viec || ''}
+                                    onChange={e => setFormData({ ...formData, mo_ta_cong_viec: e.target.value })}
+                                />
+                            </div>
+
+                            <div className="flex items-center justify-end gap-3 md:col-span-2 lg:col-span-4 mt-2">
+                                <button type="button" onClick={handleCancel} className="px-5 py-2 text-gray-500 font-bold hover:bg-gray-100 rounded-lg transition-colors">Hủy</button>
+                                <button type="submit" className="px-6 py-2 bg-primary-600 text-white font-bold rounded-lg hover:bg-primary-700 shadow-lg shadow-primary-200 transition-all flex items-center gap-2">
+                                    <span className="material-icons-outlined">save</span>
+                                    {editingId ? 'Cập Nhật' : 'Lưu Đơn Hàng'}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                ) : loading ? (
+                    <div className="flex justify-center items-center h-64">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
+                    </div>
+                ) : filteredOrders.length === 0 ? (
+                    <div className="text-center py-20 text-gray-500">
+                        <span className="material-icons-outlined text-4xl mb-2">work_off</span>
+                        <p>Không tìm thấy đơn hàng nào.</p>
+                    </div>
+                ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                        {filteredOrders.map(order => (
+                            <OrderCard
+                                key={order.id}
+                                order={order}
+                                onStatusChange={handleStatusChange}
+                                onDelete={handleDelete}
+                                onEdit={handleEdit}
+                            />
+                        ))}
+                    </div>
+                )}
+            </div>
+        </div>
+    )
+}
+
+function StatCard({ label, count, icon, color }) {
+    return (
+        <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
+            <div className="min-w-0">
+                <p className="text-xs text-gray-500 uppercase font-bold mb-1 truncate">{label}</p>
+                <p className="text-2xl font-black text-gray-800">{count}</p>
+            </div>
+            <div className={`w-10 h-10 rounded-lg ${color} flex items-center justify-center text-white shadow-md bg-opacity-90 flex-shrink-0 ml-2`}>
+                <span className="material-icons-outlined">{icon}</span>
+            </div>
+        </div>
+    )
+}
+
+function OrderCard({ order, onStatusChange, onEdit, onDelete }) {
+    const statusColors = {
+        'Mới đăng': 'bg-blue-500',
+        'Đang tuyển': 'bg-green-500',
+        'Sắp hết hạn': 'bg-orange-500',
+        'Đã đóng': 'bg-gray-400'
+    }
+
+    const currentStatusColor = statusColors[order.trang_thai] || 'bg-gray-300'
+    const STATUS_OPTIONS = ['Mới đăng', 'Đang tuyển', 'Sắp hết hạn', 'Đã đóng']
+
+    return (
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col relative overflow-hidden transition-all active:scale-[0.99] hover:shadow-md h-full">
+            {/* Status Bar */}
+            <div className={`h-1.5 w-full ${currentStatusColor}`}></div>
+
+            <div className="p-4 flex-1">
+                {/* Header */}
+                <div className="flex justify-between items-start mb-2">
+                    <h3 className="font-bold text-gray-900 text-base leading-snug line-clamp-2" title={order.ten_don_hang}>{order.ten_don_hang}</h3>
+                </div>
+                <div className="flex items-center gap-2 mb-4">
+                    <span className="text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded uppercase tracking-wide truncate max-w-[120px]">{order.nganh_nghe}</span>
+                    <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded text-white ${currentStatusColor}`}>{order.trang_thai}</span>
+                </div>
+
+                {/* Info Grid */}
+                <div className="grid grid-cols-2 gap-2 text-sm mb-3">
+                    <div className="bg-gray-50 rounded-lg p-2.5 flex flex-col justify-center">
+                        <p className="text-[10px] text-gray-400 font-bold uppercase mb-0.5">Mức lương</p>
+                        <p className="font-black text-gray-800 text-sm whitespace-nowrap">{parseInt(order.muc_luong || 0).toLocaleString()}¥</p>
+                    </div>
+                    <div className="bg-gray-50 rounded-lg p-2.5 flex flex-col justify-center">
+                        <p className="text-[10px] text-gray-400 font-bold uppercase mb-0.5">Số lượng</p>
+                        <p className="font-black text-gray-800 text-sm">{order.so_luong_tuyen} người</p>
+                    </div>
+                </div>
+                <div className="text-xs text-gray-500 flex items-center gap-1 font-medium truncate">
+                    <span className="material-icons-outlined text-sm">place</span> {order.dia_diem_lam_viec}
+                </div>
+            </div>
+
+            {/* Footer Actions */}
+            <div className="grid grid-cols-3 border-t border-gray-100 divide-x divide-gray-100 bg-gray-50/50">
+                <button onClick={() => onEdit(order)} className="flex flex-col items-center justify-center gap-1 py-3 hover:bg-white transition-colors group">
+                    <span className="material-icons-outlined text-blue-500 text-xl group-hover:scale-110 transition-transform">edit</span>
+                    <span className="text-[9px] font-bold text-blue-600 uppercase">Sửa</span>
+                </button>
+
+                <div className="relative group flex flex-col items-center justify-center gap-1 py-3 hover:bg-white transition-colors cursor-pointer">
+                    <span className="material-icons-outlined text-purple-500 text-xl group-hover:text-primary-600 group-hover:scale-110 transition-transform">change_circle</span>
+                    <span className="text-[9px] font-bold text-purple-600 uppercase group-hover:text-primary-600">Trạng thái</span>
+                    <select
+                        value={order.trang_thai}
+                        onChange={(e) => onStatusChange(order.id, e.target.value)}
+                        className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                    >
+                        {STATUS_OPTIONS.map(s => <option key={s} value={s}>{s}</option>)}
+                    </select>
+                </div>
+
+                <button onClick={() => onDelete(order.id)} className="flex flex-col items-center justify-center gap-1 py-3 hover:bg-white transition-colors group">
+                    <span className="material-icons-outlined text-red-400 text-xl group-hover:scale-110 transition-transform">delete</span>
+                    <span className="text-[9px] font-bold text-red-500 uppercase">Xóa</span>
+                </button>
             </div>
         </div>
     )

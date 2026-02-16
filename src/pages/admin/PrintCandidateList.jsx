@@ -90,12 +90,6 @@ export default function PrintCandidateList() {
         return '---'
     }
 
-    // Updated to use helper if needed, but logic here is quite custom (Work summary)
-    const getWorkSummary = (workArr) => {
-        if (!Array.isArray(workArr) || workArr.length === 0) return 'なし'
-        const lastJob = workArr[workArr.length - 1]
-        return `${lastJob.cong_viec} (${lastJob.cong_ty})`
-    }
 
     // --- Pagination Logic ---
     const PAGE_SIZE_FIRST = 4 // Trang 1 chứa 4 người (vì có Header)

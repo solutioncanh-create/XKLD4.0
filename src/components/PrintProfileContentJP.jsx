@@ -3,7 +3,7 @@ import {
     mapSex, mapMarital, mapReligion, mapYesNo, mapHand, mapRelation,
     formatDateJP, getAge, mapLicense, mapPurpose, mapJob, mapStrength,
     mapWeakness, mapEducation, mapVision, mapWork, mapSmoke, mapDrink,
-    mapTattoo, formatTimeRange
+    mapTattoo, formatTimeRange, mapJapaneseLevel
 } from '../utils/printHelpers'
 
 function SectionTitle({ children }) {
@@ -14,7 +14,7 @@ export default function PrintProfileContentJP({ hoSo, showSBD = false }) {
     if (!hoSo) return null;
 
     return (
-        <div className="print-container w-[210mm] mx-auto bg-white shadow-sm px-[10mm] py-[5mm] min-h-[297mm] text-blue-900 leading-snug relative flex flex-col" style={{ boxSizing: 'border-box' }}>
+        <div className="print-container w-[210mm] mx-auto bg-white shadow-sm print:shadow-none px-[10mm] py-[5mm] min-h-[297mm] text-blue-900 leading-snug relative flex flex-col" style={{ boxSizing: 'border-box' }}>
             {/* --- HEADER --- */}
             <div className="flex justify-between items-start mb-2 border-b-2 border-blue-900 pb-2">
                 <div className="flex-1">
@@ -28,7 +28,7 @@ export default function PrintProfileContentJP({ hoSo, showSBD = false }) {
                                 <div className="flex items-center gap-2">
                                     <span className="font-bold text-blue-900 text-sm">受験番号 (SBD):</span>
                                     <span className="text-3xl font-black text-red-600 tracking-widest">
-                                        {hoSo.sbd ? String(hoSo.sbd).padStart(2, '0') : (hoSo.ma_ho_so || '---')}
+                                        {hoSo.sbd ? String(hoSo.sbd).padStart(2, '0') : (hoSo.nguon || '---')}
                                     </span>
                                 </div>
                             </div>
@@ -50,25 +50,27 @@ export default function PrintProfileContentJP({ hoSo, showSBD = false }) {
                 <table className="w-full border-collapse border border-blue-300 text-xs">
                     <tbody>
                         <tr>
-                            <td className="border border-blue-300 p-1 font-bold w-32 bg-blue-50">氏 名 (Full Name)</td>
-                            <td className="border border-blue-300 p-1 uppercase font-bold text-base" colSpan="3">{hoSo.ho_ten}</td>
+                            <td className="border border-blue-300 p-1 font-bold w-44 bg-blue-50">氏 名 (Full Name)</td>
+                            <td className="border border-blue-300 p-1 uppercase font-bold text-base">{hoSo.ho_ten}</td>
+                            <td className="border border-blue-300 p-1 font-bold bg-blue-50 w-32">ニックネーム</td>
+                            <td className="border border-blue-300 p-1 w-32 font-bold">{hoSo.nickname || ''}</td>
                         </tr>
                         <tr>
-                            <td className="border border-blue-300 p-1 font-bold bg-blue-50">生年月日 (DOB)</td>
+                            <td className="border border-blue-300 p-1 font-bold w-44 bg-blue-50">生年月日 (DOB)</td>
                             <td className="border border-blue-300 p-1">{formatDateJP(hoSo.ngay_sinh)} ({getAge(hoSo.ngay_sinh)}歳)</td>
-                            <td className="border border-blue-300 p-1 font-bold bg-blue-50 w-36">性 別 (Sex)</td>
-                            <td className="border border-blue-300 p-1">{mapSex(hoSo.gioi_tinh)}</td>
+                            <td className="border border-blue-300 p-1 font-bold bg-blue-50 w-32">性 別 (Sex)</td>
+                            <td className="border border-blue-300 p-1 w-32">{mapSex(hoSo.gioi_tinh)}</td>
                         </tr>
                         <tr>
-                            <td className="border border-blue-300 p-1 font-bold bg-blue-50">出身地 (Place of Birth)</td>
+                            <td className="border border-blue-300 p-1 font-bold w-44 bg-blue-50">出身地 (Place of Birth)</td>
                             <td className="border border-blue-300 p-1" colSpan="3">{hoSo.que_quan}</td>
                         </tr>
 
                         <tr>
-                            <td className="border border-blue-300 p-1 font-bold bg-blue-50">宗 教 (Religion)</td>
+                            <td className="border border-blue-300 p-1 font-bold w-44 bg-blue-50">宗 教 (Religion)</td>
                             <td className="border border-blue-300 p-1">{mapReligion(hoSo.ton_giao)}</td>
-                            <td className="border border-blue-300 p-1 font-bold bg-blue-50">婚姻状況</td>
-                            <td className="border border-blue-300 p-1">{mapMarital(hoSo.hon_nhan)}</td>
+                            <td className="border border-blue-300 p-1 font-bold bg-blue-50 w-32">婚姻状況</td>
+                            <td className="border border-blue-300 p-1 w-32">{mapMarital(hoSo.hon_nhan)}</td>
                         </tr>
                     </tbody>
                 </table>
@@ -113,7 +115,7 @@ export default function PrintProfileContentJP({ hoSo, showSBD = false }) {
                 <div className="border border-blue-300 p-2 text-xs flex flex-col gap-1.5">
                     <div className="grid grid-cols-2 gap-4">
                         <p><strong>希望職種 (Desired Job):</strong> {mapJob(hoSo.nganh_nghe_mong_muon)}</p>
-                        <p><strong>日本語 (Japanese):</strong> {hoSo.trinh_do_tieng_nhat}</p>
+                        <p><strong>日本語 (Japanese):</strong> {mapJapaneseLevel(hoSo.trinh_do_tieng_nhat)}</p>
                     </div>
                     <div className="border-t border-dashed border-gray-300 my-1"></div>
                     <div className="grid grid-cols-2 gap-4">

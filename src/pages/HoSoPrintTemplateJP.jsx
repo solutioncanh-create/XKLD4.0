@@ -50,10 +50,11 @@ export default function HoSoPrintTemplateJP() {
                     }
                     .print-container {
                         height: 297mm;
+                        width: 210mm !important;
                         overflow: hidden !important;
                         zoom: 0.95;
                         padding: 10mm !important;
-                        margin: 0 !important;
+                        margin: 0 auto !important;
                     }
                     /* Override font/colors */
                     body {
