@@ -9,6 +9,7 @@ export default function DangKy() {
     const navigate = useNavigate()
     const [loading, setLoading] = useState(false)
     const [step, setStep] = useState(1)
+    const [showSuccess, setShowSuccess] = useState(false)
 
     const steps = [
         { num: 1, label: 'Cá nhân & Giấy tờ', icon: 'person_outline' },
@@ -270,8 +271,7 @@ export default function DangKy() {
             } else {
                 const { error } = await supabase.from('ho_so').insert([payload])
                 if (error) throw error
-                alert('Đăng ký mới thành công!')
-                navigate('/')
+                setShowSuccess(true)
             }
         } catch (error) { alert('Lỗi: ' + error.message) }
         finally { setLoading(false) }
@@ -416,7 +416,7 @@ export default function DangKy() {
                 <div className="flex justify-between items-center mb-6">
                     <h3 className="text-lg font-bold text-emerald-900 flex items-center gap-2">
                         <span className="material-icons-outlined">document_scanner</span>
-                        1. Số hóa Giấy tờ (OCR AI)
+                        1. Số hóa Giấy tờ
                     </h3>
                     <span className="text-xs font-bold text-orange-700 bg-white px-3 py-1.5 rounded-full shadow-sm border border-orange-200 flex items-center gap-2">
                         <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse shadow-sm"></span>
@@ -1183,6 +1183,29 @@ export default function DangKy() {
                     )}
                 </button>
             </div>
+
+            {/* SUCCESS MODAL */}
+            {showSuccess && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8 text-center relative overflow-hidden animate-slide-up">
+                        <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-emerald-400 to-teal-600"></div>
+                        <div className="w-20 h-20 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-6 animate-bounce-slow">
+                            <span className="material-icons-outlined text-5xl text-emerald-600">check_circle</span>
+                        </div>
+                        <h2 className="text-2xl font-bold text-gray-800 mb-2">Đăng Ký Thành Công!</h2>
+                        <p className="text-gray-500 mb-8 leading-relaxed text-sm px-4">
+                            Hồ sơ của bạn đã được gửi an toàn lên hệ thống.
+                        </p>
+                        <button
+                            onClick={() => navigate('/')}
+                            className="w-full py-3.5 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-bold rounded-xl shadow-lg shadow-emerald-500/30 hover:shadow-emerald-500/40 hover:-translate-y-0.5 transition-all text-base uppercase tracking-wide flex items-center justify-center gap-2"
+                        >
+                            <span>Về Trang Chủ</span>
+                            <span className="material-icons-outlined">arrow_forward</span>
+                        </button>
+                    </div>
+                </div>
+            )}
 
             {/* CSS Utility Classes embedded for this component */}
             <style>{`
