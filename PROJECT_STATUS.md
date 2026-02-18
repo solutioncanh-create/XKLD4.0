@@ -1,27 +1,26 @@
 # Trạng thái Dự án (Checkpoint)
-**Ngày cập nhật:** 2026-02-18
+**Ngày cập nhật:** 2026-02-18 (Phiên làm việc chiều)
 
 ---
 
 ### 1. Trạng thái Hiện tại
-- **Mã nguồn:** Đã Commit (e5e6bd2, 90fb0d5).
-- **Trang chủ:** Đã thiết kế lại hoàn toàn theo phong cách SaaS hiện đại (Emerald Green / Navy Blue).
-- **Navbar:** Đã cập nhật Menu, Logo mới, Toggle chuyển đổi vai trò (Ứng viên/Doanh nghiệp).
-- **Công nghệ:** Đã tích hợp `lucide-react` cho icon bộ mới.
+- **Mã nguồn:** Đã Commit & Push lên GitHub (main branch).
+- **Deploy:** Đã deploy thành công lên Vercel Production.
+- **Navbar:** Đã tối ưu hiển thị trên Mobile (Solid White Background) và loại bỏ nút "Chế độ xem" không cần thiết.
 
 ### 2. Các Thay đổi Quan trọng (Phiên làm việc này)
-- **HomePage.jsx:**
-    - Viết lại Hero Section, Value Grid, Stats, Process, Footer.
-    - Sử dụng `lucide-react` thay cho `material-icons`.
 - **Navbar.jsx:**
-    - Update Links: Trang Chủ, Cộng Đồng Số, Hồ Sơ, Việc Làm.
-    - Thêm nút chuyển đổi role Ứng viên/Doanh nghiệp.
-    - Responsive Mobile Menu mới.
+    - Sửa lỗi hiển thị trong suốt gây khó đọc trên Mobile.
+    - Xóa bỏ nút chuyển đổi "Chế độ xem" (Doanh nghiệp/Ứng viên) khỏi cả Mobile và Desktop Menu.
+    - Dọn dẹp code (unused imports & state).
+- **System:**
+    - Deploy lên Vercel Production.
+    - Push code lên GitHub remote.
 
 ### 3. Công việc Tiếp theo (Gợi ý)
-- **Deploy:** User có thể kiểm tra trên Localhost (port 3001) trước khi deploy.
-- **Trang Cộng Đồng Số:** Hiện tại là link placeholder (`/community`), cần xây dựng nếu yêu cầu.
-- **Flow Ứng viên/Doanh nghiệp:** Xử lý logic Toggle Switch để thay đổi nội dung trang web theo role.
+- **Kiểm tra thực tế:** Review giao diện trên thiết bị di động thật để đảm bảo UX tốt nhất.
+- **Tính năng mới:** Phát triển tiếp các tính năng core như Quản lý Hồ sơ, Tuyển dụng theo yêu cầu.
+- **Admin Dashboard:** Cải thiện giao diện Admin nếu cần.
 
 ---
-*File này được tạo tự động để lưu lại tiến độ công việc.*
+*Ghi chú: Lần sau mở dự án, hãy chạy `npm run dev` để tiếp tục.*
