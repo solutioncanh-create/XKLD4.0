@@ -51,7 +51,10 @@ export default function DangKy() {
 
         // --- BƯỚC 2: GIA ĐÌNH (JSON Array) ---
         // [ { quan_he: 'Bố', ho_ten: '', nam_sinh: '', nghe_nghiep: '', noi_o: '' } ]
-        thong_tin_gia_dinh: [],
+        thong_tin_gia_dinh: [
+            { quan_he: 'Bố', ho_ten: '', nam_sinh: '', nghe_nghiep: '' },
+            { quan_he: 'Mẹ', ho_ten: '', nam_sinh: '', nghe_nghiep: '' }
+        ],
         nguoi_bao_lanh: '',     // Người bảo lãnh chính
         sdt_nguoi_bao_lanh: '',
 
@@ -72,7 +75,10 @@ export default function DangKy() {
 
         // --- BƯỚC 4: HỌC VẤN & KINH NGHIỆM (JSON Array) ---
         qua_trinh_hoc_tap: [],
-        kinh_nghiem_lam_viec: [],
+        kinh_nghiem_lam_viec: [
+            { thoi_gian: '', cong_ty: '', cong_viec: '' },
+            { thoi_gian: '', cong_ty: '', cong_viec: '' }
+        ],
 
         // --- BƯỚC 5: KỸ NĂNG & NGUYỆN VỌNG & SÀNG LỌC ---
         trinh_do_tieng_nhat: '',
@@ -612,9 +618,11 @@ export default function DangKy() {
 
             {formData.thong_tin_gia_dinh.map((mem, idx) => (
                 <div key={idx} className="bg-gray-50 p-4 rounded-lg border border-gray-200 relative mb-4 shadow-sm">
-                    <button type="button" onClick={() => removeItem('thong_tin_gia_dinh', idx)} className="absolute top-2 right-2 text-red-500 hover:text-red-700 font-bold bg-white rounded-full p-1" title="Xóa dòng này">
-                        <span className="material-icons-outlined text-lg">close</span>
-                    </button>
+                    {mem.quan_he !== 'Bố' && mem.quan_he !== 'Mẹ' && (
+                        <button type="button" onClick={() => removeItem('thong_tin_gia_dinh', idx)} className="absolute top-2 right-2 text-red-500 hover:text-red-700 font-bold bg-white rounded-full p-1" title="Xóa dòng này">
+                            <span className="material-icons-outlined text-lg">close</span>
+                        </button>
+                    )}
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-4 pt-2">
                         <div>
                             <label className="text-xs text-gray-500 block mb-1">Quan hệ <span className="text-red-500">*</span></label>
@@ -647,8 +655,10 @@ export default function DangKy() {
                 </div>
             ))}
 
-            <button type="button" onClick={() => addItem('thong_tin_gia_dinh', { quan_he: '', ho_ten: '', nam_sinh: '', nghe_nghiep: '' })} className="btn-add">
-                + Thêm thành viên khác
+            <button type="button" onClick={() => addItem('thong_tin_gia_dinh', { quan_he: '', ho_ten: '', nam_sinh: '', nghe_nghiep: '' })}
+                className="w-full md:w-auto px-6 py-3 bg-emerald-50 text-emerald-700 font-bold rounded-xl border-2 border-dashed border-emerald-300 hover:bg-emerald-100 hover:border-emerald-400 hover:shadow-sm transition-all flex items-center justify-center gap-2 uppercase text-sm tracking-wide">
+                <span className="material-icons-outlined">person_add</span>
+                Thêm thành viên khác
             </button>
 
             <div className="mt-8 pt-4 border-t">
@@ -883,7 +893,7 @@ export default function DangKy() {
                             <div className="flex flex-col md:flex-row gap-4 items-center">
                                 {/* Thời gian */}
                                 <div className="w-full md:w-auto flex flex-col items-start">
-                                    <label className="text-xs text-gray-500 block mb-1 font-semibold">Thời gian</label>
+                                    <label className="text-xs text-gray-500 block mb-1 font-semibold">Thời gian <span className="text-red-500 ml-1">*</span></label>
                                     <div className="flex flex-col md:flex-row gap-2 w-full md:items-center bg-gray-50 md:bg-transparent rounded md:rounded-none p-2 md:p-0">
                                         <MonthYearSelect arrayName="qua_trinh_hoc_tap" index={0} point="start" />
                                         <div className="text-gray-400 text-xs text-center md:hidden">đến</div>
@@ -921,17 +931,19 @@ export default function DangKy() {
                 {/* KINH NGHIỆM LÀM VIỆC */}
                 <div>
                     <h3 className="section-title mt-8">VI. KINH NGHIỆM LÀM VIỆC</h3>
-                    <p className="text-xs text-gray-500 mb-2">(*) Khai 3 công việc gần nhất (nếu có).</p>
+                    <p className="text-xs text-red-500 italic mb-2 font-medium">(*) Khai 3 công việc gần nhất (nếu có).</p>
 
                     {formData.kinh_nghiem_lam_viec.map((item, idx) => (
                         <div key={idx} className="bg-gray-50 p-4 rounded-lg border border-gray-200 relative mb-4 shadow-sm">
-                            <button type="button" onClick={() => removeItem('kinh_nghiem_lam_viec', idx)} className="absolute top-2 right-2 text-red-500 hover:text-red-700 font-bold bg-white rounded-full p-1" title="Xóa dòng này">
-                                <span className="material-icons-outlined text-lg">close</span>
-                            </button>
+                            {idx > 1 && (
+                                <button type="button" onClick={() => removeItem('kinh_nghiem_lam_viec', idx)} className="absolute top-2 right-2 text-red-500 hover:text-red-700 font-bold bg-white rounded-full p-1" title="Xóa dòng này">
+                                    <span className="material-icons-outlined text-lg">close</span>
+                                </button>
+                            )}
                             <div className="flex flex-col md:flex-row gap-4 items-start pt-2">
                                 {/* Thời gian */}
                                 <div className="w-full md:w-auto flex flex-col items-start pb-2 border-b md:border-b-0 border-gray-200 mb-2 md:mb-0">
-                                    <label className="text-xs text-gray-500 block mb-1 font-semibold">Thời gian</label>
+                                    <label className="text-xs text-gray-500 block mb-1 font-semibold">Thời gian {idx === 0 && <span className="text-red-500 ml-1">*</span>}</label>
                                     <div className="flex flex-col md:flex-row gap-2 w-full md:items-center bg-gray-50 md:bg-transparent rounded md:rounded-none p-2 md:p-0">
                                         <MonthYearSelect arrayName="kinh_nghiem_lam_viec" index={idx} point="start" />
                                         <div className="text-gray-400 text-xs text-center md:hidden">đến</div>
@@ -943,14 +955,14 @@ export default function DangKy() {
                                 {/* Thông tin */}
                                 <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
                                     <div>
-                                        <label className="text-xs text-gray-500 block mb-1">Tên công ty <span className="text-red-500 ml-1">*</span></label>
-                                        <input placeholder="CONG TY ABC" className={`input-sm font-medium w-full uppercase ${!item.cong_ty ? '' : '!bg-white'}`}
+                                        <label className="text-xs text-gray-500 block mb-1">Tên công ty {idx === 0 && <span className="text-red-500 ml-1">*</span>}</label>
+                                        <input placeholder={idx === 0 ? "BẮT BUỘC NHẬP" : "CÔNG TY ABC"} className={`input-sm font-medium w-full uppercase ${!item.cong_ty ? '' : '!bg-white'}`}
                                             value={item.cong_ty}
                                             onChange={(e) => handleArrayChange('kinh_nghiem_lam_viec', idx, 'cong_ty', toUpperNoAccent(e.target.value))}
                                         />
                                     </div>
                                     <div>
-                                        <label className="text-xs text-gray-500 block mb-1">Công việc <span className="text-red-500 ml-1">*</span></label>
+                                        <label className="text-xs text-gray-500 block mb-1">Công việc {idx === 0 && <span className="text-red-500 ml-1">*</span>}</label>
                                         <select className={`input-sm w-full ${!item.cong_viec ? 'text-gray-400' : '!bg-white'}`} value={item.cong_viec} onChange={(e) => handleArrayChange('kinh_nghiem_lam_viec', idx, 'cong_viec', e.target.value)}>
                                             <option value="">-- Chọn --</option>
                                             {[
@@ -972,7 +984,11 @@ export default function DangKy() {
                             </div>
                         </div>
                     ))}
-                    <button type="button" onClick={() => addItem('kinh_nghiem_lam_viec', { thoi_gian: '', cong_ty: '', cong_viec: '' })} className="btn-add">+ Thêm công việc</button>
+                    <button type="button" onClick={() => addItem('kinh_nghiem_lam_viec', { thoi_gian: '', cong_ty: '', cong_viec: '' })}
+                        className="mt-4 w-full md:w-auto px-6 py-3 bg-emerald-50 text-emerald-700 font-bold rounded-xl border-2 border-dashed border-emerald-300 hover:bg-emerald-100 hover:border-emerald-400 hover:shadow-sm transition-all flex items-center justify-center gap-2 uppercase text-sm tracking-wide">
+                        <span className="material-icons-outlined">add_circle</span>
+                        Thêm công việc
+                    </button>
                 </div>
             </div>
         )
