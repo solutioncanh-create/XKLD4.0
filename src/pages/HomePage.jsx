@@ -1,154 +1,196 @@
-import { useState } from 'react'
 import { Link } from 'react-router-dom'
-
+import {
+    FileText,
+    Search,
+    Cloud,
+    MessageCircle,
+    GraduationCap,
+    ShieldCheck,
+    Scan,
+    Cpu,
+    Plane,
+    Globe,
+    ArrowRight,
+    CheckCircle
+} from 'lucide-react'
 
 export default function HomePage() {
-
-
     return (
-        <div className="font-sans text-secondary-800 bg-white selection:bg-primary-100 selection:text-primary-900">
+        <div className="font-sans text-slate-900 bg-white selection:bg-emerald-100 selection:text-emerald-900 pt-20">
 
             {/* HERO SECTION */}
-            <section className="relative overflow-hidden bg-gradient-to-b from-primary-50/50 via-white to-white min-h-[50vh] flex items-center justify-center pt-10 pb-10 md:pt-20 md:pb-16">
-                {/* Background Decoration */}
-                <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-secondary-200 to-transparent opacity-50"></div>
-                <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                    <div className="absolute -top-[10%] -right-[5%] w-[300px] md:w-[600px] h-[300px] md:h-[600px] bg-primary-100/40 rounded-full blur-3xl animate-pulse-slow"></div>
-                    <div className="absolute top-[20%] -left-[10%] w-[200px] md:w-[400px] h-[200px] md:h-[400px] bg-sky-50/60 rounded-full blur-3xl animate-pulse-slow delay-1000"></div>
+            <section className="relative overflow-hidden bg-gradient-to-b from-emerald-50/50 via-white to-white py-20 lg:py-32">
+                <div className="container mx-auto px-4 sm:px-6 relative z-10 text-center max-w-5xl">
+
+                    {/* Badge */}
+                    <div className="inline-flex items-center gap-2 bg-white px-4 py-1.5 rounded-full text-xs font-bold tracking-wider uppercase border border-slate-200 text-emerald-700 shadow-sm mb-8 animate-fade-in-up">
+                        <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                        Uy tín - Tận tâm - Chuyên nghiệp
+                    </div>
+
+                    {/* Headline */}
+                    <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tight text-slate-900 mb-6 leading-tight animate-fade-in-up delay-100">
+                        Hệ sinh thái Số kết nối <br className="hidden md:block" />
+                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-teal-500">Nhân lực Việt - Nhật</span>
+                    </h1>
+
+                    {/* Subheadline */}
+                    <p className="text-lg md:text-xl text-slate-600 max-w-2xl mx-auto mb-10 leading-relaxed font-normal animate-fade-in-up delay-200">
+                        Nền tảng đầu tiên minh bạch hóa quy trình XKLĐ bằng công nghệ. Kết nối trực tiếp Ứng viên - Công ty XKLĐ - Nghiệp đoàn Nhật Bản trên một giao diện duy nhất.
+                    </p>
+
+                    {/* CTA Buttons */}
+                    <div className="flex flex-col sm:flex-row gap-4 justify-center items-center animate-fade-in-up delay-300">
+                        <Link to="/dang-ky" className="group relative w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-4 text-base font-bold text-white transition-all duration-300 bg-emerald-600 rounded-full hover:bg-emerald-700 hover:shadow-lg hover:shadow-emerald-500/30 hover:-translate-y-1">
+                            <FileText size={20} />
+                            Tạo Hồ Sơ Số (E-Resume)
+                        </Link>
+                        <Link to="/viec-lam" className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-4 text-base font-bold text-slate-700 transition-all duration-300 bg-white border border-slate-200 rounded-full hover:bg-slate-50 hover:border-emerald-200 hover:text-emerald-700 hover:shadow-md hover:-translate-y-1">
+                            <Search size={20} />
+                            Tra cứu Đơn hàng AI
+                        </Link>
+                    </div>
                 </div>
 
-                <div className="container mx-auto px-4 sm:px-6 relative z-10 text-center w-full max-w-5xl">
-                    <div className="space-y-6 md:space-y-8 animate-fade-in-up">
-
-                        {/* Badge */}
-                        <div className="inline-flex items-center gap-2 bg-white px-4 py-1.5 rounded-full text-xs md:text-sm font-bold tracking-wider uppercase border border-secondary-200 text-primary-800 shadow-sm mx-auto hover:shadow-md transition-shadow cursor-default">
-                            <span className="w-2 h-2 rounded-full bg-primary-600 animate-pulse"></span>
-                            Uy tín - Tận tâm - Chuyên nghiệp
-                        </div>
-
-                        {/* Headline */}
-                        <h1 className="text-[41px] sm:text-5xl md:text-7xl lg:text-7xl font-black leading-[1.1] tracking-tight text-secondary-900">
-                            Kiến Tạo Tương Lai<br />
-                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary-700 to-primary-500 pb-2">Hành trình Japan</span>
-                        </h1>
-
-                        {/* Subheadline */}
-                        <p className="text-lg sm:text-lg md:text-xl text-secondary-600 max-w-2xl mx-auto leading-relaxed font-normal px-4">
-                            Hệ thống quản lý ứng viên thông minh, kết nối trực tiếp với các đơn vị uy tín hàng đầu Nhật Bản. Mở ra cơ hội nghề nghiệp vững chắc.
-                        </p>
-
-                        {/* CTA Buttons */}
-                        <div className="flex flex-col sm:flex-row gap-3 justify-center pt-2 px-4 sm:px-0">
-                            <Link to="/dang-ky" className="group relative w-full sm:w-auto inline-flex items-center justify-center px-6 py-4 text-lg font-bold text-white transition-all duration-300 bg-primary-700 rounded-xl focus:outline-none hover:bg-primary-800 hover:shadow-lg hover:shadow-primary-500/20 hover:-translate-y-0.5">
-                                Khai Form Online
-                                <span className="material-icons-outlined ml-2 group-hover:translate-x-1 transition-transform">arrow_forward</span>
-                            </Link>
-                            <Link to="/yeu-cau-tu-van" className="w-full sm:w-auto inline-flex items-center justify-center px-6 py-4 text-lg font-bold text-primary-900 transition-all duration-300 bg-white border border-secondary-200 rounded-xl hover:bg-secondary-50 hover:border-primary-200 focus:outline-none hover:shadow-md hover:-translate-y-0.5">
-                                Yêu Cầu Tư Vấn
-                            </Link>
-                        </div>
-                    </div>
+                {/* Background Blobs */}
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full overflow-hidden pointer-events-none -z-10">
+                    <div className="absolute top-[10%] left-[10%] w-[500px] h-[500px] bg-emerald-100/40 rounded-full blur-3xl opacity-60 animate-pulse-slow"></div>
+                    <div className="absolute bottom-[10%] right-[10%] w-[400px] h-[400px] bg-teal-50/60 rounded-full blur-3xl opacity-60"></div>
                 </div>
             </section>
 
-            {/* FEATURES SECTION */}
-            <section className="py-10 md:py-16 bg-white relative">
+            {/* VALUE PROPOSITION GRID */}
+            <section className="py-20 bg-white">
                 <div className="container mx-auto px-4 sm:px-6">
-                    <div className="text-center max-w-3xl mx-auto mb-8 md:mb-12 px-4">
-                        <span className="text-primary-600 font-bold tracking-widest uppercase text-[15px] mb-2 block">Giá Trị Cốt Lõi</span>
-                        <h2 className="text-4xl font-bold text-secondary-900 mb-3">Tại Sao Chọn Chúng Tôi?</h2>
-                        <div className="w-48 h-px bg-gradient-to-r from-transparent via-primary-300 to-transparent mx-auto mb-6"></div>
-                        <p className="text-secondary-500 text-lg leading-relaxed">Cam kết đồng hành cùng bạn trên mọi chặng đường với sự minh bạch và tận tâm nhất.</p>
+                    <div className="text-center mb-16">
+                        <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4">Giá Trị Cốt Lõi</h2>
+                        <div className="w-20 h-1 bg-emerald-500 mx-auto rounded-full"></div>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 md:gap-6 px-2">
-                        <FeatureCard
-                            icon="settings_suggest"
-                            title="Quy Trình Tối Ưu"
-                            desc="Minh bạch, rõ ràng và nhanh chóng trong từng bước xử lý hồ sơ."
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                        <ValueCard
+                            icon={<Cloud size={32} />}
+                            title="Hồ sơ Số hóa"
+                            desc="Loại bỏ giấy tờ thủ tục. Quản lý thông tin trên Cloud 24/7."
                         />
-                        <FeatureCard
-                            icon="handshake"
-                            title="Kết Nối Trực Tiếp"
-                            desc="Làm việc trực tiếp với nghiệp đoàn Nhật Bản, không qua trung gian."
+                        <ValueCard
+                            icon={<MessageCircle size={32} />}
+                            title="Kết nối Real-time"
+                            desc="Tương tác trực tiếp với Nghiệp đoàn, phỏng vấn online."
                         />
-                        <FeatureCard
-                            icon="school"
-                            title="Đào Tạo Chuẩn"
-                            desc="Trang bị kỹ năng & Tiếng Nhật sát thực tế đời sống và công việc."
+                        <ValueCard
+                            icon={<GraduationCap size={32} />}
+                            title="Học tập Chủ động"
+                            desc="E-learning tiếng Nhật và kỹ năng chuẩn công nghiệp."
                         />
-                        <FeatureCard
-                            icon="shield"
-                            title="Cam Kết Hỗ Trợ"
-                            desc="Bảo vệ quyền lợi hợp pháp của người lao động trong suốt quá trình."
+                        <ValueCard
+                            icon={<ShieldCheck size={32} />}
+                            title="Tracking Minh bạch"
+                            desc="Theo dõi tài chính và trạng thái Visa theo thời gian thực."
                         />
                     </div>
                 </div>
             </section>
 
             {/* STATS SECTION */}
-            <section className="py-10 md:py-14 bg-secondary-50 border-y border-secondary-100">
-                <div className="container mx-auto px-4 sm:px-6">
-                    <div className="grid grid-cols-1 lg:grid-cols-4 divide-y lg:divide-y-0 lg:divide-x divide-secondary-100 bg-white rounded-2xl shadow-sm border border-secondary-100">
-                        <StatNumber number="500+" label="Đối tác Nhật Bản" icon="business" />
-                        <StatNumber number="10K+" label="Hồ sơ thành công" icon="assignment_turned_in" />
-                        <StatNumber number="99%" label="Tỷ lệ đỗ Visa" icon="airplane_ticket" />
-                        <StatNumber number="100%" label="Hài lòng" icon="sentiment_satisfied_alt" />
+            <section className="py-20 bg-slate-900 text-white relative overflow-hidden">
+                <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=2072&auto=format&fit=crop')] opacity-10 bg-cover bg-center"></div>
+                <div className="container mx-auto px-4 sm:px-6 relative z-10">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12 text-center divide-x divide-slate-800/50">
+                        <StatItem number="500+" label="Đối tác Nghiệp đoàn" />
+                        <StatItem number="10K+" label="Profile số đã kích hoạt" />
+                        <StatItem number="99%" label="Tỷ lệ xử lý chuẩn xác" />
+                        <StatItem number="24/7" label="Hỗ trợ kỹ thuật số" />
                     </div>
                 </div>
             </section>
 
-            {/* SIMPLE FOOTER */}
-            <footer className="bg-primary-700 text-white py-10 md:py-14 font-light text-sm">
-                <div className="container mx-auto px-6 text-center space-y-6">
-                    <Link to="/" className="inline-flex items-center gap-3 group justify-center hover:opacity-90 transition-opacity">
-                        <div className="w-10 h-10 md:w-12 md:h-12 bg-white rounded-xl flex items-center justify-center text-primary-700 shadow-lg shadow-black/20">
-                            <span className="material-icons-outlined text-2xl md:text-3xl">public</span>
-                        </div>
-                        <span className="text-3xl md:text-4xl font-black text-white drop-shadow-md">XKLD <span className="inline-block bg-gradient-to-r from-yellow-400 to-red-600 text-transparent bg-clip-text pb-1 pr-1">4.0</span></span>
-                    </Link>
+            {/* HOW IT WORKS */}
+            <section className="py-20 bg-slate-50">
+                <div className="container mx-auto px-4 sm:px-6">
+                    <div className="text-center mb-16">
+                        <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4">Quy trình 3 bước trên App/Web</h2>
+                        <p className="text-slate-600 max-w-xl mx-auto">Đơn giản hóa hành trình của bạn chỉ với 3 bước được tối ưu hóa bằng công nghệ.</p>
+                    </div>
 
-                    <p className="text-secondary-200 text-sm md:text-base max-w-xl mx-auto leading-relaxed font-normal opacity-80">
-                        Nền tảng quản lý hồ sơ thực tập sinh Việt Nam đi Nhật Bản.
-                    </p>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative max-w-5xl mx-auto">
+                        {/* Connecting Line (Desktop) */}
+                        <div className="hidden md:block absolute top-[28px] left-[16%] right-[16%] h-0.5 bg-slate-200 -z-10"></div>
 
-                    <div className="pt-6 border-t border-white/10 w-full max-w-sm mx-auto space-y-1">
-                        <p className="text-xs font-bold text-white/50">© 2026 SolutionCooperative.</p>
-                        <p className="text-[10px] text-white/30">Developed for Vietnam-Japan Labor Cooperation</p>
+                        <StepCard
+                            step="01"
+                            icon={<Scan size={28} className="text-white" />}
+                            title="Quét & Tạo"
+                            desc="Scan giấy tờ, AI tự động điền Form."
+                            color="bg-emerald-500"
+                        />
+                        <StepCard
+                            step="02"
+                            icon={<Cpu size={28} className="text-white" />}
+                            title="Matching"
+                            desc="Hệ thống tự gợi ý đơn hàng phù hợp."
+                            color="bg-teal-500"
+                        />
+                        <StepCard
+                            step="03"
+                            icon={<Plane size={28} className="text-white" />}
+                            title="Flying"
+                            desc="Theo dõi lịch bay và hỗ trợ tại Nhật qua App."
+                            color="bg-sky-500"
+                        />
+                    </div>
+                </div>
+            </section>
+
+            {/* FOOTER */}
+            <footer className="bg-white border-t border-slate-100 py-12">
+                <div className="container mx-auto px-4 text-center">
+                    <div className="flex items-center justify-center gap-2 mb-6">
+                        <Globe className="text-emerald-600" size={24} />
+                        <span className="text-xl font-bold text-slate-900">XKLD <span className="text-emerald-600">4.0</span></span>
+                    </div>
+                    <p className="text-slate-500 text-sm mb-6">Nền tảng công nghệ kết nối nhân lực toàn cầu.</p>
+                    <div className="text-sm font-medium text-slate-400">
+                        © 2026 XKLD 4.0 Technology JSC. All rights reserved.
                     </div>
                 </div>
             </footer>
-
-            {/* CONSULTATION MODAL */}
-
         </div>
     )
 }
 
-function FeatureCard({ icon, title, desc }) {
+function ValueCard({ icon, title, desc }) {
     return (
-        <div className="bg-white p-6 md:p-8 rounded-2xl border border-secondary-100 hover:border-primary-200 hover:shadow-lg hover:shadow-primary-500/5 hover:-translate-y-1 transition-all duration-300 group flex flex-col items-center text-center h-full">
-            <div className={`w-14 h-14 md:w-16 md:h-16 rounded-2xl flex items-center justify-center mb-5 text-3xl transition-all duration-300 text-primary-700 bg-primary-50 group-hover:bg-primary-600 group-hover:text-white shadow-sm`}>
-                <span className="material-icons-outlined">{icon}</span>
+        <div className="bg-slate-50 p-8 rounded-2xl group hover:bg-white hover:shadow-xl hover:shadow-slate-200/50 transition-all duration-300 border border-transparent hover:border-emerald-100 text-center">
+            <div className="w-16 h-16 mx-auto bg-white rounded-2xl flex items-center justify-center text-emerald-600 mb-6 shadow-sm group-hover:scale-110 group-hover:bg-emerald-600 group-hover:text-white transition-all duration-300">
+                {icon}
             </div>
-            <h3 className="text-xl font-bold text-secondary-900 mb-3 group-hover:text-primary-700 transition-colors">{title}</h3>
-            <p className="text-secondary-500 text-lg leading-relaxed flex-1">
-                {desc}
-            </p>
+            <h3 className="text-xl font-bold text-slate-900 mb-3">{title}</h3>
+            <p className="text-slate-600 leading-relaxed">{desc}</p>
         </div>
     )
 }
 
-function StatNumber({ number, label, icon }) {
+function StatItem({ number, label }) {
     return (
-        <div className="p-8 md:p-10 flex flex-col items-center justify-center group hover:bg-secondary-50 transition-colors duration-300 first:rounded-t-2xl lg:first:rounded-l-2xl lg:first:rounded-tr-none last:rounded-b-2xl lg:last:rounded-r-2xl lg:last:rounded-bl-none">
-            {icon && (
-                <div className="w-16 h-16 rounded-full bg-primary-50 text-primary-600 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300 group-hover:bg-primary-100">
-                    <span className="material-icons-outlined text-4xl">{icon}</span>
+        <div className="flex flex-col items-center p-4">
+            <div className="text-4xl md:text-5xl font-extrabold text-emerald-400 mb-2">{number}</div>
+            <div className="text-sm md:text-base font-medium text-slate-300">{label}</div>
+        </div>
+    )
+}
+
+function StepCard({ step, icon, title, desc, color }) {
+    return (
+        <div className="flex flex-col items-center text-center group bg-white p-6 rounded-2xl md:bg-transparent md:p-0">
+            <div className={`w-14 h-14 rounded-full flex items-center justify-center shadow-lg mb-6 relative z-10 transition-transform group-hover:scale-110 ${color}`}>
+                {icon}
+                <div className="absolute -top-2 -right-2 w-6 h-6 bg-slate-900 rounded-full text-[10px] font-bold text-white flex items-center justify-center border-2 border-white">
+                    {step}
                 </div>
-            )}
-            <div className="text-4xl md:text-5xl font-black text-secondary-900 mb-2 group-hover:text-primary-600 transition-colors duration-300">{number}</div>
-            <div className="text-sm md:text-base font-bold text-secondary-500 uppercase tracking-wider">{label}</div>
+            </div>
+            <h3 className="text-xl font-bold text-slate-900 mb-2">{title}</h3>
+            <p className="text-slate-600">{desc}</p>
         </div>
     )
 }

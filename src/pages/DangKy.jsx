@@ -494,7 +494,7 @@ export default function DangKy() {
                 <div className="md:col-span-3 grid grid-cols-1 gap-4">
                     <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-2">
                         <div className="md:col-span-3">
-                            <label className="label">Họ và Tên <span className="text-red-500 ml-1">*</span> <span className="text-[10px] text-red-500 font-normal italic">(VIẾT HOA KHÔNG DẤU)</span></label>
+                            <label className="label">Họ và Tên <span className="text-red-500 ml-1">*</span></label>
                             <input name="ho_ten" value={formData.ho_ten} onChange={handleChange} className={vCls(formData.ho_ten) + " uppercase"} placeholder="NGUYEN VAN A" />
                         </div>
                         {/* Nickname input hidden requested by user */}
@@ -527,8 +527,8 @@ export default function DangKy() {
 
             {/* Địa chỉ */}
             <div className="space-y-3">
-                <div><label className="label">Quê quán (Nguyên quán) <span className="text-red-500 ml-1">*</span></label><input name="que_quan" value={formData.que_quan} onChange={handleChange} className={vCls(formData.que_quan)} placeholder="Xã, Huyện, Tỉnh..." /></div>
-                <div><label className="label">Nơi ở hiện tại (Để liên hệ) <span className="text-red-500 ml-1">*</span></label><input name="noi_o_hien_tai" value={formData.noi_o_hien_tai} onChange={handleChange} className={vCls(formData.noi_o_hien_tai)} placeholder="Số nhà, đường..." /></div>
+                <div><label className="label">Quê quán (Nguyên quán) <span className="text-red-500 ml-1">*</span></label><input name="que_quan" value={formData.que_quan} onChange={handleChange} className={vCls(formData.que_quan) + " uppercase"} placeholder="Xã, Huyện, Tỉnh..." /></div>
+                <div><label className="label">Nơi ở hiện tại (Để liên hệ) <span className="text-red-500 ml-1">*</span></label><input name="noi_o_hien_tai" value={formData.noi_o_hien_tai} onChange={handleChange} className={vCls(formData.noi_o_hien_tai) + " uppercase"} placeholder="Số nhà, đường..." /></div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 pb-4 border-b border-gray-100">
@@ -594,12 +594,12 @@ export default function DangKy() {
                             <label className="text-xs text-gray-500 block mb-1">Quan hệ <span className="text-red-500">*</span></label>
                             <select className={`input-sm w-full font-medium ${!mem.quan_he ? 'text-gray-400' : '!bg-white'}`} value={mem.quan_he} onChange={(e) => handleArrayChange('thong_tin_gia_dinh', idx, 'quan_he', e.target.value)}>
                                 <option value="" disabled>-- Chọn --</option>
-                                {['Bố', 'Mẹ', 'Ông bà', 'Anh chị', 'Vợ', 'Con'].map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                                {['Bố', 'Mẹ', 'Chồng', 'Vợ', 'Con', 'Anh chị', 'Ông bà'].map(opt => <option key={opt} value={opt}>{opt}</option>)}
                             </select>
                         </div>
                         <div className="md:col-span-1">
-                            <label className="text-xs text-gray-500 block mb-1">Họ và Tên <span className="text-red-500">*</span> <span className="text-[10px] text-red-500 font-normal italic">(VIẾT HOA KHÔNG DẤU)</span></label>
-                            <input placeholder="NGUYEN VAN A" value={mem.ho_ten} onChange={(e) => handleArrayChange('thong_tin_gia_dinh', idx, 'ho_ten', e.target.value)} className={`input-sm uppercase ${!mem.ho_ten ? '' : '!bg-white'}`} />
+                            <label className="text-xs text-gray-500 block mb-1">Họ và Tên <span className="text-red-500">*</span></label>
+                            <input placeholder="NGUYEN VAN A" value={mem.ho_ten} onChange={(e) => handleArrayChange('thong_tin_gia_dinh', idx, 'ho_ten', toUpperNoAccent(e.target.value))} className={`input-sm uppercase ${!mem.ho_ten ? '' : '!bg-white'}`} />
                         </div>
                         <div>
                             <label className="text-xs text-gray-500 block mb-1">Năm sinh <span className="text-red-500">*</span></label>
@@ -869,10 +869,10 @@ export default function DangKy() {
                                 {/* Thông tin */}
                                 <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
                                     <div className="col-span-1">
-                                        <label className="text-xs text-gray-500 block mb-1">Tên trường <span className="text-red-500 ml-1">*</span> <span className="text-[10px] text-red-500 font-normal italic">(VIẾT HOA KHÔNG DẤU)</span></label>
+                                        <label className="text-xs text-gray-500 block mb-1">Tên trường <span className="text-red-500 ml-1">*</span></label>
                                         <input placeholder="THPT NGUYEN TRAI" className={`input-sm font-medium uppercase w-full ${!formData.qua_trinh_hoc_tap[0].ten_truong ? '' : '!bg-white'}`}
                                             value={formData.qua_trinh_hoc_tap[0].ten_truong}
-                                            onChange={(e) => handleArrayChange('qua_trinh_hoc_tap', 0, 'ten_truong', e.target.value)}
+                                            onChange={(e) => handleArrayChange('qua_trinh_hoc_tap', 0, 'ten_truong', toUpperNoAccent(e.target.value))}
                                         />
                                     </div>
                                     <div className="col-span-1">
@@ -917,10 +917,10 @@ export default function DangKy() {
                                 {/* Thông tin */}
                                 <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
                                     <div>
-                                        <label className="text-xs text-gray-500 block mb-1">Tên công ty <span className="text-red-500 ml-1">*</span> <span className="text-[10px] text-red-500 font-normal italic">(VIẾT HOA KHÔNG DẤU)</span></label>
+                                        <label className="text-xs text-gray-500 block mb-1">Tên công ty <span className="text-red-500 ml-1">*</span></label>
                                         <input placeholder="CONG TY ABC" className={`input-sm font-medium w-full uppercase ${!item.cong_ty ? '' : '!bg-white'}`}
                                             value={item.cong_ty}
-                                            onChange={(e) => handleArrayChange('kinh_nghiem_lam_viec', idx, 'cong_ty', e.target.value)}
+                                            onChange={(e) => handleArrayChange('kinh_nghiem_lam_viec', idx, 'cong_ty', toUpperNoAccent(e.target.value))}
                                         />
                                     </div>
                                     <div>

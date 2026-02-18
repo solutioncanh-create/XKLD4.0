@@ -1,113 +1,142 @@
+import { useState, useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { useState } from 'react'
+import { Menu, X, Globe, Briefcase, FileText, Users, LayoutDashboard, User, ToggleLeft, ToggleRight } from 'lucide-react'
 
 export default function Navbar() {
     const location = useLocation()
     const [isMobileMenuOpen, setMobileMenuOpen] = useState(false)
-    const isActive = (path) => location.pathname === path
+    const [scrolled, setScrolled] = useState(false)
+    const [isBusinessMode, setBusinessMode] = useState(false)
+
+    // Handle scroll effect
+    useEffect(() => {
+        const handleScroll = () => {
+            setScrolled(window.scrollY > 20)
+        }
+        window.addEventListener('scroll', handleScroll)
+        return () => window.removeEventListener('scroll', handleScroll)
+    }, [])
+
+    const navLinks = [
+        { name: 'Trang Chủ', path: '/', icon: <Globe size={18} /> },
+        { name: 'Cộng Đồng Số', path: '/community', icon: <Users size={18} /> }, // Placeholder path
+        { name: 'Hồ Sơ Của Tôi', path: '/dang-ky', icon: <FileText size={18} /> }, // Using /dang-ky as Create Profile entry
+        { name: 'Cơ Hội Việc Làm', path: '/viec-lam', icon: <Briefcase size={18} /> },
+    ]
 
     return (
-        <nav className="bg-white/90 backdrop-blur-md border-b border-gray-100 sticky top-0 z-50 transition-all duration-300">
-            <div className="max-w-6xl mx-auto px-4">
-                <div className="flex justify-between h-20 items-center">
-                    <div className="flex items-center gap-12">
-                        {/* LOGO */}
-                        <Link to="/" className="flex-shrink-0 flex items-center group" onClick={() => setMobileMenuOpen(false)}>
-                            <div className="w-10 h-10 bg-primary-600 rounded-lg flex items-center justify-center mr-2 shadow-lg shadow-primary-200 group-hover:scale-105 transition-transform">
-                                <span className="material-icons-outlined text-white text-2xl">public</span>
-                            </div>
-                            <span className="text-2xl font-black text-gray-800 group-hover:text-primary-600 transition-colors">
-                                XKLD <span className="inline-block bg-gradient-to-r from-yellow-400 to-red-600 text-transparent bg-clip-text pb-1 pr-1">4.0</span>
-                            </span>
-                        </Link>
+        <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled || isMobileMenuOpen ? 'bg-white/95 backdrop-blur-md shadow-sm border-b border-gray-100 py-3' : 'bg-transparent py-5'
+            }`}>
+            <div className="container mx-auto px-4 md:px-6">
+                <div className="flex items-center justify-between">
 
-                        {/* DESKTOP MENU */}
-                        <div className="hidden md:flex space-x-1">
-                            <NavLink to="/" label="Trang Chủ" icon="home" active={isActive('/')} />
-                            <NavLink to="/viec-lam" label="Việc Làm" icon="work_outline" active={isActive('/viec-lam')} badge="Hot" />
-                            <NavLink to="/dang-ky" label="Đăng Ký Hồ Sơ" icon="assignment_turned_in" active={isActive('/dang-ky')} />
+                    {/* LOGO */}
+                    <Link to="/" className="flex items-center gap-2 group z-50" onClick={() => setMobileMenuOpen(false)}>
+                        <div className="w-10 h-10 bg-emerald-600 rounded-xl flex items-center justify-center shadow-lg shadow-emerald-600/20 group-hover:scale-105 transition-transform duration-300">
+                            <Globe className="text-white" size={24} />
                         </div>
+                        <span className="text-2xl font-bold tracking-tight text-slate-900 group-hover:text-emerald-700 transition-colors">
+                            XKLD <span className="text-emerald-600">4.0</span>
+                        </span>
+                    </Link>
+
+                    {/* DESKTOP NAVIGATION */}
+                    <div className="hidden md:flex items-center gap-8">
+                        {navLinks.map((link) => (
+                            <Link
+                                key={link.name}
+                                to={link.path}
+                                className={`text-sm font-medium transition-colors hover:text-emerald-600 flex items-center gap-2 ${location.pathname === link.path ? 'text-emerald-700 font-bold' : 'text-slate-600'
+                                    }`}
+                            >
+                                {link.name}
+                            </Link>
+                        ))}
                     </div>
 
-                    {/* RIGHT ACTIONS (Desktop) */}
-                    <div className="flex items-center gap-3">
+                    {/* RIGHT ACTIONS */}
+                    <div className="hidden md:flex items-center gap-4">
+                        {/* Role Toggle */}
+                        <button
+                            onClick={() => setBusinessMode(!isBusinessMode)}
+                            className="flex items-center gap-2 text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-600 px-3 py-1.5 rounded-full transition-colors"
+                        >
+                            <span className={!isBusinessMode ? 'text-emerald-700' : ''}>Ứng viên</span>
+                            {isBusinessMode ? <ToggleRight className="text-slate-900" size={20} /> : <ToggleLeft className="text-emerald-600" size={20} />}
+                            <span className={isBusinessMode ? 'text-slate-900' : ''}>Doanh nghiệp</span>
+                        </button>
+
+                        <div className="h-6 w-px bg-slate-200"></div>
+
+                        {/* Admin Link */}
                         <Link
                             to="/admin/login"
-                            className="hidden sm:flex text-gray-500 hover:text-primary-700 px-4 py-2 rounded-full text-sm font-bold items-center gap-2 transition-all hover:bg-gray-100 border border-transparent hover:border-gray-200"
+                            className="text-slate-500 hover:text-emerald-700 transition-colors p-2 rounded-full hover:bg-emerald-50"
+                            title="Quản trị viên"
                         >
-                            <span className="material-icons-outlined text-xl">admin_panel_settings</span>
-                            Quản Trị Viên
+                            <LayoutDashboard size={20} />
                         </Link>
 
-                        {/* MOBILE MENU TOGGLE */}
-                        <button
-                            onClick={() => setMobileMenuOpen(!isMobileMenuOpen)}
-                            className="md:hidden text-gray-500 hover:text-primary-600 focus:outline-none p-2 rounded-lg hover:bg-gray-50 transition-colors"
+                        {/* User Profile */}
+                        <Link
+                            to="/dang-ky" // Assuming this goes to profile/dashboard
+                            className="w-9 h-9 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-700 hover:bg-emerald-200 transition-colors"
                         >
-                            <span className="material-icons-outlined text-3xl transition-transform duration-300 transform">
-                                {isMobileMenuOpen ? 'close' : 'menu'}
-                            </span>
-                        </button>
+                            <User size={18} />
+                        </Link>
                     </div>
+
+                    {/* MOBILE MENU TOGGLE */}
+                    <button
+                        className="md:hidden z-50 p-2 text-slate-600"
+                        onClick={() => setMobileMenuOpen(!isMobileMenuOpen)}
+                    >
+                        {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+                    </button>
                 </div>
             </div>
 
-            {/* MOBILE MENU DROPDOWN */}
-            {isMobileMenuOpen && (
-                <div className="md:hidden bg-white border-t border-gray-100 absolute top-20 left-0 right-0 shadow-xl py-4 px-4 flex flex-col space-y-2 animate-fade-in-up h-[calc(100vh-5rem)] overflow-y-auto z-40">
-                    <NavLinkMobile to="/" label="Trang Chủ" icon="home" onClick={() => setMobileMenuOpen(false)} active={isActive('/')} />
-                    <NavLinkMobile to="/viec-lam" label="Việc Làm" icon="work_outline" onClick={() => setMobileMenuOpen(false)} active={isActive('/viec-lam')} badge="Hot" />
-                    <NavLinkMobile to="/dang-ky" label="Đăng Ký Hồ Sơ" icon="assignment_turned_in" onClick={() => setMobileMenuOpen(false)} active={isActive('/dang-ky')} />
+            {/* MOBILE MENU OVERLAY */}
+            <div className={`fixed inset-0 bg-white z-40 transform transition-transform duration-300 md:hidden pt-24 px-6 ${isMobileMenuOpen ? 'translate-x-0' : 'translate-x-full'
+                }`}>
+                <div className="flex flex-col gap-6">
+                    {navLinks.map((link) => (
+                        <Link
+                            key={link.name}
+                            to={link.path}
+                            onClick={() => setMobileMenuOpen(false)}
+                            className={`text-lg font-medium py-2 border-b border-slate-100 flex items-center gap-3 ${location.pathname === link.path ? 'text-emerald-600' : 'text-slate-800'
+                                }`}
+                        >
+                            {link.icon}
+                            {link.name}
+                        </Link>
+                    ))}
 
-                    <div className="border-t border-gray-100 my-2 pt-2">
+                    <div className="pt-4 flex flex-col gap-4">
+                        <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+                            <span className="text-sm font-medium text-slate-600">Chế độ xem</span>
+                            <button
+                                onClick={() => setBusinessMode(!isBusinessMode)}
+                                className="flex items-center gap-2 text-sm font-bold"
+                            >
+                                <span className={!isBusinessMode ? 'text-emerald-600' : 'text-slate-400'}>Ứng viên</span>
+                                /
+                                <span className={isBusinessMode ? 'text-slate-900' : 'text-slate-400'}>Doanh nghiệp</span>
+                            </button>
+                        </div>
+
                         <Link
                             to="/admin/login"
-                            className="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-500 font-bold hover:bg-gray-50 transition-colors"
                             onClick={() => setMobileMenuOpen(false)}
+                            className="flex items-center gap-3 text-slate-600 hover:text-emerald-600 py-2"
                         >
-                            <span className="material-icons-outlined text-xl">admin_panel_settings</span>
-                            Quản Trị Viên
+                            <LayoutDashboard size={20} />
+                            Truy cập Admin
                         </Link>
                     </div>
                 </div>
-            )}
+            </div>
         </nav>
-    )
-}
-
-function NavLink({ to, label, icon, active, badge }) {
-    return (
-        <Link
-            to={to}
-            className={`relative inline-flex items-center px-4 py-2 rounded-lg text-sm font-bold transition-all duration-200 group
-                ${active
-                    ? 'text-primary-700 bg-primary-50'
-                    : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50'
-                }
-            `}
-        >
-            <span className={`material-icons-outlined mr-2 text-lg ${active ? 'text-primary-600' : 'text-gray-400 group-hover:text-primary-500 transition-colors'}`}>{icon}</span>
-            {label}
-            {badge && <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded-full shadow-sm animate-pulse">{badge}</span>}
-        </Link>
-    )
-}
-
-function NavLinkMobile({ to, label, icon, onClick, active, badge }) {
-    return (
-        <Link
-            to={to}
-            onClick={onClick}
-            className={`relative flex items-center gap-4 px-4 py-3 rounded-xl text-base font-bold transition-all duration-200
-                ${active
-                    ? 'text-primary-700 bg-primary-50 border border-primary-100 shadow-sm'
-                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50 border border-transparent'
-                }
-            `}
-        >
-            <span className={`material-icons-outlined text-2xl ${active ? 'text-primary-600' : 'text-gray-400'}`}>{icon}</span>
-            {label}
-            {badge && <span className="ml-auto bg-red-500 text-white text-xs px-2 py-0.5 rounded-full font-bold shadow-sm">{badge}</span>}
-        </Link>
     )
 }
