@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../supabaseClient'
 import { callGeminiAPI } from '../utils/ocr'
+import { compressImage } from '../utils/compressImage'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 
 export default function DangKy() {
@@ -352,13 +353,28 @@ export default function DangKy() {
                 return
             }
 
-            const file = event.target.files[0]
-            const fileExt = file.name.split('.').pop()
+            let fileToUpload = file
+
+            // --- TỰ ĐỘNG NÉN ẢNH CHO STORAGE (< 200KB) ---
+            try {
+                if (file.type.startsWith('image/')) {
+                    const compressed = await compressImage(file, 200)
+                    if (compressed) {
+                        fileToUpload = compressed
+                        console.log(`Đã nén ảnh upload: ${(fileToUpload.size / 1024).toFixed(1)} KB (Gốc: ${(file.size / 1024).toFixed(1)} KB)`)
+                    }
+                }
+            } catch (e) {
+                console.warn("Lỗi nén ảnh (bỏ qua):", e)
+            }
+            // ----------------------------------
+
+            const fileExt = fileToUpload.name.split('.').pop()
             const fileName = `${fieldName}_${Date.now()}.${fileExt}`
             const filePath = `${fileName}`
 
-            // Upload ảnh lên bucket 'avatars' (Cần tạo bucket này trên Supabase Dashboard và set policy Public)
-            let { error: uploadError } = await supabase.storage.from('avatars').upload(filePath, file)
+            // Upload ảnh NÉN lên bucket 'avatars' (Tiết kiệm dung lượng)
+            let { error: uploadError } = await supabase.storage.from('avatars').upload(filePath, fileToUpload)
 
             if (uploadError) {
                 throw uploadError
@@ -370,9 +386,9 @@ export default function DangKy() {
             // Cập nhật vào form
             setFormData(prev => ({ ...prev, [fieldName]: data.publicUrl }))
 
-            // Nếu là ảnh mặt trước HOẶC mặt sau -> Kích hoạt AI Scan (Dùng FILE gốc)
+            // Nếu là ảnh mặt trước HOẶC mặt sau -> Kích hoạt AI Scan (Dùng FILE GỐC để AI đọc rõ nét nhất)
             if (fieldName === 'anh_cccd_mat_truoc' || fieldName === 'anh_cccd_mat_sau') {
-                analyzeCCCD(file)
+                analyzeCCCD(file) // Dùng file gốc chất lượng cao
             }
 
         } catch (error) {
