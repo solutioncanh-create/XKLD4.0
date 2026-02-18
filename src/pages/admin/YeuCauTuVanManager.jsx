@@ -77,48 +77,28 @@ export default function YeuCauTuVanManager() {
 
     return (
         <div className="bg-gray-50 min-h-screen font-sans pb-20">
-            {/* Header Stats - Hidden on Mobile */}
-            <div className="hidden md:flex overflow-x-auto gap-3 pb-2 mb-4 px-4 pt-4 no-scrollbar snap-x">
-                <div className="min-w-[140px] snap-center"><StatCard label="Tổng yêu cầu" count={stats.total} icon="list_alt" color="bg-blue-500" /></div>
-                <div className="min-w-[140px] snap-center"><StatCard label="Chờ tư vấn" count={stats.new} icon="notifications_active" color="bg-yellow-500" /></div>
-                <div className="min-w-[140px] snap-center"><StatCard label="Đã liên hệ" count={stats.contacted} icon="phone_in_talk" color="bg-purple-500" /></div>
-                <div className="min-w-[140px] snap-center"><StatCard label="Đã chốt đơn" count={stats.done} icon="check_circle" color="bg-green-500" /></div>
-            </div>
+            {/* Header Stats - Removed per request */}
 
-            {/* Toolbar - Natural Scroll */}
+            {/* Toolbar - Combined Responsive */}
             <div className="bg-gray-50 px-3 pt-3 md:px-4 mb-4">
-                {/* Search Bar & Action Buttons */}
-                <div className="flex gap-2 items-center mb-3">
-                    {/* Client Search - Visible on Mobile */}
-                    <div className="flex relative flex-1">
-                        <span className="material-icons-outlined absolute left-3 top-3 text-slate-400">search</span>
-                        <input
-                            type="text"
-                            placeholder="Tìm tên, SĐT, email..."
-                            value={searchTerm}
-                            onChange={e => setSearchTerm(e.target.value)}
-                            className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-base font-medium focus:ring-2 focus:ring-emerald-500/50 outline-none transition-all shadow-sm"
-                        />
-                    </div>
-                    <button onClick={fetchLeads} className="hidden md:flex w-10 h-10 items-center justify-center bg-white border border-gray-200 rounded-lg text-gray-500 hover:bg-gray-50 active:scale-95 transition-all shadow-sm ml-auto">
-                        <span className="material-icons-outlined">refresh</span>
-                    </button>
-                </div>
+                <div className="flex flex-wrap items-center gap-2">
 
-                {/* Filter Buttons - Horizontal Scroll */}
-                <div className="flex overflow-x-auto pb-2 gap-2 md:flex-wrap md:overflow-visible no-scrollbar mask-gradient-right mb-2">
-                    {['All', ...STATUS_OPTIONS].map(status => (
-                        <button
-                            key={status}
-                            onClick={() => setFilterStatus(status)}
-                            className={`shrink-0 h-[44px] px-3.5 rounded-xl text-sm font-bold transition-all border shadow-sm whitespace-nowrap ${filterStatus === status
-                                ? 'bg-emerald-50 text-emerald-700 border-emerald-200 ring-1 ring-emerald-100'
-                                : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50'
-                                }`}
-                        >
-                            {status === 'All' ? 'Tất cả' : status}
-                        </button>
-                    ))}
+
+                    {/* Filter Buttons */}
+                    <div className="flex flex-wrap gap-2 flex-1 md:justify-start w-full md:w-auto">
+                        {['All', ...STATUS_OPTIONS].map(status => (
+                            <button
+                                key={status}
+                                onClick={() => setFilterStatus(status)}
+                                className={`shrink-0 h-[38px] px-3.5 rounded-lg text-sm font-bold transition-all border shadow-sm whitespace-nowrap ${filterStatus === status
+                                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200 ring-1 ring-emerald-100'
+                                    : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50'
+                                    }`}
+                            >
+                                {status === 'All' ? 'Tất cả' : status}
+                            </button>
+                        ))}
+                    </div>
                 </div>
             </div>
 
@@ -133,17 +113,46 @@ export default function YeuCauTuVanManager() {
                         <p>Không tìm thấy yêu cầu nào.</p>
                     </div>
                 ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                        {filteredLeads.map(lead => (
-                            <LeadCard
-                                key={lead.id}
-                                lead={lead}
-                                onStatusChange={handleStatusChange}
-                                onDelete={() => deleteLead(lead.id)}
-                            />
-                        ))}
+                    <div className="w-full">
+                        {/* Mobile View */}
+                        <div className="md:hidden grid grid-cols-1 gap-4">
+                            {filteredLeads.map(lead => (
+                                <LeadCard
+                                    key={lead.id}
+                                    lead={lead}
+                                    onStatusChange={handleStatusChange}
+                                    onDelete={() => deleteLead(lead.id)}
+                                />
+                            ))}
+                        </div>
+
+                        {/* Desktop View */}
+                        <div className="hidden md:block bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                            <table className="w-full text-left border-collapse">
+                                <thead className="bg-gray-50 uppercase text-xs font-bold text-gray-500 border-b border-gray-100 tracking-wider">
+                                    <tr>
+                                        <th className="px-6 py-4">Ứng viên</th>
+                                        <th className="px-6 py-4">Liên hệ</th>
+                                        <th className="px-6 py-4">Nhu cầu</th>
+                                        <th className="px-6 py-4">Trạng thái</th>
+                                        <th className="px-6 py-4 text-right">Hành động</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-gray-50">
+                                    {filteredLeads.map(lead => (
+                                        <LeadRow
+                                            key={lead.id}
+                                            lead={lead}
+                                            onStatusChange={handleStatusChange}
+                                            onDelete={() => deleteLead(lead.id)}
+                                        />
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
-                ))}
+                ))
+                }
             </div>
         </div>
     )
@@ -164,88 +173,79 @@ function StatCard({ label, count, icon, color }) {
 }
 
 function LeadCard({ lead, onStatusChange, onDelete }) {
-    const statusColors = {
-        'Chờ tư vấn': 'bg-yellow-500',
-        'Đã liên hệ': 'bg-purple-500',
-        'Đã chốt': 'bg-green-500',
-        'Hủy': 'bg-red-500'
-    }
-
-    const currentStatusColor = statusColors[lead.trang_thai] || 'bg-gray-400'
     const STATUS_OPTIONS = ['Chờ tư vấn', 'Đã liên hệ', 'Đã chốt', 'Hủy']
 
+    // Helpers
+    const formatDate = (dateString) => {
+        if (!dateString) return ''
+        return new Date(dateString).toLocaleString('vi-VN', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })
+    }
+
+    const getStatusStyle = (status) => {
+        switch (status) {
+            case 'Chờ tư vấn': return 'bg-amber-50 text-amber-600 border-amber-100'
+            case 'Đã liên hệ': return 'bg-blue-50 text-blue-600 border-blue-100'
+            case 'Đã chốt': return 'bg-emerald-50 text-emerald-600 border-emerald-100'
+            case 'Hủy': return 'bg-rose-50 text-rose-600 border-rose-100'
+            default: return 'bg-slate-100 text-slate-500 border-slate-200'
+        }
+    }
+
     return (
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col relative overflow-hidden transition-all active:scale-[0.99] hover:shadow-md h-full">
-            {/* Status Bar */}
-            <div className={`h-1.5 w-full ${currentStatusColor}`}></div>
+        <div className="bg-white rounded-lg shadow-sm border border-slate-200 hover:border-blue-300 hover:shadow transition-all flex flex-col h-full group">
 
             <div className="p-4 flex-1 flex flex-col">
-                <div className="flex justify-between items-start mb-3">
+                {/* Header: Name & Status */}
+                <div className="flex justify-between items-start gap-3 mb-3">
                     <div>
-                        <h3 className="font-bold text-gray-900 text-base leading-tight mb-0.5" title={lead.ho_ten}>{lead.ho_ten}</h3>
-                        <span className="text-[10px] text-gray-400 font-medium flex items-center gap-1">
-                            <span className="material-icons-outlined text-[10px]">schedule</span>
-                            {new Date(lead.created_at).toLocaleString('vi-VN')}
-                        </span>
+                        <h3 className="font-bold text-slate-800 text-sm leading-snug" title={lead.ho_ten}>{lead.ho_ten}</h3>
+                        <p className="text-[10px] text-slate-400 font-medium mt-0.5">{formatDate(lead.created_at)}</p>
                     </div>
-                    <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded text-white whitespace-nowrap ${currentStatusColor}`}>
+                    <span className={`shrink-0 text-[10px] font-bold uppercase px-2 py-0.5 rounded border ${getStatusStyle(lead.trang_thai)}`}>
                         {lead.trang_thai}
                     </span>
                 </div>
 
-                <div className="space-y-3 flex-1">
-                    {/* Phone Block */}
-                    <div className="bg-blue-50 rounded-lg p-2.5 flex items-center justify-between group cursor-pointer hover:bg-blue-100 transition-colors" onClick={() => window.open(`tel:${lead.so_dien_thoai}`)}>
-                        <div className="flex items-center gap-2">
-                            <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center text-blue-600 shadow-sm border border-blue-100">
-                                <span className="material-icons-outlined text-sm">phone_in_talk</span>
-                            </div>
-                            <div>
-                                <p className="text-[9px] text-blue-400 font-bold uppercase tracking-wider">Số điện thoại</p>
-                                <p className="font-mono font-black text-blue-700 text-sm tracking-tight">{lead.so_dien_thoai}</p>
-                            </div>
-                        </div>
-                        <span className="material-icons-outlined text-blue-300 group-active:text-blue-600">call</span>
+                {/* Contact Info */}
+                <div className="space-y-2 text-xs mb-3">
+                    <div className="flex items-center justify-between border-b border-dashed border-slate-100 pb-1.5 group/phone cursor-pointer" onClick={() => window.open(`tel:${lead.so_dien_thoai}`)}>
+                        <span className="text-slate-400 flex items-center gap-1"><span className="material-icons-outlined text-[14px]">phone</span> SĐT</span>
+                        <span className="font-bold text-blue-600 font-mono group-hover/phone:underline">{lead.so_dien_thoai}</span>
                     </div>
 
-                    {/* Metadata */}
-                    <div className="flex flex-wrap gap-2 text-xs text-gray-600">
-                        {lead.email && (
-                            <div className="flex items-center gap-1 bg-gray-50 px-2 py-1 rounded border border-gray-100 max-w-full">
-                                <span className="material-icons-outlined text-[12px] text-gray-400">email</span>
-                                <span className="truncate">{lead.email}</span>
-                            </div>
-                        )}
-                        <div className="flex items-center gap-1 bg-gray-50 px-2 py-1 rounded border border-gray-100">
-                            <span className="material-icons-outlined text-[12px] text-gray-400">person_outline</span>
-                            <span>{lead.gioi_tinh || '?'} • {lead.tuoi ? `${lead.tuoi}t` : '?'} • {lead.que_quan || '??'}</span>
-                        </div>
-                    </div>
-
-                    {lead.ghi_chu && (
-                        <div className="bg-gray-50 p-2.5 rounded-lg border border-gray-100 mt-2">
-                            <div className="flex items-center gap-1 mb-1">
-                                <span className="material-icons-outlined text-[10px] text-gray-400">sticky_note_2</span>
-                                <p className="text-[9px] font-bold text-gray-400 uppercase">Nội dung quan tâm</p>
-                            </div>
-                            <p className="text-gray-700 text-xs line-clamp-3 leading-relaxed break-words">
-                                {lead.ghi_chu}
-                            </p>
+                    {lead.email && (
+                        <div className="flex items-center justify-between border-b border-dashed border-slate-100 pb-1.5">
+                            <span className="text-slate-400 flex items-center gap-1"><span className="material-icons-outlined text-[14px]">email</span> Email</span>
+                            <span className="font-medium text-slate-700 truncate max-w-[120px]" title={lead.email}>{lead.email}</span>
                         </div>
                     )}
                 </div>
+
+                {/* Attributes (Gender, Age, Hometown) */}
+                <div className="flex flex-wrap gap-2 mb-3">
+                    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-slate-50 text-[10px] text-slate-500 border border-slate-100">
+                        <span className="material-icons-outlined text-[12px]">person</span>
+                        {lead.gioi_tinh || '?'} • {lead.tuoi ? `${lead.tuoi}t` : '?'} • {lead.que_quan || '??'}
+                    </span>
+                </div>
+
+                {/* Note */}
+                {lead.ghi_chu && (
+                    <div className="mt-auto bg-slate-50 p-2 rounded border border-slate-100 text-xs text-slate-600 italic">
+                        <span className="font-bold text-[10px] text-slate-400 uppercase block mb-0.5">Nhu cầu:</span>
+                        <span className="line-clamp-3">{lead.ghi_chu}</span>
+                    </div>
+                )}
             </div>
 
-            {/* Footer Actions */}
-            <div className="grid grid-cols-3 border-t border-slate-100 divide-x divide-slate-100 bg-slate-50/50">
-                <a href={`tel:${lead.so_dien_thoai}`} className="flex flex-col items-center justify-center gap-1 h-[50px] hover:bg-white transition-colors group">
-                    <span className="material-icons-outlined text-emerald-500 text-xl group-hover:scale-110 transition-transform">call</span>
-                    <span className="text-[10px] font-bold text-emerald-600 uppercase">Gọi</span>
-                </a>
-
-                <div className="relative group flex flex-col items-center justify-center gap-1 h-[50px] hover:bg-white transition-colors cursor-pointer">
-                    <span className="material-icons-outlined text-purple-500 text-xl group-hover:text-emerald-600 group-hover:scale-110 transition-transform">change_circle</span>
-                    <span className="text-[10px] font-bold text-purple-600 uppercase group-hover:text-emerald-600">Trạng thái</span>
+            {/* Footer Actions - Compact */}
+            <div className="px-3 py-2 border-t border-slate-100 bg-slate-50/30 flex items-center justify-between">
+                {/* Status Changer */}
+                <div className="relative group/status cursor-pointer">
+                    <div className="flex items-center gap-1 text-[10px] uppercase font-bold text-slate-400 hover:text-indigo-600 transition-colors">
+                        <span className="material-icons-outlined text-[14px]">sync_alt</span>
+                        Đổi trạng thái
+                    </div>
                     <select
                         value={lead.trang_thai}
                         onChange={(e) => onStatusChange(lead.id, e.target.value)}
@@ -255,11 +255,104 @@ function LeadCard({ lead, onStatusChange, onDelete }) {
                     </select>
                 </div>
 
-                <button onClick={() => onDelete(lead.id)} className="flex flex-col items-center justify-center gap-1 h-[50px] hover:bg-white transition-colors group">
-                    <span className="material-icons-outlined text-rose-400 text-xl group-hover:scale-110 transition-transform">delete</span>
-                    <span className="text-[10px] font-bold text-rose-500 uppercase">Xóa</span>
-                </button>
+                <div className="flex items-center gap-1">
+                    <a href={`tel:${lead.so_dien_thoai}`} className="w-7 h-7 flex items-center justify-center rounded text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-all" title="Gọi ngay">
+                        <span className="material-icons-outlined text-[16px]">call</span>
+                    </a>
+                    <button onClick={() => onDelete(lead.id)} className="w-7 h-7 flex items-center justify-center rounded text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-all" title="Xóa">
+                        <span className="material-icons-outlined text-[16px]">delete</span>
+                    </button>
+                </div>
             </div>
         </div>
+    )
+}
+
+function LeadRow({ lead, onStatusChange, onDelete }) {
+    const STATUS_OPTIONS = ['Chờ tư vấn', 'Đã liên hệ', 'Đã chốt', 'Hủy']
+
+    const formatDate = (dateString) => {
+        if (!dateString) return ''
+        return new Date(dateString).toLocaleString('vi-VN', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })
+    }
+
+    const getStatusStyle = (status) => {
+        switch (status) {
+            case 'Chờ tư vấn': return 'bg-amber-50 text-amber-600 border-amber-100 ring-1 ring-amber-200/50'
+            case 'Đã liên hệ': return 'bg-blue-50 text-blue-600 border-blue-100 ring-1 ring-blue-200/50'
+            case 'Đã chốt': return 'bg-emerald-50 text-emerald-600 border-emerald-100 ring-1 ring-emerald-200/50'
+            case 'Hủy': return 'bg-rose-50 text-rose-600 border-rose-100 ring-1 ring-rose-200/50'
+            default: return 'bg-slate-50 text-slate-500 border-slate-100'
+        }
+    }
+
+    return (
+        <tr className="hover:bg-slate-50/80 transition-colors group">
+            <td className="px-6 py-3 align-top">
+                <div>
+                    <p className="font-bold text-slate-800 text-sm">{lead.ho_ten}</p>
+                    <p className="text-sm text-slate-500 mt-1 flex items-center gap-1">
+                        <span className="material-icons-outlined text-[10px]">schedule</span>
+                        {formatDate(lead.created_at)}
+                    </p>
+                    <div className="text-sm text-slate-500 mt-1.5 flex items-center gap-1">
+                        <span className="material-icons-outlined text-[12px] text-slate-400">person</span>
+                        {lead.gioi_tinh || '?'} - {lead.tuoi || '?'}t - {lead.que_quan || '?'}
+                    </div>
+                </div>
+            </td>
+            <td className="px-6 py-3 align-top">
+                <div className="space-y-1">
+                    <span
+                        className="block text-sm font-bold text-slate-700 font-mono hover:text-blue-600 transition-colors cursor-pointer"
+                        onClick={() => window.open(`tel:${lead.so_dien_thoai}`)}
+                    >
+                        {lead.so_dien_thoai}
+                    </span>
+                    {lead.email && (
+                        <span className="block text-sm text-slate-500 truncate max-w-[150px]" title={lead.email}>
+                            {lead.email}
+                        </span>
+                    )}
+                </div>
+            </td>
+            <td className="px-6 py-3 align-top">
+                <div className="max-w-[280px]">
+                    {lead.ghi_chu ? (
+                        <p className="text-sm text-slate-600 bg-slate-50 p-2 rounded border border-slate-100 italic line-clamp-3 leading-relaxed">
+                            {lead.ghi_chu}
+                        </p>
+                    ) : (
+                        <span className="text-sm text-slate-400 italic">Không có ghi chú</span>
+                    )}
+                </div>
+            </td>
+            <td className="px-6 py-3 align-top">
+                <div className="relative inline-block group/status">
+                    <button className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold border ${getStatusStyle(lead.trang_thai)} hover:shadow-sm transition-all bg-white`}>
+                        <span className="w-1.5 h-1.5 rounded-full bg-current opacity-70"></span>
+                        {lead.trang_thai}
+                        <span className="material-icons-outlined text-[12px] ml-0.5 opacity-50">expand_more</span>
+                    </button>
+                    <select
+                        value={lead.trang_thai}
+                        onChange={(e) => onStatusChange(lead.id, e.target.value)}
+                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                    >
+                        {STATUS_OPTIONS.map(s => <option key={s} value={s}>{s}</option>)}
+                    </select>
+                </div>
+            </td>
+            <td className="px-6 py-3 align-top text-right">
+                <div className="flex items-center justify-end gap-3">
+                    <a href={`tel:${lead.so_dien_thoai}`} className="w-7 h-7 flex items-center justify-center rounded-full text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 transition-colors" title="Gọi ngay">
+                        <span className="material-icons-outlined text-[16px]">call</span>
+                    </a>
+                    <button onClick={() => onDelete(lead.id)} className="w-7 h-7 flex items-center justify-center rounded-full text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors" title="Xóa">
+                        <span className="material-icons-outlined text-[16px]">delete</span>
+                    </button>
+                </div>
+            </td>
+        </tr>
     )
 }

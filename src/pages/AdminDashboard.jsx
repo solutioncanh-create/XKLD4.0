@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../supabaseClient'
 import { Link, useNavigate } from 'react-router-dom'
+import { Globe } from 'lucide-react'
 
 export default function AdminDashboard() {
     const navigate = useNavigate()
@@ -375,7 +376,14 @@ export default function AdminDashboard() {
             {/* --- SIDEBAR --- */}
             <aside className="w-64 bg-white border-r border-gray-200 flex flex-col hidden md:flex">
                 <div className="h-16 flex items-center px-6 border-b border-gray-100">
-                    <span className="text-2xl font-black text-primary-700 tracking-tighter">XKLD<span className="text-accent-500">ADMIN</span></span>
+                    <Link to="/" className="flex items-center gap-2 group">
+                        <div className="w-8 h-8 bg-emerald-600 rounded-lg flex items-center justify-center shadow-md shadow-emerald-600/20 group-hover:scale-105 transition-transform duration-300">
+                            <Globe className="text-white" size={18} />
+                        </div>
+                        <span className="text-xl font-bold tracking-tight text-slate-900 group-hover:text-emerald-700 transition-colors">
+                            XKLD <span className="text-emerald-600">4.0</span>
+                        </span>
+                    </Link>
                 </div>
 
                 <div className="flex-1 overflow-y-auto py-6 px-3">

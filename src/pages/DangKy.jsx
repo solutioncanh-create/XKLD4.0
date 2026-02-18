@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../supabaseClient'
-import { callGeminiAPI } from '../utils/ocr'
+import { scanIdCard } from '../utils/aiScanner'
 import { compressImage } from '../utils/compressImage'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 
@@ -22,6 +22,7 @@ export default function DangKy() {
         // --- BƯỚC 1: CÁ NHÂN & GIẤY TỜ ---
         nguon: '', // Nguồn hồ sơ (thay thế mã hồ sơ)
         ho_ten: '',
+        nickname: '', // Biệt danh (không bắt buộc)
         ngay_sinh: '',
         gioi_tinh: 'Nam',
         hon_nhan: '', // Đổi tên cho ngắn gọn
@@ -203,8 +204,8 @@ export default function DangKy() {
             ngay_cap_cccd: 'Ngày cấp CCCD',
             noi_cap_cccd: 'Nơi cấp CCCD',
             anh_ho_so: 'Ảnh chân dung',
-            anh_cccd_mat_truoc: 'Ảnh mặt trước CCCD',
-            anh_cccd_mat_sau: 'Ảnh mặt sau CCCD',
+            anh_cccd_mat_truoc: 'Ảnh mặt trước CCCD/CMT',
+            // anh_cccd_mat_sau: 'Ảnh mặt sau CCCD', // Không bắt buộc
             nguoi_bao_lanh: 'Họ tên người bảo lãnh',
             sdt_nguoi_bao_lanh: 'SĐT người bảo lãnh',
             chieu_cao: 'Chiều cao',
@@ -283,58 +284,62 @@ export default function DangKy() {
     // Hàm gọi AI Gemini (Flash Model) - Tối ưu cho CCCD
     const analyzeCCCD = async (fileInput) => {
         setIsScanning(true)
-        console.log('Bắt đầu phân tích ảnh với Gemini...')
+        console.log('Bắt đầu phân tích ảnh với Gemini JSON Mode...')
 
         try {
-            const extractedData = await callGeminiAPI(fileInput)
+            // Gọi hàm scanIdCard mới
+            const extractedData = await scanIdCard(fileInput)
 
-            if (!extractedData || Object.keys(extractedData).length === 0) {
-                // FALLBACK MOCK DATA NẾU KEY LỖI HOẶC AI KHÔNG ĐỌC ĐƯỢC
-                if (!import.meta.env.VITE_GOOGLE_CLOUD_API_KEY) {
-                    await new Promise(resolve => setTimeout(resolve, 1500))
-                    const mockData = {
-                        ho_ten: 'NGUYEN VAN A',
-                        ngay_sinh: '2000-05-20',
-                        so_cccd: '038000000123',
-                        que_quan: 'Xã A, Huyện B, Tỉnh Nam Định',
-                        noi_o_hien_tai: 'Quận Cầu Giấy, Hà Nội',
-                        gioi_tinh: 'Nam'
-                    }
-                    setFormData(prev => ({ ...prev, ...mockData }))
-                    alert('⚠️ Chưa có API Key! Đang dùng dữ liệu giả lập.')
-                } else {
-                    // Show raw error/null for debugging
-                    console.error("Gemini returned null/empty");
-                    alert(`Không đọc được thông tin. Vui lòng kiểm tra lại ảnh.\n(Chi tiết: Dữ liệu trả về rỗng hoặc lỗi API Key)`);
-                }
+            if (!extractedData) {
+                alert('Không đọc được thông tin. Vui lòng thử lại với ảnh rõ nét hơn.')
                 return
             }
 
-            console.log('Gemini Extracted:', extractedData)
+            console.log('Gemini Extracted (JSON):', extractedData)
 
-            // CHỈ CẬP NHẬT CÁC TRƯỜNG CÓ DỮ LIỆU THỰC (Tránh ghi đè null/rỗng lên dữ liệu cũ)
+            // Map dữ liệu từ JSON trả về vào Form (Logic Smart Fill: Chỉ điền ô trống)
             const cleanData = {}
-            Object.keys(extractedData).forEach(key => {
-                let val = extractedData[key]
-                if (val && val !== '' && val !== 'null' && val !== 'N/A') {
-                    // Áp dụng format cho AI data
-                    if (key === 'ho_ten' || key === 'que_quan' || key === 'noi_o_hien_tai' || key === 'noi_cap_cccd') {
-                        val = val.normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-                            .replace(/đ/g, "d").replace(/Đ/g, "D")
-                            .toUpperCase();
+            let hasNewData = false
+
+            // Helper format: UPPERCASE NO ACCENT
+            const fmt = (val) => toUpperNoAccent(val)
+
+            // List các trường cần map
+            const fieldsToMap = [
+                { formKey: 'so_cccd', jsonKey: 'so_cccd', format: false }, // Số giữ nguyên
+                { formKey: 'ho_ten', jsonKey: 'ho_ten', format: true },
+                { formKey: 'ngay_sinh', jsonKey: 'ngay_sinh', format: false },
+                { formKey: 'ngay_cap_cccd', jsonKey: 'ngay_cap_cccd', format: false },
+                { formKey: 'gioi_tinh', jsonKey: 'gioi_tinh', format: false },
+                { formKey: 'que_quan', jsonKey: 'que_quan', format: true },
+                { formKey: 'noi_o_hien_tai', jsonKey: 'noi_o_hien_tai', format: true },
+                { formKey: 'noi_cap_cccd', jsonKey: 'noi_cap_cccd', format: true },
+            ]
+
+            fieldsToMap.forEach(({ formKey, jsonKey, format }) => {
+                let aiValue = extractedData[jsonKey]
+                if (aiValue) {
+                    if (format) aiValue = fmt(aiValue)
+
+                    // CHỈ ĐIỀN NẾU FORM ĐANG TRỐNG
+                    if (!formData[formKey] || formData[formKey].trim() === '') {
+                        cleanData[formKey] = aiValue
+                        hasNewData = true
                     }
-                    cleanData[key] = val
                 }
             })
 
-            if (Object.keys(cleanData).length > 0) {
+
+            if (hasNewData) {
                 setFormData(prev => ({
                     ...prev,
                     ...cleanData
                 }))
-                alert('✨ Gemini AI đã cập nhật thêm thông tin!')
+                alert('✅ AI Scan thành công!')
             } else {
-                alert('Không tìm thấy thông tin mới nào rõ ràng.')
+                // Nếu không có dữ liệu mới điền vào (do đã có đủ hoặc AI ko đọc được gì mới)
+                // Không làm gì hoặc thông báo nhẹ
+                console.log('Không có thông tin mới cần bổ sung (Dữ liệu đã có sẵn).')
             }
 
         } catch (error) {
@@ -353,6 +358,7 @@ export default function DangKy() {
                 return
             }
 
+            const file = event.target.files[0]
             let fileToUpload = file
 
             // --- TỰ ĐỘNG NÉN ẢNH CHO STORAGE (< 200KB) ---
@@ -412,9 +418,9 @@ export default function DangKy() {
                         <span className="material-icons-outlined">document_scanner</span>
                         1. Số hóa Giấy tờ (OCR AI)
                     </h3>
-                    <span className="text-xs font-bold text-emerald-600 bg-white px-3 py-1.5 rounded-full shadow-sm border border-emerald-100 flex items-center gap-1">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                        AI Powered Parsing
+                    <span className="text-xs font-bold text-orange-700 bg-white px-3 py-1.5 rounded-full shadow-sm border border-orange-200 flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse shadow-sm"></span>
+                        AI Scan
                     </span>
                 </div>
 
@@ -422,7 +428,7 @@ export default function DangKy() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {/* Mặt trước */}
                     <div>
-                        <label className="label mb-2 text-emerald-700 font-semibold">Ảnh mặt trước (Chân dung rõ nét)</label>
+                        <label className="label mb-2 text-emerald-700 font-semibold">Ảnh mặt trước CCCD/CMT <span className="text-red-500">*</span></label>
                         <div className={`border-2 border-dashed rounded-xl h-48 flex flex-col items-center justify-center text-gray-500 hover:bg-white/80 bg-white relative overflow-hidden cursor-pointer group transition-all
                             ${isScanning ? 'border-emerald-400 ring-4 ring-emerald-50' : 'border-gray-200 hover:border-emerald-300'}`}
                             onClick={() => document.getElementById('file-upload-cccd-truoc').click()}>
@@ -514,15 +520,14 @@ export default function DangKy() {
                 </div>
                 <div className="md:col-span-3 grid grid-cols-1 gap-4">
                     <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-2">
-                        <div className="md:col-span-3">
+                        <div className="md:col-span-2">
                             <label className="label">Họ và Tên <span className="text-red-500 ml-1">*</span></label>
                             <input name="ho_ten" value={formData.ho_ten} onChange={handleChange} className={vCls(formData.ho_ten) + " uppercase"} placeholder="NGUYEN VAN A" />
                         </div>
-                        {/* Nickname input hidden requested by user */}
-                        {/* <div className="col-span-1">
-                            <label className="label">Nickname <span className="text-red-500 ml-1">*</span></label>
-                            <input name="nickname" value={formData.nickname || ''} onChange={handleChange} className={vCls(formData.nickname)} placeholder="Tên thường gọi" />
-                        </div> */}
+                        <div className="col-span-1">
+                            <label className="label">Nickname</label>
+                            <input name="nickname" value={formData.nickname || ''} onChange={handleChange} className={vCls(formData.nickname)} placeholder="Nếu có" />
+                        </div>
                     </div>
                     <div className="z-10 relative">
                         <label className="label">Ngày sinh <span className="text-red-500 ml-1">*</span></label>

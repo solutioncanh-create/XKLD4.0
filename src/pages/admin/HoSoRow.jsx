@@ -1,6 +1,8 @@
 import { Link } from 'react-router-dom'
 
-export default function HoSoRow({ profile, onMatch, onDelete, onSmartAction, navigate }) {
+export default function HoSoRow({ profile, onMatch, onDelete, onSmartAction, navigate, onStatusChange, onJobChange }) {
+    const JOB_CATEGORIES = ['Xây dựng', 'Thực phẩm', 'Cơ khí', 'May mặc', 'Nông nghiệp', 'Điều dưỡng', 'Vệ sinh tòa nhà', 'Khách sạn', 'IT/Kỹ sư', 'Khác']
+
     const statusConfig = {
         'Mới đăng ký': { color: 'bg-green-50 text-green-700 ring-green-500', icon: 'new_releases' },
         'Đã tư vấn': { color: 'bg-yellow-50 text-yellow-700 ring-yellow-500', icon: 'support_agent' },
@@ -45,7 +47,10 @@ export default function HoSoRow({ profile, onMatch, onDelete, onSmartAction, nav
                     </div>
                     <div>
                         <Link to={`/ho-so/${profile.id}`} className="font-bold text-gray-900 text-sm hover:text-primary-600 block line-clamp-1">{profile.ho_ten}</Link>
-                        {profile.nickname && <span className="text-xs text-gray-400 italic">({profile.nickname})</span>}
+                        <div className="text-xs text-gray-400 mt-0.5 flex flex-col gap-0.5 font-medium">
+                            {profile.nickname && <span className="italic">({profile.nickname})</span>}
+                            <span>{profile.tinh_trang_hon_nhan || profile.hon_nhan || 'Chưa cập nhật TT'}</span>
+                        </div>
                     </div>
                 </div>
             </td>
@@ -58,23 +63,56 @@ export default function HoSoRow({ profile, onMatch, onDelete, onSmartAction, nav
                 </div>
             </td>
 
-            {/* 3. Job */}
+
+
+            {/* 3. Job (Editable) */}
             <td className="px-4 py-3">
-                <div className="flex items-center gap-1.5 text-sm text-gray-700 max-w-[150px]" title={profile.nganh_nghe_mong_muon}>
-                    <span className="material-icons-outlined text-gray-400 text-sm">engineering</span>
-                    <span className="truncate">{profile.nganh_nghe_mong_muon || 'Chưa chọn'}</span>
+                <div className="relative group/job inline-flex items-center">
+                    <div className="flex items-center justify-between gap-2 px-3 py-1.5 rounded-lg bg-gray-50 border border-transparent hover:bg-white hover:border-gray-200 hover:shadow-sm transition-all cursor-pointer text-sm text-gray-700 font-medium min-w-[140px]">
+                        <span className="truncate block">{profile.nganh_nghe_mong_muon || 'Chọn ngành'}</span>
+                        <span className="material-icons-outlined text-[18px] text-gray-400 shrink-0">expand_more</span>
+                    </div>
+                    <select
+                        value={profile.nganh_nghe_mong_muon || ''}
+                        onChange={(e) => onJobChange && onJobChange(profile.id, e.target.value)}
+                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                    >
+                        <option value="">Chưa chọn</option>
+                        {JOB_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+                    </select>
                 </div>
             </td>
 
-            {/* 4. Status */}
+            {/* 4. Status (Editable) */}
             <td className="px-4 py-3">
-                <div className={`inline-flex items-center gap-1.5 text-xs font-bold ${config.color.split(' ').find(c => c.startsWith('text-')) || 'text-gray-600'}`} title="Trạng thái hiện tại">
-                    <span className="material-icons-outlined text-sm leading-none">{config.icon}</span>
-                    <span className="whitespace-nowrap">{profile.trang_thai || 'Mới'}</span>
+                <div className="relative group/status inline-block">
+                    <div className={`flex items-center justify-between gap-2 px-3 py-1.5 rounded-lg bg-gray-50 border border-transparent hover:bg-white hover:border-gray-200 hover:shadow-sm transition-all cursor-pointer text-xs font-bold min-w-[150px] ${config.color.split(' ').find(c => c.startsWith('text-')) || 'text-gray-600'}`}>
+                        <span className="whitespace-nowrap">{profile.trang_thai || 'Mới'}</span>
+                        <span className="material-icons-outlined text-[18px] text-gray-400 shrink-0">expand_more</span>
+                    </div>
+                    <select
+                        value={profile.trang_thai || 'Mới đăng ký'}
+                        onChange={(e) => onStatusChange && onStatusChange(profile.id, e.target.value)}
+                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                    >
+                        {Object.keys(statusConfig).map(s => <option key={s} value={s}>{s}</option>)}
+                    </select>
                 </div>
             </td>
 
-            {/* 5. Actions */}
+            {/* 5. Match (New) */}
+            <td className="px-4 py-3 text-center">
+                <button
+                    onClick={() => onMatch(profile)}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 font-bold text-xs transition-colors border border-blue-100"
+                    title="Ghép đơn hàng"
+                >
+                    <span className="material-icons-outlined text-base">group_add</span>
+                    Ghép
+                </button>
+            </td>
+
+            {/* 6. Actions */}
             <td className="px-4 py-3 text-right whitespace-nowrap">
                 <div className="flex items-center justify-end gap-2">
                     <button
@@ -85,7 +123,6 @@ export default function HoSoRow({ profile, onMatch, onDelete, onSmartAction, nav
                         <span className="material-icons-outlined text-base">visibility</span>
                         Chi tiết
                     </button>
-
                 </div>
             </td>
         </tr>

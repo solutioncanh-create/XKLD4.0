@@ -58,21 +58,13 @@ export default function Navbar() {
 
                     {/* RIGHT ACTIONS */}
                     <div className="hidden md:flex items-center gap-4">
-                        {/* Admin Link */}
+                        {/* Admin Link (Styled as Avatar) */}
                         <Link
                             to="/admin/login"
-                            className="text-slate-500 hover:text-emerald-700 transition-colors p-2 rounded-full hover:bg-emerald-50"
+                            className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-700 hover:bg-emerald-200 transition-colors shadow-sm ring-2 ring-emerald-50"
                             title="Quản trị viên"
                         >
-                            <LayoutDashboard size={20} />
-                        </Link>
-
-                        {/* User Profile */}
-                        <Link
-                            to="/dang-ky" // Assuming this goes to profile/dashboard
-                            className="w-9 h-9 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-700 hover:bg-emerald-200 transition-colors"
-                        >
-                            <User size={18} />
+                            <User size={20} />
                         </Link>
                     </div>
 

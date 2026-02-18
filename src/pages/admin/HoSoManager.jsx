@@ -174,6 +174,22 @@ export default function HoSoManager() {
         }
     }
 
+    const updateJob = async (id, newJob) => {
+        try {
+            const { error } = await supabase
+                .from('ho_so')
+                .update({ nganh_nghe_mong_muon: newJob })
+                .eq('id', id)
+
+            if (error) throw error
+
+            setProfiles(prev => prev.map(p => p.id === id ? { ...p, nganh_nghe_mong_muon: newJob } : p))
+        } catch (error) {
+            console.error(error)
+            alert('Lỗi cập nhật ngành nghề: ' + error.message)
+        }
+    }
+
     const handleSmartAction = async (profile) => {
         const status = getNormalizedStatus(profile.trang_thai)
 
@@ -222,45 +238,20 @@ export default function HoSoManager() {
 
     return (
         <div className="bg-gray-50 min-h-screen font-sans pb-20 no-scrollbar">
-            {/* Header Stats - Hidden on Mobile */}
-            <div className="hidden md:grid grid-cols-2 lg:grid-cols-5 gap-4 px-6 pt-6 mb-6">
-                <StatCard label="Tổng hồ sơ" count={stats.total} icon="group" color="bg-blue-600" />
-                <StatCard label="Mới đăng ký" count={stats.new} icon="new_releases" color="bg-green-500" />
-                <StatCard label="Chờ tư vấn" count={stats.consulted} icon="support_agent" color="bg-orange-500" />
-                <StatCard label="Đã trúng tuyển" count={stats.passed} icon="verified" color="bg-purple-500" />
-                <StatCard label="Đã xuất cảnh" count={profiles.filter(p => getNormalizedStatus(p.trang_thai) === 'Đã xuất cảnh').length} icon="flight_takeoff" color="bg-teal-500" />
-            </div>
+            {/* Header Stats - Removed */}
 
             {/* Toolbar - Natural Scroll */}
-            <div className="bg-gray-50 px-4 pt-4 md:px-6 mb-4">
-                <div className="flex flex-col gap-3">
-                    {/* Top Row: Search */}
-                    <div className="flex gap-2 items-center">
-                        {/* Search - Visible on Mobile now */}
-                        <div className="flex relative flex-1">
-                            <span className="material-icons-outlined absolute left-3 top-2.5 text-slate-400">search</span>
-                            <input
-                                type="text"
-                                placeholder="Tìm kiếm ứng viên..."
-                                value={search}
-                                onChange={e => setSearch(e.target.value)}
-                                onKeyDown={e => e.key === 'Enter' && fetchProfiles()}
-                                className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-base focus:outline-none focus:ring-2 focus:ring-emerald-500 shadow-sm"
-                            />
-                        </div>
+            {/* Toolbar - Combined Responsive */}
+            <div className="bg-gray-50 px-3 pt-3 md:px-4 mb-4">
+                <div className="flex flex-wrap items-center gap-2">
 
-                        {/* Refresh Button - Hidden on Mobile */}
-                        <button onClick={fetchProfiles} className="hidden md:flex w-10 h-10 items-center justify-center bg-white border border-gray-200 rounded-lg text-gray-500 hover:bg-gray-50 text-gray-600 shadow-sm ml-auto">
-                            <span className="material-icons-outlined">refresh</span>
-                        </button>
-                    </div>
 
-                    {/* Filter Buttons & Actions - Horizontal Scroll on Mobile */}
-                    <div className="flex overflow-x-auto pb-2 gap-2 md:flex-wrap md:overflow-visible no-scrollbar mask-gradient-right">
-                        {/* ADD BUTTON */}
+                    {/* Filter Buttons & Actions */}
+                    <div className="flex flex-wrap gap-2 flex-1 md:justify-start w-full md:w-auto">
+                        {/* Add Button */}
                         <button
                             onClick={() => navigate('/dang-ky')}
-                            className="shrink-0 h-[44px] px-4 rounded-xl text-sm font-bold transition-all border shadow-sm bg-emerald-600 text-white border-emerald-600 hover:bg-emerald-700 flex items-center justify-center gap-2 active:scale-95"
+                            className="shrink-0 h-[38px] px-3.5 rounded-lg text-sm font-bold transition-all border shadow-sm bg-emerald-600 text-white border-emerald-600 hover:bg-emerald-700 flex items-center justify-center gap-2 active:scale-95"
                         >
                             <span className="material-icons-outlined text-lg">add_circle</span>
                             <span>Thêm mới</span>
@@ -271,7 +262,7 @@ export default function HoSoManager() {
                             <button
                                 key={status}
                                 onClick={() => setFilterStatus(status)}
-                                className={`shrink-0 h-[44px] px-3.5 rounded-xl text-sm font-bold transition-all border shadow-sm whitespace-nowrap ${filterStatus === status
+                                className={`shrink-0 h-[38px] px-3.5 rounded-lg text-sm font-bold transition-all border shadow-sm whitespace-nowrap ${filterStatus === status
                                     ? 'bg-emerald-50 text-emerald-700 border-emerald-200 ring-1 ring-emerald-100'
                                     : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50'
                                     }`}
@@ -338,6 +329,7 @@ export default function HoSoManager() {
                                                     <th className="px-4 py-3">Thông Tin</th>
                                                     <th className="px-4 py-3">Nguyện Vọng</th>
                                                     <th className="px-4 py-3">Trạng Thái</th>
+                                                    <th className="px-4 py-3 text-center">Ghép Đơn</th>
                                                     <th className="px-4 py-3 text-right">Hành Động</th>
                                                 </tr>
                                             </thead>
@@ -350,6 +342,8 @@ export default function HoSoManager() {
                                                         onDelete={handleDelete}
                                                         onSmartAction={handleSmartAction}
                                                         navigate={navigate}
+                                                        onStatusChange={updateStatus}
+                                                        onJobChange={updateJob}
                                                     />
                                                 ))}
                                             </tbody>
@@ -427,19 +421,19 @@ function StatCard({ label, count, icon, color }) {
 
 function HoSoCard({ profile, onMatch, onDelete, onSmartAction, navigate }) {
     const statusConfig = {
-        'Mới đăng ký': { color: 'text-green-600 bg-green-50 ring-green-500', icon: 'new_releases' },
-        'Đã tư vấn': { color: 'text-yellow-600 bg-yellow-50 ring-yellow-500', icon: 'support_agent' },
-        'Đợi đơn': { color: 'text-yellow-600 bg-yellow-50 ring-yellow-500', icon: 'hourglass_empty' },
-        'Chờ tư vấn': { color: 'text-yellow-600 bg-yellow-50 ring-yellow-500', icon: 'hourglass_top' },
-        'Chờ phỏng vấn': { color: 'text-purple-600 bg-purple-50 ring-purple-500', icon: 'contact_page' },
-        'Đã trúng tuyển': { color: 'text-rose-600 bg-rose-50 ring-rose-500', icon: 'celebration' },
-        'Đỗ đơn': { color: 'text-rose-600 bg-rose-50 ring-rose-500', icon: 'celebration' },
-        'Đã xuất cảnh': { color: 'text-blue-600 bg-blue-50 ring-blue-500', icon: 'flight_takeoff' },
-        'Hủy hồ sơ': { color: 'text-gray-500 bg-gray-100 ring-gray-400', icon: 'cancel' },
-        'Rút đơn': { color: 'text-gray-500 bg-gray-100 ring-gray-400', icon: 'cancel' }
+        'Mới đăng ký': { color: 'bg-green-50 text-green-700 ring-green-500', icon: 'new_releases' },
+        'Đã tư vấn': { color: 'bg-yellow-50 text-yellow-700 ring-yellow-500', icon: 'support_agent' },
+        'Đợi đơn': { color: 'bg-yellow-50 text-yellow-700 ring-yellow-500', icon: 'hourglass_empty' },
+        'Chờ tư vấn': { color: 'bg-yellow-50 text-yellow-700 ring-yellow-500', icon: 'hourglass_top' },
+        'Chờ phỏng vấn': { color: 'bg-purple-50 text-purple-700 ring-purple-500', icon: 'contact_page' },
+        'Đã trúng tuyển': { color: 'bg-rose-50 text-rose-700 ring-rose-500', icon: 'celebration' },
+        'Đỗ đơn': { color: 'bg-rose-50 text-rose-700 ring-rose-500', icon: 'celebration' },
+        'Đã xuất cảnh': { color: 'bg-blue-50 text-blue-700 ring-blue-500', icon: 'flight_takeoff' },
+        'Hủy hồ sơ': { color: 'bg-gray-100 text-gray-600 ring-gray-400', icon: 'cancel' },
+        'Rút đơn': { color: 'bg-gray-100 text-gray-600 ring-gray-400', icon: 'cancel' }
     }
 
-    const config = statusConfig[profile.trang_thai] || { color: 'text-gray-600 bg-gray-50 ring-gray-400', icon: 'info' }
+    const config = statusConfig[profile.trang_thai] || { color: 'bg-gray-50 text-gray-600 ring-gray-400', icon: 'info' }
 
     const avatarUrl = profile.anh_ho_so || (profile.gioi_tinh === 'Nữ'
         ? `https://avatar.iran.liara.run/public/girl?username=${profile.ho_ten}`
@@ -448,91 +442,67 @@ function HoSoCard({ profile, onMatch, onDelete, onSmartAction, navigate }) {
     const age = profile.ngay_sinh ? (new Date().getFullYear() - new Date(profile.ngay_sinh).getFullYear()) : '?'
 
     return (
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col relative overflow-hidden transition-all active:scale-[0.99]">
-            {/* Context Status Bar */}
-            <div className={`h-1.5 w-full ${config.color.includes('green') ? 'bg-green-500' :
-                config.color.includes('yellow') ? 'bg-yellow-500' :
-                    config.color.includes('purple') ? 'bg-purple-500' :
-                        config.color.includes('rose') ? 'bg-rose-500' :
-                            config.color.includes('blue') ? 'bg-blue-500' : 'bg-gray-300'
-                }`}></div>
-
-            <div className="p-4 flex-1">
-                {/* Header: Avatar, Name, Call Button */}
-                <div className="flex gap-4 mb-3">
-                    <div className="relative shrink-0" onClick={() => navigate(`/ho-so/${profile.id}`)}>
-                        <img src={avatarUrl} alt={profile.ho_ten} className="w-14 h-14 rounded-full object-cover border-2 border-white shadow-md ring-1 ring-gray-100" />
-                        <div className={`absolute -bottom-1 -right-1 w-5 h-5 rounded-full border-2 border-white flex items-center justify-center text-white text-[10px] ${profile.gioi_tinh === 'Nữ' ? 'bg-pink-400' : 'bg-blue-500'}`}>
-                            <span className="material-icons-outlined text-[12px]">{profile.gioi_tinh === 'Nữ' ? 'female' : 'male'}</span>
-                        </div>
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 relative group hover:shadow-md transition-all">
+            {/* Header: Name + Status */}
+            <div className="flex justify-between items-start mb-3">
+                <div className="flex items-center gap-3">
+                    {/* Avatar */}
+                    <div className="relative shrink-0 cursor-pointer" onClick={() => navigate(`/ho-so/${profile.id}`)}>
+                        <img src={avatarUrl} alt={profile.ho_ten} className="w-10 h-10 rounded-full object-cover border border-gray-100" />
+                        <span className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 border-2 border-white rounded-full ${profile.gioi_tinh === 'Nữ' ? 'bg-pink-400' : 'bg-blue-500'}`}></span>
                     </div>
-
-                    <div className="flex-1 min-w-0 flex flex-col justify-center">
-                        <div className="flex justify-between items-start">
-                            <h4 className="font-bold text-gray-900 text-lg leading-tight line-clamp-1" onClick={() => navigate(`/ho-so/${profile.id}`)}>{profile.ho_ten}</h4>
-                            <span className={`text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full whitespace-nowrap tracking-wider ml-1 ${config.color}`}>
-                                {profile.trang_thai}
-                            </span>
-                        </div>
-
-                        <div className="flex items-center gap-2 mt-1">
-                            <span className="text-sm font-medium text-gray-500">{age} tuổi • {profile.que_quan || '??'}</span>
+                    <div>
+                        <h3 className="font-bold text-gray-800 text-sm line-clamp-1 cursor-pointer hover:text-blue-600" onClick={() => navigate(`/ho-so/${profile.id}`)}>{profile.ho_ten}</h3>
+                        <div className="flex items-center gap-2 text-xs text-gray-500 mt-0.5">
+                            <span>{age}t</span>
+                            {profile.que_quan && (
+                                <>
+                                    <span>•</span>
+                                    <span className="truncate max-w-[100px]">{profile.que_quan}</span>
+                                </>
+                            )}
                         </div>
                     </div>
                 </div>
-
-                {/* Info Blocks */}
-                <div className="grid grid-cols-2 gap-2 mb-1">
-                    <div className="bg-blue-50 rounded-lg p-2.5 flex flex-col justify-center">
-                        <div className="flex items-center gap-1.5 text-blue-400 mb-0.5">
-                            <span className="material-icons-outlined text-sm">engineering</span>
-                            <span className="text-[10px] uppercase font-bold tracking-wide">Ngành nghề</span>
-                        </div>
-                        <span className="font-bold text-blue-900 text-sm truncate">{profile.nganh_nghe_mong_muon || 'Chưa chọn'}</span>
-                    </div>
-
-                    <div className="bg-gray-50 rounded-lg p-2.5 flex flex-col justify-center">
-                        <div className="flex items-center gap-1.5 text-gray-400 mb-0.5">
-                            <span className="material-icons-outlined text-sm">phone_iphone</span>
-                            <span className="text-[10px] uppercase font-bold tracking-wide">Điện thoại</span>
-                        </div>
-                        {profile.so_dien_thoai ? (
-                            <a href={`tel:${profile.so_dien_thoai}`} className="font-bold text-gray-900 text-sm truncate hover:text-green-600 flex items-center gap-1">
-                                {profile.so_dien_thoai}
-                            </a>
-                        ) : (
-                            <span className="text-gray-400 text-sm italic">Chưa có</span>
-                        )}
-                    </div>
+                {/* Status Badge */}
+                <div className={`px-2 py-1 rounded-lg text-[10px] font-bold uppercase border-0 ring-1 ring-inset ${config.color}`}>
+                    {profile.trang_thai}
                 </div>
             </div>
 
-            {/* Footer Action Grid - Min height 44px */}
-            <div className="grid grid-cols-3 border-t border-slate-100 divide-x divide-slate-100 bg-slate-50/50">
-                {/* 1. Detail */}
-                <button onClick={() => navigate(`/ho-so/${profile.id}`)} className="flex flex-col items-center justify-center gap-1 h-[50px] hover:bg-white active:bg-slate-100 transition-colors group">
-                    <span className="material-icons-outlined text-slate-400 group-hover:text-emerald-600 text-xl">visibility</span>
-                    <span className="text-[10px] font-bold text-slate-500 uppercase">Chi tiết</span>
-                </button>
+            {/* Content: Job, Phone, Marriage */}
+            <div className="space-y-2 mb-4 pl-1">
+                {/* Job */}
+                <div className="flex items-center gap-2 text-xs text-gray-600">
+                    <span className="material-icons-outlined text-gray-400 text-[16px]">work_outline</span>
+                    <span className="font-medium text-gray-800">{profile.nganh_nghe_mong_muon || 'Chưa chọn ngành'}</span>
+                </div>
+                {/* Phone */}
+                <div className="flex items-center gap-2 text-xs text-gray-600">
+                    <span className="material-icons-outlined text-gray-400 text-[16px]">phone</span>
+                    <a href={`tel:${profile.so_dien_thoai}`} className="font-mono hover:text-blue-600 hover:underline decoration-blue-600/30">{profile.so_dien_thoai}</a>
+                </div>
+                {/* Marriage (New) */}
+                <div className="flex items-center gap-2 text-xs text-gray-600">
+                    <span className="material-icons-outlined text-gray-400 text-[16px]">family_restroom</span>
+                    <span>{profile.tinh_trang_hon_nhan || profile.hon_nhan || 'Chưa cập nhật TT hôn nhân'}</span>
+                </div>
+            </div>
 
-                {/* 2. Call */}
-                {profile.so_dien_thoai ? (
-                    <a href={`tel:${profile.so_dien_thoai}`} className="flex flex-col items-center justify-center gap-1 h-[50px] hover:bg-white active:bg-emerald-50 transition-colors group">
-                        <span className="material-icons-outlined text-emerald-500 group-hover:scale-110 transition-transform text-xl">call</span>
-                        <span className="text-[10px] font-bold text-emerald-600 uppercase">Gọi ngay</span>
-                    </a>
-                ) : (
-                    <button className="flex flex-col items-center justify-center gap-1 h-[50px] opacity-50 cursor-not-allowed">
-                        <span className="material-icons-outlined text-slate-300 text-xl">phone_disabled</span>
-                        <span className="text-[10px] font-bold text-slate-400 uppercase">Không số</span>
+            {/* Footer Actions */}
+            <div className="flex items-center justify-between pt-3 border-t border-gray-50 mt-2">
+                {/* Call Button */}
+                <a href={`tel:${profile.so_dien_thoai}`} className="flex items-center gap-1.5 text-xs font-bold text-gray-500 hover:text-emerald-600 transition-colors bg-gray-50 hover:bg-emerald-50 px-2.5 py-1.5 rounded-lg border border-gray-100 hover:border-emerald-200">
+                    <span className="material-icons-outlined text-[16px]">call</span>
+                    Gọi điện
+                </a>
+
+                <div className="flex items-center gap-2">
+                    <button onClick={() => navigate(`/ho-so/${profile.id}`)} className="flex items-center gap-1.5 text-xs font-bold text-gray-500 hover:text-blue-600 transition-colors bg-gray-50 hover:bg-blue-50 px-2.5 py-1.5 rounded-lg border border-gray-100 hover:border-blue-200">
+                        <span className="material-icons-outlined text-[16px]">visibility</span>
+                        Xem
                     </button>
-                )}
-
-                {/* 3. Smart Action */}
-                <button onClick={() => onMatch(profile)} className="flex flex-col items-center justify-center gap-1 h-[50px] hover:bg-white active:bg-blue-50 transition-colors group">
-                    <span className="material-icons-outlined text-blue-500 group-hover:scale-110 transition-transform text-xl">group_add</span>
-                    <span className="text-[10px] font-bold text-blue-600 uppercase">Ghép đơn</span>
-                </button>
+                </div>
             </div>
         </div>
     )

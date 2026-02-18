@@ -126,58 +126,43 @@ export default function DonHangManager() {
 
     return (
         <div className="bg-gray-50 min-h-screen font-sans pb-20">
-            {/* Header Stats - Hidden on Mobile */}
-            <div className="hidden md:flex overflow-x-auto gap-3 pb-2 mb-4 px-4 pt-4 no-scrollbar snap-x">
-                <div className="min-w-[140px] snap-center"><StatCard label="Tổng đơn" count={stats.total} icon="work_outline" color="bg-blue-600" /></div>
-                <div className="min-w-[140px] snap-center"><StatCard label="Mới đăng" count={stats.new} icon="new_releases" color="bg-blue-400" /></div>
-                <div className="min-w-[140px] snap-center"><StatCard label="Đang tuyển" count={stats.active} icon="check_circle" color="bg-green-500" /></div>
-                <div className="min-w-[140px] snap-center"><StatCard label="Sắp hết" count={stats.urgent} icon="warning" color="bg-orange-500" /></div>
-                <div className="min-w-[140px] snap-center"><StatCard label="Đã đóng" count={stats.closed} icon="archive" color="bg-gray-500" /></div>
-            </div>
+            {/* Header Stats - Removed */}
 
             {/* Toolbar - Natural Scroll */}
+            {/* Toolbar - Combined Responsive */}
             <div className="bg-gray-50 px-3 pt-3 md:px-4 mb-4">
-                <div className="flex gap-2 items-center mb-3">
-                    {/* Search - Visible on Mobile */}
-                    <div className="flex relative flex-1">
-                        <span className="material-icons-outlined absolute left-3 top-3 text-slate-400">search</span>
-                        <input
-                            type="text"
-                            placeholder="Tìm đơn hàng, địa điểm..."
-                            value={searchTerm}
-                            onChange={e => setSearchTerm(e.target.value)}
-                            className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-base font-medium focus:ring-2 focus:ring-emerald-500/50 outline-none transition-all shadow-sm"
-                        />
-                    </div>
+                <div className="flex flex-wrap items-center gap-2">
+                    {/* Search Input */}
 
-                    <button
-                        onClick={() => {
-                            if (isAdding) handleCancel()
-                            else setIsAdding(true)
-                        }}
-                        className={` px-4 py-2.5 rounded-xl shadow-sm transition-all shrink-0 font-bold text-sm flex items-center gap-2 h-[44px]
-                        ${isAdding ? 'bg-rose-50 text-rose-600 border border-rose-100' : 'bg-emerald-600 text-white active:scale-95 w-full md:w-auto justify-center hover:bg-emerald-700'}
-                    `}
-                    >
-                        <span className="material-icons-outlined text-xl">{isAdding ? 'close' : 'add'}</span>
-                        <span>{isAdding ? 'Hủy' : 'Thêm Đơn Hàng'}</span>
-                    </button>
-                </div>
 
-                {/* Filter Buttons - Horizontal Scroll */}
-                <div className="flex overflow-x-auto pb-2 gap-2 md:flex-wrap md:overflow-visible no-scrollbar mask-gradient-right mb-2">
-                    {['All', ...STATUS_OPTIONS].map(status => (
+                    {/* Filter Buttons & Actions */}
+                    <div className="flex flex-wrap gap-2 flex-1 md:justify-start w-full md:w-auto">
                         <button
-                            key={status}
-                            onClick={() => setFilterStatus(status)}
-                            className={`shrink-0 h-[44px] px-3.5 rounded-xl text-sm font-bold transition-all border shadow-sm whitespace-nowrap ${filterStatus === status
-                                ? 'bg-emerald-50 text-emerald-700 border-emerald-200 ring-1 ring-emerald-100'
-                                : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50'
-                                }`}
+                            onClick={() => {
+                                if (isAdding) handleCancel()
+                                else setIsAdding(true)
+                            }}
+                            className={`shrink-0 h-[38px] px-4 rounded-lg shadow-sm transition-all font-bold text-sm flex items-center justify-center gap-2 whitespace-nowrap
+                            ${isAdding ? 'bg-rose-50 text-rose-600 border border-rose-100' : 'bg-emerald-600 text-white active:scale-95 hover:bg-emerald-700'}
+                            `}
                         >
-                            {status === 'All' ? 'Tất cả' : status}
+                            <span className="material-icons-outlined text-lg">{isAdding ? 'close' : 'add'}</span>
+                            <span>{isAdding ? 'Hủy' : 'Thêm Đơn'}</span>
                         </button>
-                    ))}
+
+                        {['All', ...STATUS_OPTIONS].map(status => (
+                            <button
+                                key={status}
+                                onClick={() => setFilterStatus(status)}
+                                className={`shrink-0 h-[38px] px-3.5 rounded-lg text-sm font-bold transition-all border shadow-sm whitespace-nowrap ${filterStatus === status
+                                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200 ring-1 ring-emerald-100'
+                                    : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50'
+                                    }`}
+                            >
+                                {status === 'All' ? 'Tất cả' : status}
+                            </button>
+                        ))}
+                    </div>
                 </div>
             </div>
 
@@ -282,16 +267,45 @@ export default function DonHangManager() {
                         <p>Không tìm thấy đơn hàng nào.</p>
                     </div>
                 ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                        {filteredOrders.map(order => (
-                            <OrderCard
-                                key={order.id}
-                                order={order}
-                                onStatusChange={handleStatusChange}
-                                onDelete={handleDelete}
-                                onEdit={handleEdit}
-                            />
-                        ))}
+                    <div className="w-full">
+                        {/* Mobile View */}
+                        <div className="md:hidden grid grid-cols-1 gap-4">
+                            {filteredOrders.map(order => (
+                                <OrderCard
+                                    key={order.id}
+                                    order={order}
+                                    onStatusChange={handleStatusChange}
+                                    onDelete={handleDelete}
+                                    onEdit={handleEdit}
+                                />
+                            ))}
+                        </div>
+
+                        {/* Desktop View */}
+                        <div className="hidden md:block bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                            <table className="w-full text-left border-collapse">
+                                <thead className="bg-gray-50 uppercase text-xs font-bold text-gray-500 border-b border-gray-100 tracking-wider">
+                                    <tr>
+                                        <th className="px-6 py-4">Đơn hàng</th>
+                                        <th className="px-6 py-4">Lương / Số lượng</th>
+                                        <th className="px-6 py-4">Thời gian</th>
+                                        <th className="px-6 py-4">Trạng thái</th>
+                                        <th className="px-6 py-4 text-right">Hành động</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-gray-50">
+                                    {filteredOrders.map(order => (
+                                        <OrderRow
+                                            key={order.id}
+                                            order={order}
+                                            onStatusChange={handleStatusChange}
+                                            onDelete={handleDelete}
+                                            onEdit={handleEdit}
+                                        />
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 )}
             </div>
@@ -314,57 +328,78 @@ function StatCard({ label, count, icon, color }) {
 }
 
 function OrderCard({ order, onStatusChange, onEdit, onDelete }) {
-    const statusColors = {
-        'Mới đăng': 'bg-blue-500',
-        'Đang tuyển': 'bg-green-500',
-        'Sắp hết hạn': 'bg-orange-500',
-        'Đã đóng': 'bg-gray-400'
-    }
-
-    const currentStatusColor = statusColors[order.trang_thai] || 'bg-gray-300'
     const STATUS_OPTIONS = ['Mới đăng', 'Đang tuyển', 'Sắp hết hạn', 'Đã đóng']
 
+    // Format currency
+    const formatMoney = (amount) => parseInt(amount || 0).toLocaleString('vi-VN')
+
+    // Format date
+    const formatDate = (dateString) => {
+        if (!dateString) return '--/--'
+        return new Date(dateString).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' })
+    }
+
+    // Status Badge Style
+    const getStatusStyle = (status) => {
+        switch (status) {
+            case 'Mới đăng': return 'bg-sky-50 text-sky-600 border-sky-100'
+            case 'Đang tuyển': return 'bg-emerald-50 text-emerald-600 border-emerald-100'
+            case 'Sắp hết hạn': return 'bg-orange-50 text-orange-600 border-orange-100'
+            default: return 'bg-slate-100 text-slate-500 border-slate-200'
+        }
+    }
+
     return (
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col relative overflow-hidden transition-all active:scale-[0.99] hover:shadow-md h-full">
-            {/* Status Bar */}
-            <div className={`h-1.5 w-full ${currentStatusColor}`}></div>
+        <div className="bg-white rounded-lg shadow-sm border border-slate-200 hover:border-emerald-300 hover:shadow transition-all flex flex-col h-full group">
 
-            <div className="p-4 flex-1">
+            <div className="p-4 flex-1 flex flex-col">
                 {/* Header */}
-                <div className="flex justify-between items-start mb-2">
-                    <h3 className="font-bold text-gray-900 text-base leading-snug line-clamp-2" title={order.ten_don_hang}>{order.ten_don_hang}</h3>
-                </div>
-                <div className="flex items-center gap-2 mb-4">
-                    <span className="text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded uppercase tracking-wide truncate max-w-[120px]">{order.nganh_nghe}</span>
-                    <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded text-white ${currentStatusColor}`}>{order.trang_thai}</span>
+                <div className="flex justify-between items-start gap-3 mb-3">
+                    <h3 className="font-bold text-slate-800 text-sm leading-snug line-clamp-2" title={order.ten_don_hang}>
+                        {order.ten_don_hang}
+                    </h3>
+                    <span className={`shrink-0 text-[10px] font-bold uppercase px-2 py-0.5 rounded border ${getStatusStyle(order.trang_thai)}`}>
+                        {order.trang_thai}
+                    </span>
                 </div>
 
-                {/* Info Grid */}
-                <div className="grid grid-cols-2 gap-2 text-sm mb-3">
-                    <div className="bg-gray-50 rounded-lg p-2.5 flex flex-col justify-center">
-                        <p className="text-[10px] text-gray-400 font-bold uppercase mb-0.5">Mức lương</p>
-                        <p className="font-black text-gray-800 text-sm whitespace-nowrap">{parseInt(order.muc_luong || 0).toLocaleString()}¥</p>
+                {/* Info List - Clean */}
+                <div className="space-y-2 text-xs mb-3">
+                    <div className="flex justify-between items-center border-b border-dashed border-slate-100 pb-1.5">
+                        <span className="text-slate-400">Mức lương</span>
+                        <span className="font-bold text-slate-700 text-sm">{formatMoney(order.muc_luong)}¥</span>
                     </div>
-                    <div className="bg-gray-50 rounded-lg p-2.5 flex flex-col justify-center">
-                        <p className="text-[10px] text-gray-400 font-bold uppercase mb-0.5">Số lượng</p>
-                        <p className="font-black text-gray-800 text-sm">{order.so_luong_tuyen} người</p>
+                    <div className="flex justify-between items-center border-b border-dashed border-slate-100 pb-1.5">
+                        <span className="text-slate-400">Số lượng</span>
+                        <span className="font-bold text-slate-700">{order.so_luong_tuyen} người</span>
                     </div>
                 </div>
-                <div className="text-xs text-gray-500 flex items-center gap-1 font-medium truncate">
-                    <span className="material-icons-outlined text-sm">place</span> {order.dia_diem_lam_viec}
+
+                {/* Sub-info */}
+                <div className="mt-auto">
+                    <div className="flex items-center gap-1 text-xs text-slate-500 mb-1" title="Địa điểm">
+                        <span className="material-icons-outlined text-[14px] text-slate-400">place</span>
+                        <span className="truncate">{order.dia_diem_lam_viec}</span>
+                    </div>
+
+                    <div className="flex items-center gap-3 text-[10px] text-slate-400">
+                        <span title={`Hạn nộp: ${formatDate(order.thoi_han_nop_ho_so)}`}>
+                            Hạn: {formatDate(order.thoi_han_nop_ho_so)}
+                        </span>
+                        <span className="w-1 h-1 rounded-full bg-slate-300"></span>
+                        <span title="Ngành nghề">{order.nganh_nghe}</span>
+                    </div>
                 </div>
             </div>
 
-            {/* Footer Actions */}
-            <div className="grid grid-cols-3 border-t border-slate-100 divide-x divide-slate-100 bg-slate-50/50">
-                <button onClick={() => onEdit(order)} className="flex flex-col items-center justify-center gap-1 h-[50px] hover:bg-white transition-colors group">
-                    <span className="material-icons-outlined text-emerald-500 text-xl group-hover:scale-110 transition-transform">edit</span>
-                    <span className="text-[10px] font-bold text-emerald-600 uppercase">Sửa</span>
-                </button>
-
-                <div className="relative group flex flex-col items-center justify-center gap-1 h-[50px] hover:bg-white transition-colors cursor-pointer">
-                    <span className="material-icons-outlined text-purple-500 text-xl group-hover:text-emerald-600 group-hover:scale-110 transition-transform">change_circle</span>
-                    <span className="text-[10px] font-bold text-purple-600 uppercase group-hover:text-emerald-600">Trạng thái</span>
+            {/* Footer Actions - Compact & Minimal */}
+            <div className="px-3 py-2 border-t border-slate-100 bg-slate-50/30 flex items-center justify-between">
+                {/* Status Changer (Hidden select trick) */}
+                <div className="relative group/status cursor-pointer">
+                    <div className="flex items-center gap-1 text-[10px] uppercase font-bold text-slate-400 hover:text-indigo-600 transition-colors">
+                        <span className="material-icons-outlined text-[14px]">sync_alt</span>
+                        Đổi trạng thái
+                    </div>
                     <select
                         value={order.trang_thai}
                         onChange={(e) => onStatusChange(order.id, e.target.value)}
@@ -374,11 +409,92 @@ function OrderCard({ order, onStatusChange, onEdit, onDelete }) {
                     </select>
                 </div>
 
-                <button onClick={() => onDelete(order.id)} className="flex flex-col items-center justify-center gap-1 h-[50px] hover:bg-white transition-colors group">
-                    <span className="material-icons-outlined text-rose-400 text-xl group-hover:scale-110 transition-transform">delete</span>
-                    <span className="text-[10px] font-bold text-rose-500 uppercase">Xóa</span>
-                </button>
+                <div className="flex items-center gap-1">
+                    <button onClick={() => onEdit(order)} className="w-7 h-7 flex items-center justify-center rounded text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 transition-all" title="Sửa">
+                        <span className="material-icons-outlined text-[16px]">edit</span>
+                    </button>
+                    <button onClick={() => onDelete(order.id)} className="w-7 h-7 flex items-center justify-center rounded text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-all" title="Xóa">
+                        <span className="material-icons-outlined text-[16px]">delete</span>
+                    </button>
+                </div>
             </div>
         </div>
+    )
+}
+
+function OrderRow({ order, onStatusChange, onEdit, onDelete }) {
+    const STATUS_OPTIONS = ['Mới đăng', 'Đang tuyển', 'Sắp hết hạn', 'Đã đóng']
+
+    const formatMoney = (amount) => parseInt(amount || 0).toLocaleString('vi-VN')
+    const formatDate = (dateString) => {
+        if (!dateString) return '--/--'
+        return new Date(dateString).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' })
+    }
+
+    const getStatusStyle = (status) => {
+        switch (status) {
+            case 'Mới đăng': return 'bg-sky-50 text-sky-600 border-sky-100'
+            case 'Đang tuyển': return 'bg-emerald-50 text-emerald-600 border-emerald-100'
+            case 'Sắp hết hạn': return 'bg-orange-50 text-orange-600 border-orange-100'
+            default: return 'bg-slate-100 text-slate-500 border-slate-200'
+        }
+    }
+
+    return (
+        <tr className="hover:bg-slate-50/80 transition-colors group">
+            <td className="px-6 py-4 align-top">
+                <div className="max-w-[300px]">
+                    <p className="font-bold text-slate-800 text-sm leading-snug line-clamp-2" title={order.ten_don_hang}>{order.ten_don_hang}</p>
+                    <div className="flex flex-wrap gap-2 mt-2">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-500 uppercase tracking-wide">
+                            {order.nganh_nghe}
+                        </span>
+                        <span className="inline-flex items-center gap-1 text-[11px] text-slate-500">
+                            <span className="material-icons-outlined text-[12px]">place</span> {order.dia_diem_lam_viec}
+                        </span>
+                    </div>
+                </div>
+            </td>
+            <td className="px-6 py-4 align-top">
+                <div className="space-y-1">
+                    <p className="font-mono font-bold text-slate-700 text-sm">{formatMoney(order.muc_luong)}¥</p>
+                    <p className="text-xs text-slate-500 font-medium">SL: {order.so_luong_tuyen}</p>
+                </div>
+            </td>
+            <td className="px-6 py-4 align-top">
+                <div className="text-xs text-slate-500 space-y-1">
+                    <p><span className="text-slate-400">Hạn nộp:</span> <span className="font-medium text-slate-700">{formatDate(order.thoi_han_nop_ho_so)}</span></p>
+                    {order.ngay_tuyen_du_kien && (
+                        <p><span className="text-slate-400">Tuyển:</span> <span className="font-medium text-slate-700">{formatDate(order.ngay_tuyen_du_kien)}</span></p>
+                    )}
+                </div>
+            </td>
+            <td className="px-6 py-4 align-top">
+                <div className="relative inline-block group/status">
+                    <button className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold border ${getStatusStyle(order.trang_thai)} hover:shadow-sm transition-all bg-white`}>
+                        <span className="w-1.5 h-1.5 rounded-full bg-current opacity-70"></span>
+                        {order.trang_thai}
+                        <span className="material-icons-outlined text-[14px] ml-1 opacity-50">expand_more</span>
+                    </button>
+                    <select
+                        value={order.trang_thai}
+                        onChange={(e) => onStatusChange(order.id, e.target.value)}
+                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                    >
+                        {STATUS_OPTIONS.map(s => <option key={s} value={s}>{s}</option>)}
+                    </select>
+                </div>
+            </td>
+            <td className="px-6 py-4 align-top text-right">
+                <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button onClick={() => onEdit(order)} className="w-8 h-8 flex items-center justify-center rounded bg-blue-50 text-blue-600 hover:bg-blue-100 border border-blue-100 transition-colors" title="Sửa">
+                        <span className="material-icons-outlined text-[18px]">edit</span>
+                    </button>
+                    <button onClick={() => onDelete(order.id)} className="w-8 h-8 flex items-center justify-center rounded bg-white text-slate-400 hover:text-rose-600 hover:bg-rose-50 border border-slate-200 hover:border-rose-100 transition-colors" title="Xóa">
+                        <span className="material-icons-outlined text-[18px]">delete</span>
+                    </button>
+                </div>
+            </td>
+        </tr>
     )
 }
