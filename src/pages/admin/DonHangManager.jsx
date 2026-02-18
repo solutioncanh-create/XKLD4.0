@@ -138,15 +138,15 @@ export default function DonHangManager() {
             {/* Toolbar - Natural Scroll */}
             <div className="bg-gray-50 px-3 pt-3 md:px-4 mb-4">
                 <div className="flex gap-2 items-center mb-3">
-                    {/* Search - Hidden on Mobile */}
-                    <div className="hidden md:block relative flex-1">
-                        <span className="material-icons-outlined absolute left-3 top-2.5 text-gray-400">search</span>
+                    {/* Search - Visible on Mobile */}
+                    <div className="flex relative flex-1">
+                        <span className="material-icons-outlined absolute left-3 top-3 text-slate-400">search</span>
                         <input
                             type="text"
                             placeholder="Tìm đơn hàng, địa điểm..."
                             value={searchTerm}
                             onChange={e => setSearchTerm(e.target.value)}
-                            className="w-full pl-10 pr-4 py-2 bg-white border-none rounded-lg text-sm font-medium focus:ring-2 focus:ring-primary-500/50 outline-none transition-all"
+                            className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-base font-medium focus:ring-2 focus:ring-emerald-500/50 outline-none transition-all shadow-sm"
                         />
                     </div>
 
@@ -155,24 +155,24 @@ export default function DonHangManager() {
                             if (isAdding) handleCancel()
                             else setIsAdding(true)
                         }}
-                        className={` px-4 py-2 rounded-lg shadow-sm transition-all shrink-0 font-bold text-sm flex items-center gap-2
-                        ${isAdding ? 'bg-red-50 text-red-600 border border-red-100' : 'bg-primary-600 text-white active:scale-95 w-full md:w-auto justify-center'}
+                        className={` px-4 py-2.5 rounded-xl shadow-sm transition-all shrink-0 font-bold text-sm flex items-center gap-2 h-[44px]
+                        ${isAdding ? 'bg-rose-50 text-rose-600 border border-rose-100' : 'bg-emerald-600 text-white active:scale-95 w-full md:w-auto justify-center hover:bg-emerald-700'}
                     `}
                     >
-                        <span className="material-icons-outlined text-lg">{isAdding ? 'close' : 'add'}</span>
+                        <span className="material-icons-outlined text-xl">{isAdding ? 'close' : 'add'}</span>
                         <span>{isAdding ? 'Hủy' : 'Thêm Đơn Hàng'}</span>
                     </button>
                 </div>
 
-                {/* Filter Buttons - Grid Layout */}
-                <div className="grid grid-cols-2 md:flex md:flex-wrap gap-2 mb-2">
+                {/* Filter Buttons - Horizontal Scroll */}
+                <div className="flex overflow-x-auto pb-2 gap-2 md:flex-wrap md:overflow-visible no-scrollbar mask-gradient-right mb-2">
                     {['All', ...STATUS_OPTIONS].map(status => (
                         <button
                             key={status}
                             onClick={() => setFilterStatus(status)}
-                            className={`px-2 py-2 md:px-4 md:py-2 rounded-lg text-xs md:text-sm font-bold transition-all border shadow-sm truncate ${filterStatus === status
-                                ? 'bg-primary-50 text-primary-700 border-primary-200 ring-1 ring-primary-100'
-                                : 'bg-white text-gray-500 border-gray-200 hover:bg-gray-50'
+                            className={`shrink-0 h-[44px] px-3.5 rounded-xl text-sm font-bold transition-all border shadow-sm whitespace-nowrap ${filterStatus === status
+                                ? 'bg-emerald-50 text-emerald-700 border-emerald-200 ring-1 ring-emerald-100'
+                                : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50'
                                 }`}
                         >
                             {status === 'All' ? 'Tất cả' : status}
@@ -356,15 +356,15 @@ function OrderCard({ order, onStatusChange, onEdit, onDelete }) {
             </div>
 
             {/* Footer Actions */}
-            <div className="grid grid-cols-3 border-t border-gray-100 divide-x divide-gray-100 bg-gray-50/50">
-                <button onClick={() => onEdit(order)} className="flex flex-col items-center justify-center gap-1 py-3 hover:bg-white transition-colors group">
-                    <span className="material-icons-outlined text-blue-500 text-xl group-hover:scale-110 transition-transform">edit</span>
-                    <span className="text-[9px] font-bold text-blue-600 uppercase">Sửa</span>
+            <div className="grid grid-cols-3 border-t border-slate-100 divide-x divide-slate-100 bg-slate-50/50">
+                <button onClick={() => onEdit(order)} className="flex flex-col items-center justify-center gap-1 h-[50px] hover:bg-white transition-colors group">
+                    <span className="material-icons-outlined text-emerald-500 text-xl group-hover:scale-110 transition-transform">edit</span>
+                    <span className="text-[10px] font-bold text-emerald-600 uppercase">Sửa</span>
                 </button>
 
-                <div className="relative group flex flex-col items-center justify-center gap-1 py-3 hover:bg-white transition-colors cursor-pointer">
-                    <span className="material-icons-outlined text-purple-500 text-xl group-hover:text-primary-600 group-hover:scale-110 transition-transform">change_circle</span>
-                    <span className="text-[9px] font-bold text-purple-600 uppercase group-hover:text-primary-600">Trạng thái</span>
+                <div className="relative group flex flex-col items-center justify-center gap-1 h-[50px] hover:bg-white transition-colors cursor-pointer">
+                    <span className="material-icons-outlined text-purple-500 text-xl group-hover:text-emerald-600 group-hover:scale-110 transition-transform">change_circle</span>
+                    <span className="text-[10px] font-bold text-purple-600 uppercase group-hover:text-emerald-600">Trạng thái</span>
                     <select
                         value={order.trang_thai}
                         onChange={(e) => onStatusChange(order.id, e.target.value)}
@@ -374,9 +374,9 @@ function OrderCard({ order, onStatusChange, onEdit, onDelete }) {
                     </select>
                 </div>
 
-                <button onClick={() => onDelete(order.id)} className="flex flex-col items-center justify-center gap-1 py-3 hover:bg-white transition-colors group">
-                    <span className="material-icons-outlined text-red-400 text-xl group-hover:scale-110 transition-transform">delete</span>
-                    <span className="text-[9px] font-bold text-red-500 uppercase">Xóa</span>
+                <button onClick={() => onDelete(order.id)} className="flex flex-col items-center justify-center gap-1 h-[50px] hover:bg-white transition-colors group">
+                    <span className="material-icons-outlined text-rose-400 text-xl group-hover:scale-110 transition-transform">delete</span>
+                    <span className="text-[10px] font-bold text-rose-500 uppercase">Xóa</span>
                 </button>
             </div>
         </div>

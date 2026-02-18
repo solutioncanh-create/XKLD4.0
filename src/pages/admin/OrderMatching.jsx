@@ -151,12 +151,12 @@ export default function OrderMatching() {
 
 
     return (
-        <div className="h-[calc(100vh-80px)] flex flex-col md:flex-row gap-6 animate-fade-in overflow-hidden pb-4">
+        <div className="min-h-screen md:h-[calc(100vh-80px)] flex flex-col md:flex-row gap-6 animate-fade-in overflow-y-auto md:overflow-hidden pb-20 md:pb-4">
             {/* LEFT PANEL */}
             <div className="w-full md:w-1/3 bg-white rounded-xl shadow-sm border border-secondary-100 flex flex-col overflow-hidden">
-                <div className="p-4 border-b border-secondary-100 bg-secondary-50">
-                    <h2 className="font-bold text-lg text-primary-900 flex items-center gap-2">
-                        <span className="material-icons-outlined text-primary-600">list_alt</span>
+                <div className="p-4 border-b border-slate-100 bg-slate-50">
+                    <h2 className="font-bold text-lg text-emerald-900 flex items-center gap-2">
+                        <span className="material-icons-outlined text-emerald-600">list_alt</span>
                         Chọn Đơn Hàng
                     </h2>
                 </div>
@@ -168,7 +168,7 @@ export default function OrderMatching() {
                             key={order.id}
                             onClick={() => setSelectedOrder(order)}
                             className={`p-4 rounded-lg cursor-pointer border transition-all hover:shadow-md
-                                ${selectedOrder?.id === order.id ? 'bg-primary-50 border-primary-500 ring-1 ring-primary-500' : 'bg-white border-secondary-100 hover:border-primary-300'}
+                                ${selectedOrder?.id === order.id ? 'bg-emerald-50 border-emerald-500 ring-1 ring-emerald-500' : 'bg-white border-slate-100 hover:border-emerald-300'}
                             `}
                         >
                             <div className="font-bold text-gray-800 line-clamp-1">{order.ten_don_hang}</div>
@@ -233,7 +233,7 @@ export default function OrderMatching() {
                             <button
                                 onClick={() => setActiveTab('list')}
                                 className={`flex-1 py-3 text-sm font-bold uppercase tracking-wide transition-colors border-b-2
-                                    ${activeTab === 'list' ? 'border-primary-600 text-primary-700 bg-white' : 'border-transparent text-gray-500 hover:text-gray-700'}
+                                    ${activeTab === 'list' ? 'border-emerald-600 text-emerald-700 bg-white' : 'border-transparent text-slate-500 hover:text-slate-700'}
                                 `}
                             >
                                 DANH SÁCH PHỎNG VẤN ({matchedCandidates.length})
@@ -241,7 +241,7 @@ export default function OrderMatching() {
                             <button
                                 onClick={() => setActiveTab('add')}
                                 className={`flex-1 py-3 text-sm font-bold uppercase tracking-wide transition-colors border-b-2
-                                    ${activeTab === 'add' ? 'border-primary-600 text-primary-700 bg-white' : 'border-transparent text-gray-500 hover:text-gray-700'}
+                                    ${activeTab === 'add' ? 'border-emerald-600 text-emerald-700 bg-white' : 'border-transparent text-slate-500 hover:text-slate-700'}
                                 `}
                             >
                                 Thêm Ứng Viên (+)

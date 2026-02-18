@@ -24,8 +24,8 @@ export default function HomePage() {
 
                     {/* Badge */}
                     <div className="inline-flex items-center gap-2 bg-white px-4 py-1.5 rounded-full text-xs font-bold tracking-wider uppercase border border-slate-200 text-emerald-700 shadow-sm mb-8 animate-fade-in-up">
-                        <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                        Uy tín - Tận tâm - Chuyên nghiệp
+                        <span className="w-2 h-2 rounded-full bg-orange-600 animate-pulse"></span>
+                        AI Powered - Kết nối toàn cầu
                     </div>
 
                     {/* Headline */}
@@ -45,9 +45,9 @@ export default function HomePage() {
                             <FileText size={20} />
                             Tạo Hồ Sơ Số (E-Resume)
                         </Link>
-                        <Link to="/viec-lam" className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-4 text-base font-bold text-slate-700 transition-all duration-300 bg-white border border-slate-200 rounded-full hover:bg-slate-50 hover:border-emerald-200 hover:text-emerald-700 hover:shadow-md hover:-translate-y-1">
-                            <Search size={20} />
-                            Tra cứu Đơn hàng AI
+                        <Link to="/yeu-cau-tu-van" className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-4 text-base font-bold text-slate-700 transition-all duration-300 bg-white border border-slate-200 rounded-full hover:bg-slate-50 hover:border-emerald-200 hover:text-emerald-700 hover:shadow-md hover:-translate-y-1">
+                            <MessageCircle size={20} />
+                            Tư Vấn Online
                         </Link>
                     </div>
                 </div>
@@ -93,10 +93,10 @@ export default function HomePage() {
             </section>
 
             {/* STATS SECTION */}
-            <section className="py-20 bg-slate-900 text-white relative overflow-hidden">
-                <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=2072&auto=format&fit=crop')] opacity-10 bg-cover bg-center"></div>
+            <section className="py-20 bg-gradient-to-r from-emerald-900 to-teal-900 text-white relative overflow-hidden">
+                <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=2072&auto=format&fit=crop')] opacity-10 bg-cover bg-center mix-blend-overlay"></div>
                 <div className="container mx-auto px-4 sm:px-6 relative z-10">
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12 text-center divide-x divide-slate-800/50">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12 text-center divide-none md:divide-x divide-white/10">
                         <StatItem number="500+" label="Đối tác Nghiệp đoàn" />
                         <StatItem number="10K+" label="Profile số đã kích hoạt" />
                         <StatItem number="99%" label="Tỷ lệ xử lý chuẩn xác" />

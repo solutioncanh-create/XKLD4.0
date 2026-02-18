@@ -390,14 +390,15 @@ export default function DangKy() {
     const Step1_CaNhan = () => (
         <div className="space-y-6 animate-fade-in">
             {/* PHẦN 1: AI SCANNER - UPLOAD CCCD TRƯỚC */}
-            <div className="bg-gradient-to-r from-teal-50 to-blue-50 p-4 rounded-xl border border-teal-100 shadow-sm relative overflow-hidden">
-                <div className="flex justify-between items-center mb-4">
-                    <h3 className="section-title !mb-0 !border-0 text-teal-800 flex items-center gap-2">
+            <div className="bg-gradient-to-r from-emerald-50 to-teal-50 p-6 rounded-2xl border border-emerald-100 shadow-sm relative overflow-hidden">
+                <div className="flex justify-between items-center mb-6">
+                    <h3 className="text-lg font-bold text-emerald-900 flex items-center gap-2">
                         <span className="material-icons-outlined">document_scanner</span>
-                        1. Tải ảnh CCCD/CMT
+                        1. Số hóa Giấy tờ (OCR AI)
                     </h3>
-                    <span className="text-xs font-bold text-teal-600 bg-white px-2 py-1 rounded-full shadow-sm border border-teal-100">
-                        ✨ AI Tự động điền
+                    <span className="text-xs font-bold text-emerald-600 bg-white px-3 py-1.5 rounded-full shadow-sm border border-emerald-100 flex items-center gap-1">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                        AI Powered Parsing
                     </span>
                 </div>
 
@@ -405,23 +406,23 @@ export default function DangKy() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {/* Mặt trước */}
                     <div>
-                        <label className="label mb-2 text-teal-700">Ảnh mặt trước (Có ảnh chân dung)</label>
+                        <label className="label mb-2 text-emerald-700 font-semibold">Ảnh mặt trước (Chân dung rõ nét)</label>
                         <div className={`border-2 border-dashed rounded-xl h-48 flex flex-col items-center justify-center text-gray-500 hover:bg-white/80 bg-white relative overflow-hidden cursor-pointer group transition-all
-                            ${isScanning ? 'border-teal-400 ring-4 ring-teal-50' : 'border-gray-300'}`}
+                            ${isScanning ? 'border-emerald-400 ring-4 ring-emerald-50' : 'border-gray-200 hover:border-emerald-300'}`}
                             onClick={() => document.getElementById('file-upload-cccd-truoc').click()}>
 
                             {uploading && !formData.anh_cccd_mat_truoc ? (
                                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
                             ) : isScanning ? (
-                                <div className="absolute inset-0 bg-white/90 z-20 flex flex-col items-center justify-center">
-                                    <div className="w-12 h-12 border-4 border-teal-200 border-t-teal-600 rounded-full animate-spin mb-2"></div>
-                                    <p className="text-teal-700 font-bold text-sm animate-pulse">Đang quét thông tin...</p>
+                                <div className="absolute inset-0 bg-white/95 z-20 flex flex-col items-center justify-center backdrop-blur-sm">
+                                    <div className="w-12 h-12 border-4 border-emerald-100 border-t-emerald-500 rounded-full animate-spin mb-3"></div>
+                                    <p className="text-emerald-700 font-bold text-sm animate-pulse">AI đang phân tích dữ liệu...</p>
                                 </div>
                             ) : formData.anh_cccd_mat_truoc ? (
                                 <img src={formData.anh_cccd_mat_truoc} alt="CCCD Trước" className="w-full h-full object-contain p-2" />
                             ) : (
                                 <>
-                                    <span className="material-icons-outlined text-4xl text-teal-400 mb-2">add_a_photo</span>
+                                    <span className="material-icons-outlined text-4xl text-emerald-300 group-hover:text-emerald-500 transition-colors mb-2">add_a_photo</span>
                                     <span className="text-sm font-medium text-gray-500">Tải ảnh mặt trước</span>
                                 </>
                             )}
@@ -432,8 +433,8 @@ export default function DangKy() {
 
                     {/* Mặt sau */}
                     <div>
-                        <label className="label mb-2 text-teal-700">Ảnh mặt sau</label>
-                        <div className="border-2 border-dashed border-gray-300 rounded-xl h-48 flex flex-col items-center justify-center text-gray-500 hover:bg-white/80 bg-white relative overflow-hidden cursor-pointer group transition-all"
+                        <label className="label mb-2 text-emerald-700 font-semibold">Ảnh mặt sau</label>
+                        <div className="border-2 border-dashed border-gray-200 hover:border-emerald-300 rounded-xl h-48 flex flex-col items-center justify-center text-gray-500 hover:bg-white/80 bg-white relative overflow-hidden cursor-pointer group transition-all"
                             onClick={() => document.getElementById('file-upload-cccd-sau').click()}>
                             {uploading && !formData.anh_cccd_mat_sau ? (
                                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
@@ -451,8 +452,8 @@ export default function DangKy() {
                     </div>
                 </div>
 
-                {/* Các trường thông tin trích xuất ID (Ẩn bớt nếu muốn gọn hoặc để hiện cho user check) */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6 pt-4 border-t border-teal-100/50">
+                {/* Các trường thông tin trích xuất ID */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6 pt-6 border-t border-emerald-100/50">
                     <div><label className="label">Số CCCD / CMND <span className="text-red-500 ml-1">*</span></label><input name="so_cccd" value={formData.so_cccd} onChange={handleChange} className={vCls(formData.so_cccd)} placeholder="AI sẽ tự điền..." /></div>
                     <div className="z-0 relative">
                         <label className="label">Ngày cấp <span className="text-red-500 ml-1">*</span></label>
@@ -462,7 +463,11 @@ export default function DangKy() {
                 </div>
             </div>
 
-            <h3 className="section-title pt-4 border-t border-dashed">2. KIỂM TRA & BỔ SUNG THÔNG TIN</h3>
+            <div className="flex items-center gap-4 py-4 mt-8">
+                <div className="h-px bg-slate-200 flex-1"></div>
+                <h3 className="text-lg font-bold text-slate-700">2. XÁC THỰC THÔNG TIN ỨNG VIÊN</h3>
+                <div className="h-px bg-slate-200 flex-1"></div>
+            </div>
 
             {/* Ảnh & Tên */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
@@ -576,7 +581,7 @@ export default function DangKy() {
 
 
 
-        </div>
+        </div >
     )
 
     const Step2_GiaDinh = () => (
@@ -1053,15 +1058,15 @@ export default function DangKy() {
         <div className="max-w-4xl mx-auto px-4 py-8 pb-32"> {/* pb-32 để tránh nút che nội dung cuối */}
 
             {/* Header Difference Notice */}
-            <div className="bg-blue-50 border-l-4 border-blue-500 p-4 mb-6 rounded-r shadow-sm">
+            <div className="bg-emerald-50 border-l-4 border-emerald-500 p-4 mb-6 mt-10 rounded-r shadow-sm">
                 <div className="flex">
                     <div className="flex-shrink-0">
-                        <span className="material-icons-outlined text-blue-400">info</span>
+                        <span className="material-icons-outlined text-emerald-500">info</span>
                     </div>
                     <div className="ml-3">
-                        <p className="text-sm text-blue-700">
+                        <p className="text-sm text-emerald-800">
                             <strong>HỒ SƠ ĐĂNG KÝ CHÍNH THỨC</strong> (Dành cho ứng viên nộp hồ sơ đầy đủ).<br />
-                            Nếu bạn chỉ muốn nhận tư vấn sơ bộ, vui lòng <Link to="/yeu-cau-tu-van" className="font-bold underline hover:text-blue-800">bấm vào đây để đăng ký tư vấn nhanh</Link>.
+                            Nếu bạn chỉ muốn nhận tư vấn sơ bộ, vui lòng <Link to="/yeu-cau-tu-van" className="font-bold underline hover:text-emerald-900">bấm vào đây để đăng ký tư vấn nhanh</Link>.
                         </p>
                     </div>
                 </div>

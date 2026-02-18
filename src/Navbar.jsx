@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { Menu, X, Globe, Briefcase, FileText, Users, LayoutDashboard, User, ToggleLeft, ToggleRight } from 'lucide-react'
+import { Menu, X, Globe, Briefcase, FileText, Users, LayoutDashboard, User } from 'lucide-react'
 
 export default function Navbar() {
     const location = useLocation()
     const [isMobileMenuOpen, setMobileMenuOpen] = useState(false)
     const [scrolled, setScrolled] = useState(false)
-    const [isBusinessMode, setBusinessMode] = useState(false)
+
 
     // Handle scroll effect
     useEffect(() => {
@@ -19,13 +19,15 @@ export default function Navbar() {
 
     const navLinks = [
         { name: 'Trang Chủ', path: '/', icon: <Globe size={18} /> },
-        { name: 'Cộng Đồng Số', path: '/community', icon: <Users size={18} /> }, // Placeholder path
-        { name: 'Hồ Sơ Của Tôi', path: '/dang-ky', icon: <FileText size={18} /> }, // Using /dang-ky as Create Profile entry
-        { name: 'Cơ Hội Việc Làm', path: '/viec-lam', icon: <Briefcase size={18} /> },
+        // { name: 'Cộng Đồng Số', path: '/community', icon: <Users size={18} /> }, // Hidden
+        { name: 'Hồ Sơ Của Tôi', path: '/dang-ky', icon: <FileText size={18} /> },
+        // { name: 'Cơ Hội Việc Làm', path: '/viec-lam', icon: <Briefcase size={18} /> }, // Hidden
     ]
 
     return (
-        <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled || isMobileMenuOpen ? 'bg-white/95 backdrop-blur-md shadow-sm border-b border-gray-100 py-3' : 'bg-transparent py-5'
+        <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled || isMobileMenuOpen
+            ? 'bg-white shadow-sm border-b border-gray-100 py-3 md:bg-white/95 md:backdrop-blur-md'
+            : 'bg-white shadow-sm border-b border-gray-100 py-3 md:bg-transparent md:shadow-none md:border-none md:py-5'
             }`}>
             <div className="container mx-auto px-4 md:px-6">
                 <div className="flex items-center justify-between">
@@ -56,18 +58,6 @@ export default function Navbar() {
 
                     {/* RIGHT ACTIONS */}
                     <div className="hidden md:flex items-center gap-4">
-                        {/* Role Toggle */}
-                        <button
-                            onClick={() => setBusinessMode(!isBusinessMode)}
-                            className="flex items-center gap-2 text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-600 px-3 py-1.5 rounded-full transition-colors"
-                        >
-                            <span className={!isBusinessMode ? 'text-emerald-700' : ''}>Ứng viên</span>
-                            {isBusinessMode ? <ToggleRight className="text-slate-900" size={20} /> : <ToggleLeft className="text-emerald-600" size={20} />}
-                            <span className={isBusinessMode ? 'text-slate-900' : ''}>Doanh nghiệp</span>
-                        </button>
-
-                        <div className="h-6 w-px bg-slate-200"></div>
-
                         {/* Admin Link */}
                         <Link
                             to="/admin/login"
@@ -114,18 +104,6 @@ export default function Navbar() {
                     ))}
 
                     <div className="pt-4 flex flex-col gap-4">
-                        <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
-                            <span className="text-sm font-medium text-slate-600">Chế độ xem</span>
-                            <button
-                                onClick={() => setBusinessMode(!isBusinessMode)}
-                                className="flex items-center gap-2 text-sm font-bold"
-                            >
-                                <span className={!isBusinessMode ? 'text-emerald-600' : 'text-slate-400'}>Ứng viên</span>
-                                /
-                                <span className={isBusinessMode ? 'text-slate-900' : 'text-slate-400'}>Doanh nghiệp</span>
-                            </button>
-                        </div>
-
                         <Link
                             to="/admin/login"
                             onClick={() => setMobileMenuOpen(false)}

@@ -1,26 +1,27 @@
 # Trạng thái Dự án (Checkpoint)
-**Ngày cập nhật:** 2026-02-16
+**Ngày cập nhật:** 2026-02-18
 
 ---
 
 ### 1. Trạng thái Hiện tại
-- **Mã nguồn:** Đã được dọn dẹp và commit vào Git.
-- **Phiên bản:** Đã deploy thành công lên Vercel (`https://quanly-xkld.vercel.app`).
-- **Giao diện:**
-    - **Mobile:** Đã tối ưu hóa trang Chi tiết Hồ sơ (ẩn thanh công cụ Ngành/Nguồn/Trạng thái trên header). Navbar hoạt động bình thường.
-    - **Desktop:** Giữ nguyên đầy đủ tính năng.
+- **Mã nguồn:** Đã Commit (e5e6bd2, 90fb0d5).
+- **Trang chủ:** Đã thiết kế lại hoàn toàn theo phong cách SaaS hiện đại (Emerald Green / Navy Blue).
+- **Navbar:** Đã cập nhật Menu, Logo mới, Toggle chuyển đổi vai trò (Ứng viên/Doanh nghiệp).
+- **Công nghệ:** Đã tích hợp `lucide-react` cho icon bộ mới.
 
 ### 2. Các Thay đổi Quan trọng (Phiên làm việc này)
-- **In Hồ Sơ Tiếng Nhật (JP Template):**
-    - Đã dịch thuật toàn bộ các trường dữ liệu quan trọng sang tiếng Nhật (Ngành nghề, Mục đích, Điểm mạnh/yếu, Trình độ tiếng Nhật...).
-    - Xử lý các trường hợp dữ liệu tiếng Việt (ví dụ: "Kiếm tiền" -> "家族を支えるため...", "Nấu ăn giỏi" -> "料理が得意").
-- **Giao diện Chi Tiết Hồ Sơ:**
-    - Ẩn thanh nổi (Floating Bar) chứa Ngành nghề/Trạng thái/Nguồn khi xem trên Mobile để giao diện thoáng hơn.
+- **HomePage.jsx:**
+    - Viết lại Hero Section, Value Grid, Stats, Process, Footer.
+    - Sử dụng `lucide-react` thay cho `material-icons`.
+- **Navbar.jsx:**
+    - Update Links: Trang Chủ, Cộng Đồng Số, Hồ Sơ, Việc Làm.
+    - Thêm nút chuyển đổi role Ứng viên/Doanh nghiệp.
+    - Responsive Mobile Menu mới.
 
 ### 3. Công việc Tiếp theo (Gợi ý)
-- **Kiểm tra thực tế:** In thử hồ sơ tiếng Nhật để đảm bảo layouts khi in ra giấy A4 không bị vỡ.
-- **Tính năng OCR:** Nếu cần, tiếp tục hoàn thiện tính năng bóc tách dữ liệu từ ảnh (đã có file hướng dẫn `GOOGLE_CLOUD_VISION_SETUP_JP.md` nhưng chưa tích hợp sâu).
-- **Phân quyền:** Rà soát lại quyền hạn Admin/User nếu cần (file hướng dẫn `HUONG_DAN_PHAN_QUYEN.md` đã có).
+- **Deploy:** User có thể kiểm tra trên Localhost (port 3001) trước khi deploy.
+- **Trang Cộng Đồng Số:** Hiện tại là link placeholder (`/community`), cần xây dựng nếu yêu cầu.
+- **Flow Ứng viên/Doanh nghiệp:** Xử lý logic Toggle Switch để thay đổi nội dung trang web theo role.
 
 ---
 *File này được tạo tự động để lưu lại tiến độ công việc.*

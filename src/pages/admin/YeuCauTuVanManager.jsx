@@ -89,15 +89,15 @@ export default function YeuCauTuVanManager() {
             <div className="bg-gray-50 px-3 pt-3 md:px-4 mb-4">
                 {/* Search Bar & Action Buttons */}
                 <div className="flex gap-2 items-center mb-3">
-                    {/* Client Search - Hidden on Mobile */}
-                    <div className="hidden md:block relative flex-1">
-                        <span className="material-icons-outlined absolute left-3 top-2.5 text-gray-400">search</span>
+                    {/* Client Search - Visible on Mobile */}
+                    <div className="flex relative flex-1">
+                        <span className="material-icons-outlined absolute left-3 top-3 text-slate-400">search</span>
                         <input
                             type="text"
                             placeholder="Tìm tên, SĐT, email..."
                             value={searchTerm}
                             onChange={e => setSearchTerm(e.target.value)}
-                            className="w-full pl-10 pr-4 py-2 bg-white border-none rounded-lg text-sm font-medium focus:ring-2 focus:ring-primary-500/50 outline-none transition-all shadow-sm"
+                            className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-base font-medium focus:ring-2 focus:ring-emerald-500/50 outline-none transition-all shadow-sm"
                         />
                     </div>
                     <button onClick={fetchLeads} className="hidden md:flex w-10 h-10 items-center justify-center bg-white border border-gray-200 rounded-lg text-gray-500 hover:bg-gray-50 active:scale-95 transition-all shadow-sm ml-auto">
@@ -105,15 +105,15 @@ export default function YeuCauTuVanManager() {
                     </button>
                 </div>
 
-                {/* Filter Buttons - Grid Layout */}
-                <div className="grid grid-cols-2 md:flex md:flex-wrap gap-2 mb-2">
+                {/* Filter Buttons - Horizontal Scroll */}
+                <div className="flex overflow-x-auto pb-2 gap-2 md:flex-wrap md:overflow-visible no-scrollbar mask-gradient-right mb-2">
                     {['All', ...STATUS_OPTIONS].map(status => (
                         <button
                             key={status}
                             onClick={() => setFilterStatus(status)}
-                            className={`px-2 py-2 md:px-4 md:py-2 rounded-lg text-xs md:text-sm font-bold transition-all border shadow-sm truncate ${filterStatus === status
-                                ? 'bg-primary-50 text-primary-700 border-primary-200 ring-1 ring-primary-100'
-                                : 'bg-white text-gray-500 border-gray-200 hover:bg-gray-50'
+                            className={`shrink-0 h-[44px] px-3.5 rounded-xl text-sm font-bold transition-all border shadow-sm whitespace-nowrap ${filterStatus === status
+                                ? 'bg-emerald-50 text-emerald-700 border-emerald-200 ring-1 ring-emerald-100'
+                                : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50'
                                 }`}
                         >
                             {status === 'All' ? 'Tất cả' : status}
@@ -237,15 +237,15 @@ function LeadCard({ lead, onStatusChange, onDelete }) {
             </div>
 
             {/* Footer Actions */}
-            <div className="grid grid-cols-3 border-t border-gray-100 divide-x divide-gray-100 bg-gray-50/50">
-                <a href={`tel:${lead.so_dien_thoai}`} className="flex flex-col items-center justify-center gap-1 py-3 hover:bg-white transition-colors group">
-                    <span className="material-icons-outlined text-green-500 text-xl group-hover:scale-110 transition-transform">call</span>
-                    <span className="text-[9px] font-bold text-green-600 uppercase">Gọi</span>
+            <div className="grid grid-cols-3 border-t border-slate-100 divide-x divide-slate-100 bg-slate-50/50">
+                <a href={`tel:${lead.so_dien_thoai}`} className="flex flex-col items-center justify-center gap-1 h-[50px] hover:bg-white transition-colors group">
+                    <span className="material-icons-outlined text-emerald-500 text-xl group-hover:scale-110 transition-transform">call</span>
+                    <span className="text-[10px] font-bold text-emerald-600 uppercase">Gọi</span>
                 </a>
 
-                <div className="relative group flex flex-col items-center justify-center gap-1 py-3 hover:bg-white transition-colors cursor-pointer">
-                    <span className="material-icons-outlined text-purple-500 text-xl group-hover:text-primary-600 group-hover:scale-110 transition-transform">change_circle</span>
-                    <span className="text-[9px] font-bold text-purple-600 uppercase group-hover:text-primary-600">Trạng thái</span>
+                <div className="relative group flex flex-col items-center justify-center gap-1 h-[50px] hover:bg-white transition-colors cursor-pointer">
+                    <span className="material-icons-outlined text-purple-500 text-xl group-hover:text-emerald-600 group-hover:scale-110 transition-transform">change_circle</span>
+                    <span className="text-[10px] font-bold text-purple-600 uppercase group-hover:text-emerald-600">Trạng thái</span>
                     <select
                         value={lead.trang_thai}
                         onChange={(e) => onStatusChange(lead.id, e.target.value)}
@@ -255,9 +255,9 @@ function LeadCard({ lead, onStatusChange, onDelete }) {
                     </select>
                 </div>
 
-                <button onClick={() => onDelete(lead.id)} className="flex flex-col items-center justify-center gap-1 py-3 hover:bg-white transition-colors group">
-                    <span className="material-icons-outlined text-red-400 text-xl group-hover:scale-110 transition-transform">delete</span>
-                    <span className="text-[9px] font-bold text-red-500 uppercase">Xóa</span>
+                <button onClick={() => onDelete(lead.id)} className="flex flex-col items-center justify-center gap-1 h-[50px] hover:bg-white transition-colors group">
+                    <span className="material-icons-outlined text-rose-400 text-xl group-hover:scale-110 transition-transform">delete</span>
+                    <span className="text-[10px] font-bold text-rose-500 uppercase">Xóa</span>
                 </button>
             </div>
         </div>

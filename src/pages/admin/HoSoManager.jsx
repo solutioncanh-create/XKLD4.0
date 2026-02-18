@@ -236,16 +236,16 @@ export default function HoSoManager() {
                 <div className="flex flex-col gap-3">
                     {/* Top Row: Search */}
                     <div className="flex gap-2 items-center">
-                        {/* Search - Hidden on Mobile, Visible on Desktop */}
-                        <div className="hidden md:flex relative flex-1">
-                            <span className="material-icons-outlined absolute left-3 top-2.5 text-gray-400">search</span>
+                        {/* Search - Visible on Mobile now */}
+                        <div className="flex relative flex-1">
+                            <span className="material-icons-outlined absolute left-3 top-2.5 text-slate-400">search</span>
                             <input
                                 type="text"
                                 placeholder="Tìm kiếm ứng viên..."
                                 value={search}
                                 onChange={e => setSearch(e.target.value)}
                                 onKeyDown={e => e.key === 'Enter' && fetchProfiles()}
-                                className="w-full pl-10 pr-4 py-2 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 shadow-sm"
+                                className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-base focus:outline-none focus:ring-2 focus:ring-emerald-500 shadow-sm"
                             />
                         </div>
 
@@ -255,14 +255,14 @@ export default function HoSoManager() {
                         </button>
                     </div>
 
-                    {/* Filter Buttons & Actions - Grid Layout */}
-                    <div className="grid grid-cols-2 md:flex md:flex-wrap gap-2">
-                        {/* ADD BUTTON - Same layout as filters - Replaced 'All' button if desired, or just first item */}
+                    {/* Filter Buttons & Actions - Horizontal Scroll on Mobile */}
+                    <div className="flex overflow-x-auto pb-2 gap-2 md:flex-wrap md:overflow-visible no-scrollbar mask-gradient-right">
+                        {/* ADD BUTTON */}
                         <button
                             onClick={() => navigate('/dang-ky')}
-                            className="px-2 py-2 md:px-4 md:py-2 rounded-lg text-xs md:text-sm font-bold transition-all border shadow-sm truncate bg-primary-600 text-white border-primary-600 hover:bg-primary-700 flex items-center justify-center gap-1 active:scale-95"
+                            className="shrink-0 h-[44px] px-4 rounded-xl text-sm font-bold transition-all border shadow-sm bg-emerald-600 text-white border-emerald-600 hover:bg-emerald-700 flex items-center justify-center gap-2 active:scale-95"
                         >
-                            <span className="material-icons-outlined text-sm">add_circle</span>
+                            <span className="material-icons-outlined text-lg">add_circle</span>
                             <span>Thêm mới</span>
                         </button>
 
@@ -271,9 +271,9 @@ export default function HoSoManager() {
                             <button
                                 key={status}
                                 onClick={() => setFilterStatus(status)}
-                                className={`px-2 py-2 md:px-4 md:py-2 rounded-lg text-xs md:text-sm font-bold transition-all border shadow-sm truncate ${filterStatus === status
-                                    ? 'bg-primary-50 text-primary-700 border-primary-200 ring-1 ring-primary-100'
-                                    : 'bg-white text-gray-500 border-gray-200 hover:bg-gray-50'
+                                className={`shrink-0 h-[44px] px-3.5 rounded-xl text-sm font-bold transition-all border shadow-sm whitespace-nowrap ${filterStatus === status
+                                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200 ring-1 ring-emerald-100'
+                                    : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50'
                                     }`}
                             >
                                 {status === 'All' ? 'Tất cả' : status}
@@ -507,29 +507,29 @@ function HoSoCard({ profile, onMatch, onDelete, onSmartAction, navigate }) {
                 </div>
             </div>
 
-            {/* Footer Action Grid */}
-            <div className="grid grid-cols-3 border-t border-gray-100 divide-x divide-gray-100 bg-gray-50/50">
+            {/* Footer Action Grid - Min height 44px */}
+            <div className="grid grid-cols-3 border-t border-slate-100 divide-x divide-slate-100 bg-slate-50/50">
                 {/* 1. Detail */}
-                <button onClick={() => navigate(`/ho-so/${profile.id}`)} className="flex flex-col items-center justify-center gap-1 py-2.5 hover:bg-white active:bg-gray-100 transition-colors group">
-                    <span className="material-icons-outlined text-gray-400 group-hover:text-blue-600 text-xl">visibility</span>
-                    <span className="text-[10px] font-bold text-gray-500 uppercase">Chi tiết</span>
+                <button onClick={() => navigate(`/ho-so/${profile.id}`)} className="flex flex-col items-center justify-center gap-1 h-[50px] hover:bg-white active:bg-slate-100 transition-colors group">
+                    <span className="material-icons-outlined text-slate-400 group-hover:text-emerald-600 text-xl">visibility</span>
+                    <span className="text-[10px] font-bold text-slate-500 uppercase">Chi tiết</span>
                 </button>
 
-                {/* 2. Call (or Alt Action) */}
+                {/* 2. Call */}
                 {profile.so_dien_thoai ? (
-                    <a href={`tel:${profile.so_dien_thoai}`} className="flex flex-col items-center justify-center gap-1 py-2.5 hover:bg-white active:bg-green-50 transition-colors group">
-                        <span className="material-icons-outlined text-green-500 group-hover:scale-110 transition-transform text-xl">call</span>
-                        <span className="text-[10px] font-bold text-green-600 uppercase">Gọi ngay</span>
+                    <a href={`tel:${profile.so_dien_thoai}`} className="flex flex-col items-center justify-center gap-1 h-[50px] hover:bg-white active:bg-emerald-50 transition-colors group">
+                        <span className="material-icons-outlined text-emerald-500 group-hover:scale-110 transition-transform text-xl">call</span>
+                        <span className="text-[10px] font-bold text-emerald-600 uppercase">Gọi ngay</span>
                     </a>
                 ) : (
-                    <button className="flex flex-col items-center justify-center gap-1 py-2.5 opacity-50 cursor-not-allowed">
-                        <span className="material-icons-outlined text-gray-300 text-xl">phone_disabled</span>
-                        <span className="text-[10px] font-bold text-gray-400 uppercase">Không số</span>
+                    <button className="flex flex-col items-center justify-center gap-1 h-[50px] opacity-50 cursor-not-allowed">
+                        <span className="material-icons-outlined text-slate-300 text-xl">phone_disabled</span>
+                        <span className="text-[10px] font-bold text-slate-400 uppercase">Không số</span>
                     </button>
                 )}
 
-                {/* 3. Smart Action (Dynamic) */}
-                <button onClick={() => onMatch(profile)} className="flex flex-col items-center justify-center gap-1 py-2.5 hover:bg-white active:bg-blue-50 transition-colors group">
+                {/* 3. Smart Action */}
+                <button onClick={() => onMatch(profile)} className="flex flex-col items-center justify-center gap-1 h-[50px] hover:bg-white active:bg-blue-50 transition-colors group">
                     <span className="material-icons-outlined text-blue-500 group-hover:scale-110 transition-transform text-xl">group_add</span>
                     <span className="text-[10px] font-bold text-blue-600 uppercase">Ghép đơn</span>
                 </button>

@@ -77,10 +77,10 @@ export default function ChiTietHoSo() {
     const canPrint = hasPermission(Permissions.PRINT_EXPORT)
 
     return (
-        <div className="max-w-5xl mx-auto px-4 py-8 mt-[10px]">
+        <div className="max-w-5xl mx-auto px-4 py-8 mt-24">
             {/* Header & Navigation */}
             <div className="mb-6 flex flex-col sm:flex-row items-center justify-between gap-4 animate-fade-in-up">
-                <Link to="/admin/ho-so" className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 font-bold flex items-center gap-2 shadow-md hover:shadow-lg transition-all group">
+                <Link to="/admin/ho-so" className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 font-bold flex items-center gap-2 shadow-md hover:shadow-lg transition-all group">
                     <span className="group-hover:-translate-x-1 transition-transform material-icons-outlined text-sm">arrow_back</span> Lưu lại và về home
                 </Link>
 
@@ -100,7 +100,7 @@ export default function ChiTietHoSo() {
                     {canPrint && (
                         <button
                             onClick={() => window.open(`/in-ho-so/${id}`, '_blank')}
-                            className="px-3 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 font-medium flex items-center gap-2 shadow-md hover:shadow-lg transition-all text-sm"
+                            className="px-3 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 font-medium flex items-center gap-2 shadow-md hover:shadow-lg transition-all text-sm"
                         >
                             <span className="material-icons-outlined text-base">print</span> In HS
                         </button>
@@ -108,7 +108,7 @@ export default function ChiTietHoSo() {
                     {canPrint && (
                         <button
                             onClick={() => window.open(`/in-ho-so-jp/${id}`, '_blank')}
-                            className="px-3 py-2 bg-white border border-primary-200 text-primary-700 rounded-lg hover:bg-primary-50 font-medium flex items-center gap-2 shadow-sm transition-colors text-sm"
+                            className="px-3 py-2 bg-white border border-emerald-200 text-emerald-700 rounded-lg hover:bg-emerald-50 font-medium flex items-center gap-2 shadow-sm transition-colors text-sm"
                         >
                             <span className="material-icons-outlined text-base">language</span> In Tiếng Nhật
                         </button>
@@ -120,7 +120,7 @@ export default function ChiTietHoSo() {
             <div className="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100 animate-fade-in">
 
                 {/* Cover & Avatar Header */}
-                <div className="h-[100px] bg-gradient-to-r from-primary-600 to-primary-800 relative">
+                <div className="h-[100px] bg-gradient-to-r from-emerald-600 to-emerald-800 relative">
                     <div className="absolute inset-0 bg-pattern opacity-10"></div>
 
                     {/* Center Controls */}
@@ -217,8 +217,8 @@ export default function ChiTietHoSo() {
 
                     {/* Section 1: Thông tin cá nhân */}
                     <div className="space-y-6">
-                        <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2 border-b-2 border-primary-100 pb-2">
-                            <span className="material-icons-outlined text-primary-600 bg-primary-50 p-1 rounded">person</span>
+                        <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2 border-b-2 border-emerald-100 pb-2">
+                            <span className="material-icons-outlined text-emerald-600 bg-emerald-50 p-1 rounded">person</span>
                             Thông Tin Cá Nhân
                         </h3>
                         <div className="bg-gray-50/50 rounded-xl p-6 space-y-4 border border-gray-100">
@@ -241,19 +241,19 @@ export default function ChiTietHoSo() {
 
                     {/* Section 2: Sức khỏe & Ngoại hình */}
                     <div className="space-y-6">
-                        <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2 border-b-2 border-primary-100 pb-2">
-                            <span className="material-icons-outlined text-primary-600 bg-primary-50 p-1 rounded">health_and_safety</span>
+                        <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2 border-b-2 border-emerald-100 pb-2">
+                            <span className="material-icons-outlined text-emerald-600 bg-emerald-50 p-1 rounded">health_and_safety</span>
                             Sức Khỏe & Ngoại Hình
                         </h3>
 
                         <div className="grid grid-cols-2 gap-4">
-                            <div className="bg-gradient-to-br from-primary-50 to-white p-4 rounded-xl text-center border border-primary-100 shadow-sm">
-                                <span className="block text-primary-400 text-xs uppercase font-bold tracking-wider mb-1">Chiều cao</span>
-                                <span className="text-2xl font-black text-primary-700">{hoSo.chieu_cao || 0} <span className="text-base font-normal text-gray-400">cm</span></span>
+                            <div className="bg-gradient-to-br from-emerald-50 to-white p-4 rounded-xl text-center border border-emerald-100 shadow-sm">
+                                <span className="block text-emerald-600 text-xs uppercase font-bold tracking-wider mb-1">Chiều cao</span>
+                                <span className="text-2xl font-black text-emerald-700">{hoSo.chieu_cao || 0} <span className="text-base font-normal text-gray-400">cm</span></span>
                             </div>
-                            <div className="bg-gradient-to-br from-primary-50 to-white p-4 rounded-xl text-center border border-primary-100 shadow-sm">
-                                <span className="block text-primary-400 text-xs uppercase font-bold tracking-wider mb-1">Cân nặng</span>
-                                <span className="text-2xl font-black text-primary-700">{hoSo.can_nang || 0} <span className="text-base font-normal text-gray-400">kg</span></span>
+                            <div className="bg-gradient-to-br from-emerald-50 to-white p-4 rounded-xl text-center border border-emerald-100 shadow-sm">
+                                <span className="block text-emerald-600 text-xs uppercase font-bold tracking-wider mb-1">Cân nặng</span>
+                                <span className="text-2xl font-black text-emerald-700">{hoSo.can_nang || 0} <span className="text-base font-normal text-gray-400">kg</span></span>
                             </div>
                         </div>
 
@@ -283,11 +283,11 @@ export default function ChiTietHoSo() {
                     {/* Nguyện vọng & Kỹ năng */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
                         <div className="space-y-6">
-                            <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2 border-b-2 border-primary-100 pb-2">
-                                <span className="material-icons-outlined text-primary-600 bg-primary-50 p-1 rounded">work_outline</span>
+                            <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2 border-b-2 border-emerald-100 pb-2">
+                                <span className="material-icons-outlined text-emerald-600 bg-emerald-50 p-1 rounded">work_outline</span>
                                 Nguyện Vọng
                             </h3>
-                            <div className="bg-primary-50/30 p-6 rounded-xl border border-primary-100 space-y-4">
+                            <div className="bg-emerald-50/30 p-6 rounded-xl border border-emerald-100 space-y-4">
                                 <InfoRow label="Ngành nghề" value={hoSo.nganh_nghe_mong_muon} highlight />
                                 <InfoRow label="Thời gian đi" value={hoSo.thoi_gian_du_kien} />
                                 <InfoRow label="Mục đích" value={hoSo.muc_dich_di_nhat} />
@@ -295,8 +295,8 @@ export default function ChiTietHoSo() {
                         </div>
 
                         <div className="space-y-6">
-                            <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2 border-b-2 border-primary-100 pb-2">
-                                <span className="material-icons-outlined text-primary-600 bg-primary-50 p-1 rounded">psychology</span>
+                            <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2 border-b-2 border-emerald-100 pb-2">
+                                <span className="material-icons-outlined text-emerald-600 bg-emerald-50 p-1 rounded">psychology</span>
                                 Kỹ Năng & Điểm Mạnh
                             </h3>
                             <div className="bg-white p-6 rounded-xl border border-gray-200 space-y-4 shadow-sm">
@@ -318,8 +318,8 @@ export default function ChiTietHoSo() {
 
                     {/* Gia đình & Bảo lãnh */}
                     <div className="space-y-6">
-                        <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2 border-b-2 border-primary-100 pb-2">
-                            <span className="material-icons-outlined text-primary-600 bg-primary-50 p-1 rounded">family_restroom</span>
+                        <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2 border-b-2 border-emerald-100 pb-2">
+                            <span className="material-icons-outlined text-emerald-600 bg-emerald-50 p-1 rounded">family_restroom</span>
                             Gia Đình & Bảo Lãnh
                         </h3>
 
@@ -337,7 +337,7 @@ export default function ChiTietHoSo() {
                         {Array.isArray(hoSo.thong_tin_gia_dinh) && hoSo.thong_tin_gia_dinh.length > 0 ? (
                             <div className="overflow-hidden border border-gray-200 rounded-xl shadow-sm">
                                 <table className="w-full text-sm text-left">
-                                    <thead className="bg-primary-50 text-primary-800 font-bold">
+                                    <thead className="bg-emerald-50 text-emerald-800 font-bold">
                                         <tr><th className="p-4">Họ tên</th><th className="p-4">Quan hệ</th><th className="p-4">Năm sinh</th><th className="p-4">Công việc</th></tr>
                                     </thead>
                                     <tbody className="divide-y divide-gray-100 bg-white">
@@ -359,14 +359,14 @@ export default function ChiTietHoSo() {
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
                         {/* Học vấn */}
                         <div className="space-y-6">
-                            <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2 border-b-2 border-primary-100 pb-2">
-                                <span className="material-icons-outlined text-primary-600 bg-primary-50 p-1 rounded">school</span>
+                            <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2 border-b-2 border-emerald-100 pb-2">
+                                <span className="material-icons-outlined text-emerald-600 bg-emerald-50 p-1 rounded">school</span>
                                 Học Vấn
                             </h3>
                             {Array.isArray(hoSo.qua_trinh_hoc_tap) && hoSo.qua_trinh_hoc_tap.length > 0 ? (
                                 <div className="overflow-hidden border border-gray-200 rounded-xl shadow-sm">
                                     <table className="w-full text-sm text-left">
-                                        <thead className="bg-primary-50 text-primary-800 font-bold uppercase text-xs">
+                                        <thead className="bg-emerald-50 text-emerald-800 font-bold uppercase text-xs">
                                             <tr>
                                                 <th className="p-3 w-32">Thời gian</th>
                                                 <th className="p-3">Trường / Ngành</th>
@@ -375,7 +375,7 @@ export default function ChiTietHoSo() {
                                         <tbody className="divide-y divide-gray-100 bg-white">
                                             {hoSo.qua_trinh_hoc_tap.map((item, i) => (
                                                 <tr key={i} className="hover:bg-gray-50">
-                                                    <td className="p-3 font-medium text-primary-600 whitespace-nowrap align-top text-xs">
+                                                    <td className="p-3 font-medium text-emerald-600 whitespace-nowrap align-top text-xs">
                                                         {formatTimeRange(item?.thoi_gian)}
                                                     </td>
                                                     <td className="p-3">
@@ -395,14 +395,14 @@ export default function ChiTietHoSo() {
 
                         {/* Kinh nghiệm */}
                         <div className="space-y-6">
-                            <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2 border-b-2 border-primary-100 pb-2">
-                                <span className="material-icons-outlined text-primary-600 bg-primary-50 p-1 rounded">engineering</span>
+                            <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2 border-b-2 border-emerald-100 pb-2">
+                                <span className="material-icons-outlined text-emerald-600 bg-emerald-50 p-1 rounded">engineering</span>
                                 Kinh Nghiệm
                             </h3>
                             {Array.isArray(hoSo.kinh_nghiem_lam_viec) && hoSo.kinh_nghiem_lam_viec.length > 0 ? (
                                 <div className="overflow-hidden border border-gray-200 rounded-xl shadow-sm">
                                     <table className="w-full text-sm text-left">
-                                        <thead className="bg-primary-50 text-primary-800 font-bold uppercase text-xs">
+                                        <thead className="bg-emerald-50 text-emerald-800 font-bold uppercase text-xs">
                                             <tr>
                                                 <th className="p-3 w-32">Thời gian</th>
                                                 <th className="p-3">Công ty / CV</th>
@@ -411,7 +411,7 @@ export default function ChiTietHoSo() {
                                         <tbody className="divide-y divide-gray-100 bg-white">
                                             {hoSo.kinh_nghiem_lam_viec.map((item, i) => (
                                                 <tr key={i} className="hover:bg-gray-50">
-                                                    <td className="p-3 font-medium text-primary-600 whitespace-nowrap align-top text-xs">
+                                                    <td className="p-3 font-medium text-emerald-600 whitespace-nowrap align-top text-xs">
                                                         {formatTimeRange(item?.thoi_gian)}
                                                     </td>
                                                     <td className="p-3">
@@ -481,7 +481,7 @@ function InfoRow({ label, value, highlight = false }) {
     return (
         <div className="flex justify-between py-2 border-b border-gray-100 last:border-0 border-dashed items-center">
             <span className="text-gray-500 text-sm">{label}</span>
-            <span className={`text-sm font-medium text-right ${highlight ? 'text-primary-700' : 'text-gray-900'}`}>{value}</span>
+            <span className={`text-sm font-medium text-right ${highlight ? 'text-emerald-700 font-bold' : 'text-gray-900'}`}>{value}</span>
         </div>
     )
 }

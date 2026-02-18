@@ -66,15 +66,15 @@ export default function JobDetail() {
     )
 
     return (
-        <div className="min-h-screen bg-secondary-50 font-sans text-secondary-800 pb-20">
+        <div className="min-h-screen bg-slate-50 font-sans text-slate-800 pb-20">
             {/* HERDER BANNER */}
-            <div className="bg-primary-900 text-white relative py-12">
+            <div className="bg-emerald-900 text-white relative py-12">
                 <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                    <div className="absolute -top-[50%] -right-[10%] w-[500px] h-[500px] bg-primary-500/10 rounded-full blur-3xl"></div>
+                    <div className="absolute -top-[50%] -right-[10%] w-[500px] h-[500px] bg-emerald-500/10 rounded-full blur-3xl"></div>
                 </div>
-                <div className="max-w-6xl mx-auto px-6 relative z-10">
+                <div className="max-w-6xl mx-auto px-4 md:px-6 relative z-10">
                     <div className="flex justify-between items-start mb-6">
-                        <Link to="/viec-lam" className="inline-flex items-center text-primary-200 hover:text-white text-sm font-medium transition-colors">
+                        <Link to="/viec-lam" className="inline-flex items-center text-emerald-200 hover:text-white text-sm font-medium transition-colors">
                             <span className="material-icons-outlined text-base mr-1">arrow_back</span>
                             Quay lại danh sách
                         </Link>
@@ -128,7 +128,7 @@ export default function JobDetail() {
 
                     <div className="flex flex-col md:flex-row gap-6 items-start justify-between">
                         <div className="w-full md:w-2/3">
-                            <span className="inline-block px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-accent-500 text-white mb-3 shadow-lg shadow-accent-500/30">
+                            <span className="inline-block px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-amber-500 text-white mb-3 shadow-lg shadow-amber-500/30">
                                 {isEditing ? <input name="nganh_nghe" value={formData.nganh_nghe || ''} onChange={handleChange} className="bg-transparent border-b border-white outline-none w-24 text-white placeholder-white/50" placeholder="Ngành nghề" /> : job.nganh_nghe}
                             </span>
 
@@ -157,8 +157,8 @@ export default function JobDetail() {
                         </div>
 
                         <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/10 text-center min-w-[200px]">
-                            <p className="text-xs font-bold text-primary-200 uppercase tracking-wider mb-1">Mức Lương Cơ Bản</p>
-                            <p className="text-3xl font-black text-accent-400">
+                            <p className="text-xs font-bold text-emerald-200 uppercase tracking-wider mb-1">Mức Lương Cơ Bản</p>
+                            <p className="text-3xl font-black text-amber-400">
                                 {isEditing ? (
                                     <div className="flex items-center justify-center gap-1">
                                         <input
@@ -181,16 +181,16 @@ export default function JobDetail() {
             </div>
 
             {/* CONTENT */}
-            <div className="max-w-6xl mx-auto px-6 -mt-8 relative z-20">
+            <div className="max-w-6xl mx-auto px-4 md:px-6 -mt-8 relative z-20">
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
                     {/* LEFT COLUMN: DETAILS */}
                     <div className="lg:col-span-2 space-y-8">
 
                         {/* Highlights */}
-                        <div className="bg-white rounded-2xl p-8 shadow-sm border border-secondary-100">
-                            <h3 className="section-title text-xl font-bold text-primary-900 mb-6 flex items-center gap-2 border-b border-secondary-100 pb-3">
-                                <span className="material-icons-outlined text-primary-600">info</span>
+                        <div className="bg-white rounded-2xl p-6 md:p-8 shadow-sm border border-slate-100">
+                            <h3 className="section-title text-xl font-bold text-emerald-900 mb-6 flex items-center gap-2 border-b border-slate-100 pb-3">
+                                <span className="material-icons-outlined text-emerald-600">info</span>
                                 Thông Tin Chi Tiết
                             </h3>
 
@@ -252,27 +252,27 @@ export default function JobDetail() {
 
                     {/* RIGHT COLUMN: ACTION */}
                     <div className="lg:col-span-1 space-y-6">
-                        <div className="bg-white rounded-2xl p-6 shadow-xl shadow-primary-900/5 border border-primary-100 sticky top-24">
-                            <h3 className="text-lg font-bold text-primary-900 mb-4 text-center">Đăng Ký Ứng Tuyển</h3>
-                            <p className="text-sm text-secondary-500 text-center mb-6">Điền thông tin để được tư vấn miễn phí về đơn hàng này.</p>
+                        <div className="bg-white rounded-2xl p-6 shadow-xl shadow-emerald-900/5 border border-emerald-100 sticky top-24">
+                            <h3 className="text-lg font-bold text-emerald-900 mb-4 text-center">Đăng Ký Ứng Tuyển</h3>
+                            <p className="text-sm text-slate-500 text-center mb-6">Điền thông tin để được tư vấn miễn phí về đơn hàng này.</p>
 
                             {job.trang_thai === 'Đang tuyển' ? (
-                                <Link to={`/yeu-cau-tu-van?don_hang=${job.id}`} className="block w-full bg-primary-600 text-white font-bold py-4 rounded-xl text-center hover:bg-primary-700 shadow-lg shadow-primary-500/30 transition-all mb-4 transform hover:-translate-y-1">
+                                <Link to={`/yeu-cau-tu-van?don_hang=${job.id}`} className="block w-full bg-emerald-600 text-white font-bold py-4 rounded-xl text-center hover:bg-emerald-700 shadow-lg shadow-emerald-500/30 transition-all mb-4 transform hover:-translate-y-1">
                                     ĐĂNG KÝ TƯ VẤN NGAY
                                 </Link>
                             ) : (
-                                <button disabled className="block w-full bg-secondary-200 text-secondary-500 font-bold py-4 rounded-xl text-center cursor-not-allowed mb-4">
+                                <button disabled className="block w-full bg-slate-200 text-slate-500 font-bold py-4 rounded-xl text-center cursor-not-allowed mb-4">
                                     ĐƠN HÀNG ĐÃ ĐÓNG
                                 </button>
                             )}
 
-                            <button className="block w-full bg-white text-primary-700 font-bold py-4 rounded-xl text-center border border-primary-200 hover:bg-primary-50 transition-all">
+                            <button className="block w-full bg-white text-emerald-700 font-bold py-4 rounded-xl text-center border border-emerald-200 hover:bg-emerald-50 transition-all">
                                 <span className="material-icons-outlined align-middle mr-2">phone_in_talk</span>
                                 Gọi Tư Vấn: 1900 1234
                             </button>
 
-                            <div className="mt-6 pt-6 border-t border-secondary-100">
-                                <p className="text-xs text-secondary-400 text-center mb-2">Chia sẻ đơn hàng này</p>
+                            <div className="mt-6 pt-6 border-t border-slate-100">
+                                <p className="text-xs text-slate-400 text-center mb-2">Chia sẻ đơn hàng này</p>
                                 <div className="flex justify-center gap-4">
                                     <SocialButton icon="facebook" />
                                     <SocialButton icon="email" />
@@ -289,13 +289,13 @@ export default function JobDetail() {
 
 function DetailItem({ icon, label, value }) {
     return (
-        <div className="flex items-start gap-4 p-4 rounded-xl bg-secondary-50 border border-secondary-100">
-            <div className="w-10 h-10 rounded-full bg-white text-primary-600 flex items-center justify-center shrink-0 shadow-sm">
+        <div className="flex items-start gap-4 p-4 rounded-xl bg-slate-50 border border-slate-100">
+            <div className="w-10 h-10 rounded-full bg-white text-emerald-600 flex items-center justify-center shrink-0 shadow-sm">
                 <span className="material-icons-outlined text-xl">{icon}</span>
             </div>
             <div>
-                <p className="text-xs font-bold text-secondary-400 uppercase tracking-wider mb-1">{label}</p>
-                <p className="font-bold text-secondary-900">{value}</p>
+                <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">{label}</p>
+                <p className="font-bold text-slate-900">{value}</p>
             </div>
         </div>
     )
