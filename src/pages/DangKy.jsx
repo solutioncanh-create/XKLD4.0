@@ -10,6 +10,7 @@ export default function DangKy() {
     const [loading, setLoading] = useState(false)
     const [step, setStep] = useState(1)
     const [showSuccess, setShowSuccess] = useState(false)
+    const [validationErrors, setValidationErrors] = useState([])
 
     const steps = [
         { num: 1, label: 'Cá nhân & Giấy tờ', icon: 'person_outline' },
@@ -74,7 +75,9 @@ export default function DangKy() {
         benh_an_phau_thuat: '', // Thêm Tiền sử bệnh
 
         // --- BƯỚC 4: HỌC VẤN & KINH NGHIỆM (JSON Array) ---
-        qua_trinh_hoc_tap: [],
+        qua_trinh_hoc_tap: [
+            { thoi_gian: '', ten_truong: '', bang_cap: '' }
+        ],
         kinh_nghiem_lam_viec: [
             { thoi_gian: '', cong_ty: '', cong_viec: '' },
             { thoi_gian: '', cong_ty: '', cong_viec: '' }
@@ -242,11 +245,30 @@ export default function DangKy() {
             }
         })
 
-        // Check mảng Gia Đình (nếu nhập dòng nào thì phải full dòng đó - logic hiện tại mảng có thể rỗng nếu user xóa hết)
-        // Check mảng Học vấn / Kinh nghiệm (ít nhất 1 dòng?) -> Tạm thời bỏ qua check mảng rỗng, chỉ check field simple
+        // Validate Gia Đình (Bố, Mẹ là quan trọng) - Nếu đã khai thì phải đủ
+        formData.thong_tin_gia_dinh.forEach(mem => {
+            if ((mem.quan_he === 'Bố' || mem.quan_he === 'Mẹ') && (!mem.ho_ten || !mem.nam_sinh)) {
+                missing.push(`Thông tin ${mem.quan_he} (Họ tên, Năm sinh)`);
+            }
+        });
+
+        // Validate Học Vấn (Bắt buộc ít nhất 1 dòng)
+        if (formData.qua_trinh_hoc_tap.length === 0) {
+            missing.push('Quá trình học tập (Vui lòng thêm ít nhất 1 cấp học)');
+        } else {
+            // Check dòng đầu tiên
+            const h1 = formData.qua_trinh_hoc_tap[0];
+            if (!h1.thoi_gian || !h1.ten_truong || !h1.bang_cap) missing.push('Học vấn (Dòng 1 chưa đủ thông tin)');
+        }
+
+        // Validate Kinh Nghiệm (Dòng 1 bắt buộc theo yêu cầu)
+        if (formData.kinh_nghiem_lam_viec.length > 0) {
+            const k1 = formData.kinh_nghiem_lam_viec[0];
+            if (!k1.thoi_gian || !k1.cong_ty || !k1.cong_viec) missing.push('Kinh nghiệm làm việc (Dòng 1 bắt buộc)');
+        }
 
         if (missing.length > 0) {
-            alert('Vui lòng nhập đầy đủ các thông tin bắt buộc sau:\n- ' + missing.join('\n- '))
+            setValidationErrors(missing)
             return
         }
 
@@ -1199,6 +1221,43 @@ export default function DangKy() {
                     )}
                 </button>
             </div>
+
+            {/* VALIDATION ERROR MODAL */}
+            {validationErrors.length > 0 && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 relative overflow-hidden animate-slide-up">
+                        <button onClick={() => setValidationErrors([])} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors">
+                            <span className="material-icons-outlined">close</span>
+                        </button>
+
+                        <div className="flex flex-col items-center mb-5">
+                            <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mb-4 animate-pulse">
+                                <span className="material-icons-outlined text-4xl text-red-500">priority_high</span>
+                            </div>
+                            <h3 className="text-xl font-bold text-gray-800 text-center">Thông Tin Chưa Đầy Đủ</h3>
+                            <p className="text-sm text-gray-500 text-center mt-1">Vui lòng bổ sung các thông tin bắt buộc sau:</p>
+                        </div>
+
+                        <div className="bg-red-50 rounded-xl p-4 mb-6 max-h-[40vh] overflow-y-auto custom-scrollbar border border-red-100">
+                            <ul className="space-y-2.5">
+                                {validationErrors.map((err, idx) => (
+                                    <li key={idx} className="flex items-start gap-3 text-sm text-gray-800">
+                                        <span className="material-icons-outlined text-red-500 text-lg mt-0.5 shrink-0">error</span>
+                                        <span className="font-medium leading-tight">{err}</span>
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+
+                        <button
+                            onClick={() => setValidationErrors([])}
+                            className="w-full py-3.5 bg-red-500 hover:bg-red-600 text-white font-bold rounded-xl shadow-lg shadow-red-500/30 transition-all uppercase tracking-wide flex items-center justify-center gap-2"
+                        >
+                            <span>KIỂM TRA LẠI</span>
+                        </button>
+                    </div>
+                </div>
+            )}
 
             {/* SUCCESS MODAL */}
             {showSuccess && (
