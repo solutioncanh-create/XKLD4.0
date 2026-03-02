@@ -196,11 +196,7 @@ export default function DangKy({ adminMode = false }) {
             que_quan: 'Quê quán',
             ton_giao: 'Tôn giáo',
             hon_nhan: 'Tình trạng hôn nhân',
-            so_cccd: 'Số CCCD',
-            ngay_cap_cccd: 'Ngày cấp CCCD',
-            noi_cap_cccd: 'Nơi cấp CCCD',
-            anh_ho_so: 'Ảnh chân dung',
-            anh_cccd_mat_truoc: 'Ảnh mặt trước CCCD/CMT',
+            ...(!adminMode ? { anh_cccd_mat_truoc: 'Ảnh mặt trước CCCD/CMT' } : {}),
             // anh_cccd_mat_sau: 'Ảnh mặt sau CCCD', // Không bắt buộc
             chieu_cao: 'Chiều cao',
             can_nang: 'Cân nặng',
@@ -491,17 +487,43 @@ export default function DangKy({ adminMode = false }) {
                         </div>
                     </div>
 
-                    {/* Các trường thông tin trích xuất ID */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6 pt-6 border-t border-emerald-100/50">
-                        <div><label className="label">Số CCCD / CMND <span className="text-red-500 ml-1">*</span></label><input name="so_cccd" value={formData.so_cccd} onChange={handleChange} className={vCls(formData.so_cccd)} placeholder="AI sẽ tự điền..." /></div>
-                        <div className="z-0 relative">
-                            <label className="label">Ngày cấp <span className="text-red-500 ml-1">*</span></label>
-                            <FullDateSelect name="ngay_cap_cccd" value={formData.ngay_cap_cccd} onChange={handleChange} startYear={2000} endYear={new Date().getFullYear()} />
-                        </div>
-                        <div><label className="label">Nơi cấp <span className="text-red-500 ml-1">*</span></label><input name="noi_cap_cccd" value={formData.noi_cap_cccd} onChange={handleChange} className={vCls(formData.noi_cap_cccd)} placeholder="Cục CS QLHC..." /></div>
-                    </div>
                 </div>
             )}
+
+            {/* Các trường thông tin CCCD - Luôn hiển thị để Admin có thể nhập tay */}
+            <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 mt-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <label className="label">Số CCCD / CMND <span className="text-red-500 ml-1">*</span></label>
+                        <input name="so_cccd" value={formData.so_cccd || ''} onChange={handleChange} className={vCls(formData.so_cccd)} placeholder="Nhập số CCCD..." />
+                    </div>
+                    <div className="z-20 relative">
+                        <label className="label">Ngày cấp <span className="text-red-500 ml-1">*</span></label>
+                        <FullDateSelect name="ngay_cap_cccd" value={formData.ngay_cap_cccd} onChange={handleChange} startYear={2000} endYear={new Date().getFullYear()} />
+                    </div>
+                    <div>
+                        <label className="label">Nơi cấp <span className="text-red-500 ml-1">*</span></label>
+                        <input name="noi_cap_cccd" value={formData.noi_cap_cccd || ''} onChange={handleChange} className={vCls(formData.noi_cap_cccd)} placeholder="Nơi cấp..." />
+                    </div>
+                </div>
+                {adminMode && (
+                    <div className="mt-4">
+                        <label className="label mb-2 text-slate-700 font-semibold text-xs">Ảnh mặt trước CCCD (Không bắt buộc với Admin)</label>
+                        <div className="flex items-center gap-4">
+                            <div className="w-32 h-20 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center cursor-pointer overflow-hidden bg-white"
+                                onClick={() => document.getElementById('admin-cccd-upload').click()}>
+                                {formData.anh_cccd_mat_truoc ? (
+                                    <img src={formData.anh_cccd_mat_truoc} className="w-full h-full object-cover" />
+                                ) : (
+                                    <span className="material-icons-outlined text-gray-300">add_a_photo</span>
+                                )}
+                            </div>
+                            <input type="file" id="admin-cccd-upload" accept="image/*" className="hidden" onChange={(e) => handleUploadImage(e, 'anh_cccd_mat_truoc')} />
+                            <p className="text-[11px] text-gray-400">Nhấp để tải lên ảnh mặt trước nếu có.</p>
+                        </div>
+                    </div>
+                )}
+            </div>
 
             <div className="flex items-center gap-4 py-2 mt-4">
                 <div className="h-px bg-slate-200 flex-1"></div>
