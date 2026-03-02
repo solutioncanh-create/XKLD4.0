@@ -15,7 +15,7 @@ export default function AdminLogin() {
         const checkSession = async () => {
             const { data: { session } } = await supabase.auth.getSession()
             if (session) {
-                const { data: roleData } = await supabase.from('admin_roles').select('role').eq('user_id', session.user.id).single()
+                const { data: roleData } = await supabase.from('admin_roles').select('role').eq('id', session.user.id).single()
                 if (roleData?.role) {
                     localStorage.setItem('user_role', roleData.role)
                     navigate('/admin')
@@ -36,7 +36,7 @@ export default function AdminLogin() {
             const { data: roleData, error: roleError } = await supabase
                 .from('admin_roles')
                 .select('role')
-                .eq('user_id', data.user.id)
+                .eq('id', data.user.id)
                 .single()
 
             if (roleError || !roleData) throw new Error('Tài khoản không có quyền truy cập hệ thống quản trị.')
