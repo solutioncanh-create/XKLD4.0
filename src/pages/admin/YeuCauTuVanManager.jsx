@@ -84,6 +84,14 @@ export default function YeuCauTuVanManager() {
     return (
         <div className="admin-page">
 
+            {/* Dashboard Stats */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                <StatCard label="Tổng yêu cầu" count={stats.total} icon="groups" color="bg-blue-500" />
+                <StatCard label="Chờ tư vấn" count={stats.new} icon="pending_actions" color="bg-amber-500" />
+                <StatCard label="Đã liên hệ" count={stats.contacted} icon="support_agent" color="bg-indigo-500" />
+                <StatCard label="Đã chốt" count={stats.done} icon="check_circle" color="bg-emerald-500" />
+            </div>
+
             <div className="admin-toolbar">
                 {['All', ...STATUS_OPTIONS].map(status => (
                     <button

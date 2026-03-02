@@ -15,21 +15,7 @@ export default function ChiTietHoSo() {
         if (hoSo) setNguonInput(hoSo.nguon || '')
     }, [hoSo])
 
-    const handleSaveNguon = async () => {
-        if (!hoSo || nguonInput === hoSo.nguon) return
-        try {
-            const { error } = await supabase
-                .from('ho_so')
-                .update({ nguon: nguonInput.toUpperCase() })
-                .eq('id', id)
 
-            if (error) throw error
-            setHoSo({ ...hoSo, nguon: nguonInput.toUpperCase() })
-        } catch (error) {
-            console.error('Error updating Nguon:', error)
-            alert('Lỗi cập nhật Nguồn: ' + error.message)
-        }
-    }
 
     useEffect(() => {
         const fetchChiTiet = async () => {

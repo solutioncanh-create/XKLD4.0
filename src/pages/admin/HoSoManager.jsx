@@ -289,7 +289,7 @@ export default function HoSoManager() {
     )
 }
 
-function HoSoCard({ profile, onMatch, onDelete, onSmartAction, navigate }) {
+function HoSoCard({ profile, navigate }) {
     const avatarUrl = profile.anh_ho_so || (profile.gioi_tinh === 'Nữ'
         ? `https://avatar.iran.liara.run/public/girl?username=${profile.ho_ten}`
         : `https://avatar.iran.liara.run/public/boy?username=${profile.ho_ten}`)
