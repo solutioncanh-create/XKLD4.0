@@ -1,0 +1,9 @@
+﻿
+C:\SolApp\XKLD4.0\quan-ly-xkld\src\pages\YeuCauTuVan.jsx
+  51:19  error  Empty block statement  no-empty
+
+C:\SolApp\XKLD4.0\quan-ly-xkld\src\pages\admin\OrderMatching.jsx
+  28:8  warning  React Hook useEffect has missing dependencies: 'fetchAvailableCandidates' and 'fetchMatchedCandidates'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+笨・2 problems (1 error, 1 warning)
+

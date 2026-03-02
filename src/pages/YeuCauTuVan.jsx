@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useSearchParams, Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../supabaseClient'
 
@@ -8,7 +8,6 @@ export default function YeuCauTuVan() {
     const navigate = useNavigate()
 
     const [job, setJob] = useState(null)
-    const [loading, setLoading] = useState(donHangId ? true : false)
     const [submitting, setSubmitting] = useState(false)
 
     // Form State
@@ -37,13 +36,7 @@ export default function YeuCauTuVan() {
         })
     }
 
-    useEffect(() => {
-        if (donHangId) {
-            fetchJobInfo()
-        }
-    }, [donHangId])
-
-    const fetchJobInfo = async () => {
+    const fetchJobInfo = useCallback(async () => {
         try {
             const { data, error } = await supabase
                 .from('don_hang')
@@ -55,10 +48,14 @@ export default function YeuCauTuVan() {
             setJob(data)
         } catch (error) {
             console.error('Error fetching job:', error)
-        } finally {
-            setLoading(false)
         }
-    }
+    }, [donHangId])
+
+    useEffect(() => {
+        if (donHangId) {
+            fetchJobInfo()
+        }
+    }, [donHangId, fetchJobInfo])
 
     const handleSubmit = async (e) => {
         e.preventDefault()

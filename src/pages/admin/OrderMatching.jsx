@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../../supabaseClient'
 import { hasPermission, Permissions } from '../../utils/auth'
@@ -15,19 +15,7 @@ export default function OrderMatching() {
     const [activeTab, setActiveTab] = useState('list') // 'list' | 'add'
     const [loadingDetails, setLoadingDetails] = useState(false)
 
-
-    useEffect(() => { fetchOrders() }, [])
-
-    useEffect(() => {
-        if (selectedOrder) {
-            setMatchedCandidates([])
-            setAvailableCandidates([])
-            fetchMatchedCandidates()
-            if (activeTab === 'add') fetchAvailableCandidates()
-        }
-    }, [selectedOrder, activeTab])
-
-    const fetchOrders = async () => {
+    const fetchOrders = useCallback(async () => {
         setLoadingOrders(true)
         try {
             const { data, error } = await supabase
@@ -41,9 +29,11 @@ export default function OrderMatching() {
         } finally {
             setLoadingOrders(false)
         }
-    }
+    }, [])
 
-    const fetchMatchedCandidates = async () => {
+    useEffect(() => { fetchOrders() }, [fetchOrders])
+
+    const fetchMatchedCandidates = useCallback(async () => {
         if (!selectedOrder) return
         setLoadingDetails(true)
         try {
@@ -63,9 +53,9 @@ export default function OrderMatching() {
         } finally {
             setLoadingDetails(false)
         }
-    }
+    }, [selectedOrder])
 
-    const fetchAvailableCandidates = async () => {
+    const fetchAvailableCandidates = useCallback(async () => {
         if (!selectedOrder) return
         setLoadingDetails(true)
         try {
@@ -95,7 +85,16 @@ export default function OrderMatching() {
         } finally {
             setLoadingDetails(false)
         }
-    }
+    }, [selectedOrder, searchTerm])
+
+    useEffect(() => {
+        if (selectedOrder) {
+            setMatchedCandidates([])
+            setAvailableCandidates([])
+            fetchMatchedCandidates()
+            if (activeTab === 'add') fetchAvailableCandidates()
+        }
+    }, [selectedOrder, activeTab, fetchMatchedCandidates, fetchAvailableCandidates])
 
     const handleAddCandidate = async (candidate) => {
         if (!selectedOrder) return

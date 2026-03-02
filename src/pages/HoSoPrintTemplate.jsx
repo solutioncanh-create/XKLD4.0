@@ -33,7 +33,7 @@ export default function HoSoPrintTemplate() {
         if (!loading && hoSo) {
             document.title = `HoSo_${hoSo.ho_ten || id}`
         }
-    }, [loading, hoSo])
+    }, [loading, hoSo, id])
 
     if (loading) return <div className="text-center p-10">Đang chuẩn bị bản in...</div>
     if (!hoSo) return <div className="text-center p-10 text-red-500">Không tìm thấy dữ liệu!</div>

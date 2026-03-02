@@ -33,7 +33,7 @@ export default function HoSoPrintTemplateJP() {
         if (!loading && hoSo) {
             document.title = `HoSo_JP_${hoSo.ho_ten || id}`
         }
-    }, [loading, hoSo])
+    }, [loading, hoSo, id])
 
     if (loading) return <div className="text-center p-10">Waiting...</div>
     if (!hoSo) return <div className="text-center p-10 text-red-500">Not Found!</div>

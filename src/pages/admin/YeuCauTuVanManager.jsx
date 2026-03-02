@@ -92,16 +92,31 @@ export default function YeuCauTuVanManager() {
                 <StatCard label="Đã chốt" count={stats.done} icon="check_circle" color="bg-emerald-500" />
             </div>
 
-            <div className="admin-toolbar">
-                {['All', ...STATUS_OPTIONS].map(status => (
-                    <button
-                        key={status}
-                        onClick={() => setFilterStatus(status)}
-                        className={`admin-chip ${filterStatus === status ? 'active' : ''}`}
-                    >
-                        {status === 'All' ? 'Tất cả' : status}
-                    </button>
-                ))}
+            <div className="admin-toolbar flex flex-col md:flex-row gap-4 items-center">
+                <div className="flex gap-2 flex-wrap">
+                    {['All', ...STATUS_OPTIONS].map(status => (
+                        <button
+                            key={status}
+                            onClick={() => setFilterStatus(status)}
+                            className={`admin-chip ${filterStatus === status ? 'active' : ''}`}
+                        >
+                            {status === 'All' ? 'Tất cả' : status}
+                        </button>
+                    ))}
+                </div>
+
+                <div className="flex-grow w-full md:w-auto">
+                    <div className="relative">
+                        <span className="material-icons-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">search</span>
+                        <input
+                            type="text"
+                            placeholder="Tìm theo tên, SĐT, email..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="w-full pl-10 pr-4 py-2 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all shadow-sm"
+                        />
+                    </div>
+                </div>
             </div>
 
             <div className="no-scrollbar">

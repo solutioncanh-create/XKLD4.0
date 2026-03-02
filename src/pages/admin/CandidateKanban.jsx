@@ -1,10 +1,7 @@
-/* eslint-disable react/prop-types */
 import React, { useState, useEffect } from 'react';
 import {
     DndContext,
-    closestCorners,
     rectIntersection,
-    pointerWithin,
     MouseSensor,
     TouchSensor,
     useSensor,
@@ -14,7 +11,6 @@ import {
     useDroppable
 } from '@dnd-kit/core';
 import {
-    arrayMove,
     SortableContext,
     verticalListSortingStrategy,
     useSortable

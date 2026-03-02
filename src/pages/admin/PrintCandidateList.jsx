@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom'
 import { supabase } from '../../supabaseClient'
 import {
     getAge, mapRelation, mapVision, mapHand, mapMarital,
-    mapJapaneseLevel, mapYesNoShort, mapEducationShort
+    mapJapaneseLevel, mapYesNoShort
 } from '../../utils/printHelpers'
 
 export default function PrintCandidateList() {

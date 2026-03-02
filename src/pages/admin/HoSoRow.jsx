@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 
-export default function HoSoRow({ profile, index, colMode = 'match', orders = [], onCompanyChange, onMatch, onDelete, onSmartAction, navigate, onStatusChange, onJobChange }) {
+export default function HoSoRow({ profile, index, colMode = 'match', orders = [], onCompanyChange, onMatch, navigate, onStatusChange, onJobChange }) {
     const JOB_CATEGORIES = ['Xây dựng', 'Thực phẩm', 'Cơ khí', 'May mặc', 'Nông nghiệp', 'Điều dưỡng', 'Vệ sinh tòa nhà', 'Khách sạn', 'IT/Kỹ sư', 'Khác']
 
     const avatarUrl = profile.anh_ho_so || (profile.gioi_tinh === 'Nữ'

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { supabase } from '../supabaseClient'
 
@@ -8,11 +8,7 @@ export default function JobBoard() {
     const [loading, setLoading] = useState(true)
     const [filters, setFilters] = useState({ nganh_nghe: '', dia_diem: '' })
 
-    useEffect(() => {
-        fetchJobs()
-    }, [filters])
-
-    const fetchJobs = async () => {
+    const fetchJobs = useCallback(async () => {
         setLoading(true)
         try {
             // Lấy cả đơn Đang tuyển và Sắp hết hạn
@@ -31,7 +27,11 @@ export default function JobBoard() {
         } finally {
             setLoading(false)
         }
-    }
+    }, [filters])
+
+    useEffect(() => {
+        fetchJobs()
+    }, [fetchJobs])
 
     const industries = ['Cơ khí', 'Xây dựng', 'Nông nghiệp', 'Chế biến thực phẩm', 'May mặc', 'Điện tử']
 

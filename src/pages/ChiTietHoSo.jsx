@@ -9,11 +9,7 @@ export default function ChiTietHoSo() {
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState(null)
     const navigate = useNavigate()
-    const [nguonInput, setNguonInput] = useState('')
 
-    useEffect(() => {
-        if (hoSo) setNguonInput(hoSo.nguon || '')
-    }, [hoSo])
 
 
 
