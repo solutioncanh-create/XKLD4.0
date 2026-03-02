@@ -8,17 +8,8 @@ export default function DangKy({ adminMode = false }) {
     const { id } = useParams()
     const navigate = useNavigate()
     const [loading, setLoading] = useState(false)
-    const [step, setStep] = useState(1)
     const [showSuccess, setShowSuccess] = useState(false)
     const [validationErrors, setValidationErrors] = useState([])
-
-    const steps = [
-        { num: 1, label: 'Cá nhân & Giấy tờ', icon: 'person_outline' },
-        { num: 2, label: 'Gia đình', icon: 'people_outline' },
-        { num: 3, label: 'Sức khỏe', icon: 'medical_services' },
-        { num: 4, label: 'Học vấn & Kinh nghiệm', icon: 'school' },
-        { num: 5, label: 'Nguyện vọng & Kỹ năng', icon: 'work_outline' }
-    ]
 
     const [formData, setFormData] = useState({
         // --- BƯỚC 1: CÁ NHÂN & GIẤY TỜ ---
