@@ -1,507 +1,734 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../supabaseClient'
-import { Link, useNavigate } from 'react-router-dom'
-import { Globe } from 'lucide-react'
+import { useNavigate, Link } from 'react-router-dom'
+import {
+    Users, Briefcase, UserPlus, TrendingUp, TrendingDown,
+    ArrowRight, Activity, Clock, ChevronRight, Zap,
+    BarChart2, CheckCircle, Globe, GitMerge
+} from 'lucide-react'
 
 export default function AdminDashboard() {
     const navigate = useNavigate()
-    const [selectedMenu, setSelectedMenu] = useState('dashboard') // dashboard | hoso | donhang | thongbao
-    const [stats, setStats] = useState({ totalActive: 0, newToday: 0, pending: 0, revenue: 0 })
+    const [stats, setStats] = useState({ total: 0, newToday: 0, pendingInterview: 0, passed: 0, orders: 0, activeOrders: 0 })
     const [recentProfiles, setRecentProfiles] = useState([])
+    const [recentOrders, setRecentOrders] = useState([])
     const [loading, setLoading] = useState(true)
 
-    useEffect(() => {
-        fetchDashboardData()
-    }, [])
+    useEffect(() => { fetchDashboardData() }, [])
 
     const fetchDashboardData = async () => {
         setLoading(true)
         try {
-            // Lấy tổng số hồ sơ
-            const { count: totalCount } = await supabase.from('ho_so').select('*', { count: 'exact', head: true })
-
-            // Lấy hồ sơ mới hôm nay
             const today = new Date().toISOString().split('T')[0]
-            const { count: newCount } = await supabase.from('ho_so').select('*', { count: 'exact', head: true }).gte('created_at', today)
-
-            // Lấy hồ sơ gần đây
-            const { data: recent } = await supabase.from('ho_so').select('*').order('created_at', { ascending: false }).limit(5)
-
+            const [
+                { count: totalCount },
+                { count: newCount },
+                { count: interviewCount },
+                { count: passedCount },
+                { count: ordersCount },
+                { count: activeOrdersCount },
+                { data: recent },
+                { data: recentOrd }
+            ] = await Promise.all([
+                supabase.from('ho_so').select('*', { count: 'exact', head: true }),
+                supabase.from('ho_so').select('*', { count: 'exact', head: true }).gte('created_at', today),
+                supabase.from('ho_so').select('*', { count: 'exact', head: true }).eq('trang_thai', 'Chờ phỏng vấn'),
+                supabase.from('ho_so').select('*', { count: 'exact', head: true }).in('trang_thai', ['Đã trúng tuyển', 'Đỗ đơn']),
+                supabase.from('don_hang').select('*', { count: 'exact', head: true }),
+                supabase.from('don_hang').select('*', { count: 'exact', head: true }).eq('trang_thai', 'Đang tuyển'),
+                supabase.from('ho_so').select('id, ho_ten, anh_ho_so, trang_thai, nganh_nghe_mong_muon, created_at, gioi_tinh').order('created_at', { ascending: false }).limit(6),
+                supabase.from('don_hang').select('id, ten_don_hang, trang_thai, nganh_nghe, so_luong_tuyen, created_at').order('created_at', { ascending: false }).limit(4)
+            ])
             setStats({
-                totalActive: totalCount || 0,
-                newToday: newCount || 0,
-                pending: 0, // Tạm thời để 0 hoặc query theo status nếu có
-                revenue: 0
+                total: totalCount || 0, newToday: newCount || 0,
+                pendingInterview: interviewCount || 0, passed: passedCount || 0,
+                orders: ordersCount || 0, activeOrders: activeOrdersCount || 0
             })
             setRecentProfiles(recent || [])
-        } catch (error) {
-            console.error('Error loading dashboard:', error)
-        } finally {
-            setLoading(false)
-        }
+            setRecentOrders(recentOrd || [])
+        } catch (err) { console.error(err) }
+        finally { setLoading(false) }
     }
 
-    const MenuItem = ({ id, icon, label, badge }) => (
-        <div
-            onClick={() => setSelectedMenu(id)}
-            className={`flex items-center gap-3 px-4 py-3 rounded-lg cursor-pointer transition-colors mb-1
-                ${selectedMenu === id ? 'bg-primary-50 text-primary-700 font-bold shadow-sm border border-primary-100' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'}
-            `}
-        >
-            <span className="material-icons-outlined text-xl">{icon}</span>
-            <span className="flex-1">{label}</span>
-            {badge && <span className="bg-red-500 text-white text-xs px-2 py-0.5 rounded-full font-bold">{badge}</span>}
+    const STATUS_MAP = {
+        'Mới đăng ký': { color: '#059669', bg: '#d1fae5', border: '#a7f3d0' },
+        'Đã tư vấn': { color: '#d97706', bg: '#fef3c7', border: '#fde68a' },
+        'Chờ phỏng vấn': { color: '#7c3aed', bg: '#ede9fe', border: '#ddd6fe' },
+        'Đã trúng tuyển': { color: '#db2777', bg: '#fce7f3', border: '#fbcfe8' },
+        'Đã xuất cảnh': { color: '#2563eb', bg: '#dbeafe', border: '#bfdbfe' },
+        'Hủy hồ sơ': { color: '#64748b', bg: '#f1f5f9', border: '#e2e8f0' },
+    }
+    const ORDER_MAP = {
+        'Đang tuyển': { color: '#059669', bg: '#d1fae5' },
+        'Mới đăng': { color: '#2563eb', bg: '#dbeafe' },
+        'Sắp hết hạn': { color: '#d97706', bg: '#fef3c7' },
+        'Đã đóng': { color: '#64748b', bg: '#f1f5f9' },
+    }
+
+    const getS = (status) => STATUS_MAP[status] || { color: '#64748b', bg: '#f1f5f9', border: '#e2e8f0' }
+    const getO = (status) => ORDER_MAP[status] || { color: '#64748b', bg: '#f1f5f9' }
+
+    const timeAgo = (d) => {
+        const m = Math.floor((Date.now() - new Date(d)) / 60000)
+        if (m < 60) return `${m || 1} phút trước`
+        const h = Math.floor(m / 60)
+        if (h < 24) return `${h} giờ trước`
+        return `${Math.floor(h / 24)} ngày trước`
+    }
+
+    if (loading) return (
+        <div className="admd-loading">
+            <div className="admd-spinner" />
+            <p>Đang tải dữ liệu...</p>
         </div>
     )
-
-    const StatCard = ({ title, value, unit, icon, color }) => (
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between hover:shadow-md transition-shadow">
-            <div>
-                <p className="text-sm text-gray-500 font-medium mb-1 uppercase tracking-wide">{title}</p>
-                <div className="flex items-baseline gap-1">
-                    <h3 className="text-3xl font-bold text-gray-800">{value}</h3>
-                    {unit && <span className="text-sm text-gray-500">{unit}</span>}
-                </div>
-            </div>
-            <div className={`w-12 h-12 rounded-full flex items-center justify-center bg-${color}-50 text-${color}-600`}>
-                <span className="material-icons-outlined text-2xl">{icon}</span>
-            </div>
-        </div>
-    )
-
-    const DonHangManager = () => {
-        const [orders, setOrders] = useState([])
-        const [loading, setLoading] = useState(true)
-        const [isAdding, setIsAdding] = useState(false)
-        const [newOrder, setNewOrder] = useState({
-            ten_don_hang: '', nganh_nghe: 'Xây dựng', muc_luong: '',
-            so_luong_tuyen: 1, dia_diem_lam_viec: '',
-            thoi_han_nop_ho_so: '', ngay_tuyen_du_kien: '', trang_thai: 'Đang tuyển'
-        })
-
-        useEffect(() => { fetchOrders() }, [])
-
-        const fetchOrders = async () => {
-            try {
-                const { data, error } = await supabase.from('don_hang').select('*').order('created_at', { ascending: false })
-                if (error) throw error
-                setOrders(data || [])
-            } catch (error) {
-                console.error('Lỗi tải đơn hàng:', error)
-            } finally {
-                setLoading(false)
-            }
-        }
-
-        const handleAddOrder = async (e) => {
-            e.preventDefault()
-            try {
-                const { error } = await supabase.from('don_hang').insert([newOrder])
-                if (error) throw error
-                alert('Thêm đơn hàng thành công!')
-                setIsAdding(false)
-                setNewOrder({ ten_don_hang: '', nganh_nghe: 'Xây dựng', muc_luong: '', so_luong_tuyen: 1, dia_diem_lam_viec: '', thoi_han_nop_ho_so: '', ngay_tuyen_du_kien: '', trang_thai: 'Đang tuyển' })
-                fetchOrders()
-            } catch (error) { alert('Lỗi tải lên: ' + error.message) }
-        }
-
-        const handleDelete = async (id) => {
-            if (window.confirm('Bạn có chắc chắn muốn xóa đơn hàng này?')) {
-                try {
-                    const { error } = await supabase.from('don_hang').delete().eq('id', id)
-                    if (error) throw error
-                    fetchOrders()
-                } catch (error) { alert('Lỗi xóa: ' + error.message) }
-            }
-        }
-
-        return (
-            <div className="space-y-6 animate-fade-in">
-                {/* Header Actions */}
-                <div className="flex justify-between items-center">
-                    <div>
-                        <h2 className="text-2xl font-bold text-gray-800">Quản lý Đơn hàng</h2>
-                        <p className="text-gray-500 text-sm">Danh sách các đơn hàng thực tế từ hệ thống</p>
-                    </div>
-                    <button onClick={() => setIsAdding(!isAdding)} className="bg-primary-600 text-white px-4 py-2 rounded-lg font-bold shadow-lg hover:bg-primary-700 flex items-center gap-2 transition-colors">
-                        <span className="material-icons-outlined">add</span> {isAdding ? 'Hủy bỏ' : 'Thêm Đơn Mới'}
-                    </button>
-                </div>
-
-                {/* Form thêm mới */}
-                {isAdding && (
-                    <div className="bg-white p-6 rounded-xl border border-primary-100 shadow-lg animate-fade-in-down mb-6">
-                        <h3 className="font-bold text-lg mb-4 text-primary-700 border-b pb-2">Thêm Đơn Hàng Mới</h3>
-                        <form onSubmit={handleAddOrder} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                            <div className="md:col-span-2">
-                                <label className="text-xs font-bold text-gray-500 block mb-1">Tên đơn hàng</label>
-                                <input required className="w-full p-2 border border-gray-300 rounded focus:border-primary-500 outline-none" placeholder="VD: Kỹ sư xây dựng..." value={newOrder.ten_don_hang} onChange={e => setNewOrder({ ...newOrder, ten_don_hang: e.target.value })} />
-                            </div>
-                            <div>
-                                <label className="text-xs font-bold text-gray-500 block mb-1">Ngành nghề</label>
-                                <select className="w-full p-2 border border-gray-300 rounded" value={newOrder.nganh_nghe} onChange={e => setNewOrder({ ...newOrder, nganh_nghe: e.target.value })}>
-                                    {['Xây dựng', 'Thực phẩm', 'Cơ khí', 'May mặc', 'Nông nghiệp', 'Điều dưỡng'].map(n => <option key={n} value={n}>{n}</option>)}
-                                </select>
-                            </div>
-                            <div><label className="text-xs font-bold text-gray-500 block mb-1">Mức lương</label><input required className="w-full p-2 border border-gray-300 rounded" placeholder="VD: 18 Man" value={newOrder.muc_luong} onChange={e => setNewOrder({ ...newOrder, muc_luong: e.target.value })} /></div>
-                            <div><label className="text-xs font-bold text-gray-500 block mb-1">Số lượng</label><input type="number" min="1" className="w-full p-2 border border-gray-300 rounded" value={newOrder.so_luong_tuyen} onChange={e => setNewOrder({ ...newOrder, so_luong_tuyen: e.target.value })} /></div>
-                            <div><label className="text-xs font-bold text-gray-500 block mb-1">Địa điểm làm việc</label><input required className="w-full p-2 border border-gray-300 rounded" placeholder="VD: Tokyo" value={newOrder.dia_diem_lam_viec} onChange={e => setNewOrder({ ...newOrder, dia_diem_lam_viec: e.target.value })} /></div>
-
-                            <div className="bg-yellow-50 p-2 rounded border border-yellow-100">
-                                <label className="text-xs font-bold text-yellow-800 block mb-1">Hạn nộp hồ sơ</label>
-                                <input type="date" required className="w-full p-2 border border-yellow-300 rounded bg-white text-sm" value={newOrder.thoi_han_nop_ho_so} onChange={e => setNewOrder({ ...newOrder, thoi_han_nop_ho_so: e.target.value })} />
-                            </div>
-                            <div className="bg-blue-50 p-2 rounded border border-blue-100">
-                                <label className="text-xs font-bold text-blue-800 block mb-1">Ngày tuyển dự kiến</label>
-                                <input type="date" className="w-full p-2 border border-blue-300 rounded bg-white text-sm" value={newOrder.ngay_tuyen_du_kien} onChange={e => setNewOrder({ ...newOrder, ngay_tuyen_du_kien: e.target.value })} />
-                            </div>
-
-                            <div className="flex items-end pt-1">
-                                <button type="submit" className="w-full bg-primary-600 text-white font-bold py-2 rounded hover:bg-primary-700 shadow transition-colors h-10">Lưu Đơn Hàng</button>
-                            </div>
-                        </form>
-                    </div>
-                )}
-
-                {/* Danh sách đơn hàng table */}
-                <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-left border-collapse">
-                            <thead className="bg-gray-50 text-gray-500 text-xs uppercase tracking-wider">
-                                <tr>
-                                    <th className="px-6 py-3 font-semibold">Tên đơn hàng</th>
-                                    <th className="px-6 py-3 font-semibold">Lương / SL</th>
-                                    <th className="px-6 py-3 font-semibold">Địa điểm</th>
-                                    <th className="px-6 py-3 font-semibold">Thời gian</th>
-                                    <th className="px-6 py-3 font-semibold">Trạng thái</th>
-                                    <th className="px-6 py-3 font-semibold text-right">Thao tác</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-gray-100">
-                                {loading ? (
-                                    <tr><td colSpan="6" className="p-8 text-center"><div className="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-primary-600"></div></td></tr>
-                                ) : orders.length === 0 ? (
-                                    <tr><td colSpan="6" className="p-8 text-center text-gray-500 italic">Chưa có đơn hàng nào trong hệ thống.</td></tr>
-                                ) : orders.map(o => (
-                                    <tr key={o.id} className="hover:bg-gray-50 transition-colors group">
-                                        <td className="px-6 py-4">
-                                            <div className="font-bold text-gray-800">{o.ten_don_hang}</div>
-                                            <div className="text-xs text-blue-600 font-medium bg-blue-50 inline-block px-2 py-0.5 rounded mt-1">{o.nganh_nghe}</div>
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <div className="font-bold text-gray-700">{o.muc_luong}</div>
-                                            <div className="text-xs text-gray-500">Cần tuyển: <span className="font-bold text-primary-600">{o.so_luong_tuyen}</span></div>
-                                        </td>
-                                        <td className="px-6 py-4 text-gray-600 font-medium">{o.dia_diem_lam_viec}</td>
-                                        <td className="px-6 py-4 text-sm">
-                                            <div className="text-red-600 font-medium text-xs">Hạn: {o.thoi_han_nop_ho_so ? new Date(o.thoi_han_nop_ho_so).toLocaleDateString('vi-VN') : '-'}</div>
-                                            {o.ngay_tuyen_du_kien && <div className="text-blue-600 font-medium text-xs mt-1">Thi: {new Date(o.ngay_tuyen_du_kien).toLocaleDateString('vi-VN')}</div>}
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <span className={`px-2 py-1 text-xs font-semibold rounded-full ${o.trang_thai === 'Đang tuyển' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}>{o.trang_thai}</span>
-                                        </td>
-                                        <td className="px-6 py-4 text-right">
-                                            <button onClick={() => handleDelete(o.id)} className="text-red-400 hover:text-red-600 p-2 hover:bg-red-50 rounded-full transition-colors" title="Xóa">
-                                                <span className="material-icons-outlined">delete</span>
-                                            </button>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        )
-    }
-
-    const HoSoManager = () => {
-        const [profiles, setProfiles] = useState([])
-        const [search, setSearch] = useState('')
-        const [loadingList, setLoadingList] = useState(false)
-
-        useEffect(() => {
-            fetchProfiles()
-            // eslint-disable-next-line react-hooks/exhaustive-deps
-        }, [])
-
-        const fetchProfiles = async () => {
-            setLoadingList(true)
-            try {
-                let query = supabase.from('ho_so').select('*').order('created_at', { ascending: false })
-                if (search) {
-                    query = query.ilike('ho_ten', `%${search}%`)
-                }
-                const { data, error } = await query
-                if (error) throw error
-                setProfiles(data || [])
-            } catch (error) {
-                console.error(error)
-            } finally {
-                setLoadingList(false)
-            }
-        }
-
-        const seedFakeData = async () => {
-            const defaultProfile = {
-                ho_ten: '', ngay_sinh: '2000-01-01', gioi_tinh: 'Nam', hon_nhan: 'Độc thân',
-                que_quan: '', dia_chi_thuong_tru: 'Hà Nội', so_dien_thoai: '', email: '',
-                so_cccd: '001200000000', ngay_cap_cccd: '2020-01-01', noi_cap_cccd: 'Cục CS QLHC',
-                so_ho_chieu: '', ngay_cap_ho_chieu: '2020-01-01', ngay_het_han_ho_chieu: '2030-01-01',
-                ton_giao: 'Không', size_ao: 'M', size_giay: '40',
-                anh_ho_so: '', anh_cccd_mat_truoc: '', anh_cccd_mat_sau: '',
-                thong_tin_gia_dinh: [], nguoi_bao_lanh: 'Nguyễn Văn A', sdt_nguoi_bao_lanh: '0900000000',
-                chieu_cao: 165, can_nang: 60, nhom_mau: 'O', thi_luc_trai: '10/10', thi_luc_phai: '10/10', tay_thuan: 'Phải',
-                xam_hinh: false, mu_mau: false, hut_thuoc: false, uong_ruou: false,
-                qua_trinh_hoc_tap: [], kinh_nghiem_lam_viec: [],
-                trinh_do_tieng_nhat: 'Chưa biết', bang_lai_xe: 'Chưa có', diem_manh: '', diem_yeu: '',
-                nganh_nghe_mong_muon: '', thoi_gian_du_kien: '3 năm', muc_dich_di_nhat: 'Kiếm tiền'
-            }
-
-            const fakeDataList = [
-                { ho_ten: 'NGUYỄN VĂN MẠNH', ngay_sinh: '2000-05-15', gioi_tinh: 'Nam', so_dien_thoai: '0912345678', nganh_nghe_mong_muon: 'Xây dựng', anh_ho_so: 'https://randomuser.me/api/portraits/men/32.jpg', que_quan: 'Hà Nội' },
-                { ho_ten: 'TRẦN THỊ LAN', ngay_sinh: '2002-08-20', gioi_tinh: 'Nữ', so_dien_thoai: '0987654321', nganh_nghe_mong_muon: 'Thực phẩm', anh_ho_so: 'https://randomuser.me/api/portraits/women/44.jpg', que_quan: 'Nam Định' },
-                { ho_ten: 'LÊ VĂN HÙNG', ngay_sinh: '1999-12-10', gioi_tinh: 'Nam', so_dien_thoai: '0909090909', nganh_nghe_mong_muon: 'Cơ khí', anh_ho_so: 'https://randomuser.me/api/portraits/men/85.jpg', que_quan: 'Thanh Hóa' },
-                { ho_ten: 'PHẠM THỊ HƯƠNG', ngay_sinh: '2001-03-25', gioi_tinh: 'Nữ', so_dien_thoai: '0933445566', nganh_nghe_mong_muon: 'May mặc', anh_ho_so: 'https://randomuser.me/api/portraits/women/68.jpg', que_quan: 'Nghệ An' },
-                { ho_ten: 'HOÀNG VĂN NAM', ngay_sinh: '1998-11-05', gioi_tinh: 'Nam', so_dien_thoai: '0911223344', nganh_nghe_mong_muon: 'Nông nghiệp', anh_ho_so: 'https://randomuser.me/api/portraits/men/22.jpg', que_quan: 'Thái Bình' }
-            ]
-
-            console.log('Bắt đầu tạo mẫu...')
-            const dataToInsert = fakeDataList.map(item => ({ ...defaultProfile, ...item }))
-
-            try {
-                const { error } = await supabase.from('ho_so').insert(dataToInsert)
-                if (error) throw error
-
-                alert('Đã thêm 5 hồ sơ mẫu thành công!')
-                fetchProfiles()
-            } catch (error) {
-                console.error('Seed Error:', error)
-                alert('Lỗi: ' + error.message + ' (Xem Console để biết thêm)')
-            }
-        }
-
-        const handleDelete = async (id) => {
-            if (!window.confirm('Bạn có chắc chắn muốn xóa hồ sơ này không?')) return
-            try {
-                const { error } = await supabase.from('ho_so').delete().eq('id', id)
-                if (error) throw error
-                setProfiles(profiles.filter(p => p.id !== id))
-            } catch (error) {
-                alert('Lỗi xóa: ' + error.message)
-            }
-        }
-
-        return (
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden animate-fade-in">
-                <div className="p-6 border-b border-gray-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
-                    <h3 className="font-bold text-lg text-gray-800">Danh sách hồ sơ ({profiles.length})</h3>
-                    <div className="flex gap-2">
-                        <div className="relative">
-                            <input
-                                type="text"
-                                placeholder="Tìm theo tên..."
-                                value={search}
-                                onChange={e => setSearch(e.target.value)}
-                                onKeyDown={e => e.key === 'Enter' && fetchProfiles()}
-                                className="pl-9 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 w-64"
-                            />
-                            <span className="material-icons-outlined absolute left-2.5 top-2 text-gray-400 text-lg">search</span>
-                        </div>
-                        <button onClick={fetchProfiles} className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 text-sm font-medium">Tìm kiếm</button>
-                        <button onClick={seedFakeData} className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 text-sm font-medium whitespace-nowrap" title="Tạo dữ liệu giả để test">
-                            + 5 HS Ảo
-                        </button>
-                    </div>
-                </div>
-
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left border-collapse">
-                        <thead>
-                            <tr className="bg-gray-50 text-gray-500 text-xs uppercase tracking-wider">
-                                <th className="px-6 py-3 font-semibold">Ứng viên</th>
-                                <th className="px-6 py-3 font-semibold">Thông tin liên hệ</th>
-                                <th className="px-6 py-3 font-semibold">Nguyện vọng</th>
-                                <th className="px-6 py-3 font-semibold">Ngày ĐK</th>
-                                <th className="px-6 py-3 font-semibold text-right">Thao tác</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-100">
-                            {loadingList ? (
-                                <tr><td colSpan="5" className="p-8 text-center"><div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div></td></tr>
-                            ) : profiles.length === 0 ? (
-                                <tr><td colSpan="5" className="p-8 text-center text-gray-500">Không tìm thấy hồ sơ nào.</td></tr>
-                            ) : profiles.map(p => (
-                                <tr key={p.id} className="hover:bg-gray-50 transition-colors group">
-                                    <td className="px-6 py-4">
-                                        <div className="flex items-center gap-3">
-                                            <img src={p.anh_ho_so || 'https://via.placeholder.com/40'} className="w-10 h-10 rounded-full object-cover border border-gray-200" alt="" />
-                                            <div>
-                                                <div className="font-bold text-gray-800">{p.ho_ten}</div>
-                                                <div className="text-xs text-gray-500">{p.gioi_tinh} • {p.nam_sinh || 'Unknown'}</div>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td className="px-6 py-4 text-sm">
-                                        <div className="text-gray-800 font-medium">{p.so_dien_thoai}</div>
-                                        <div className="text-gray-500 text-xs">{p.que_quan}</div>
-                                    </td>
-                                    <td className="px-6 py-4">
-                                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                            {p.nganh_nghe_mong_muon || 'Chưa chọn'}
-                                        </span>
-                                    </td>
-                                    <td className="px-6 py-4 text-sm text-gray-500">
-                                        {new Date(p.created_at).toLocaleDateString('vi-VN')}
-                                    </td>
-                                    <td className="px-6 py-4 text-right space-x-2">
-                                        <button onClick={() => navigate(`/ho-so/${p.id}`)} className="text-blue-600 hover:text-blue-800 font-bold text-sm border border-blue-200 px-3 py-1 rounded bg-blue-50 hover:bg-blue-100 transition-colors">
-                                            Xem Chi Tiết
-                                        </button>
-                                        <button onClick={() => handleDelete(p.id)} className="text-red-600 hover:text-red-800 font-bold text-sm border border-red-200 px-3 py-1 rounded bg-red-50 hover:bg-red-100 transition-colors">
-                                            Xóa
-                                        </button>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        )
-    }
 
     return (
-        <div className="flex h-screen bg-gray-50 overflow-hidden font-sans">
-            {/* --- SIDEBAR --- */}
-            <aside className="w-64 bg-white border-r border-gray-200 flex flex-col hidden md:flex">
-                <div className="h-16 flex items-center px-6 border-b border-gray-100">
-                    <Link to="/" className="flex items-center gap-2 group">
-                        <div className="w-8 h-8 bg-emerald-600 rounded-lg flex items-center justify-center shadow-md shadow-emerald-600/20 group-hover:scale-105 transition-transform duration-300">
-                            <Globe className="text-white" size={18} />
-                        </div>
-                        <span className="text-xl font-bold tracking-tight text-slate-900 group-hover:text-emerald-700 transition-colors">
-                            XKLD <span className="text-emerald-600">4.0</span>
-                        </span>
-                    </Link>
+        <div className="admd-root">
+            {/* Header */}
+            <div className="admd-page-header">
+                <div>
+                    <div className="admd-header-badge">
+                        <Activity size={11} />
+                        Hệ thống đang hoạt động
+                    </div>
+                    <h1 className="admd-title">Tổng quan hệ thống</h1>
+                    <p className="admd-subtitle">Xin chào! Dưới đây là tóm tắt hoạt động hôm nay.</p>
                 </div>
+                <button onClick={fetchDashboardData} className="admd-refresh-btn">
+                    <Activity size={14} />
+                    Làm mới
+                </button>
+            </div>
 
-                <div className="flex-1 overflow-y-auto py-6 px-3">
-                    <div className="mb-6">
-                        <p className="px-4 text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Tổng quan</p>
-                        <MenuItem id="dashboard" icon="dashboard" label="Dashboard" />
-                        <MenuItem id="thongke" icon="insights" label="Thống kê & Báo cáo" />
+            {/* KPI Grid */}
+            <div className="admd-kpi-grid">
+                <KpiCard icon={<Users size={20} />} label="Tổng hồ sơ" value={stats.total} unit="ứng viên" accent="#10b981" accentLight="#d1fae5" trend="+12%" trendUp onClick={() => navigate('/admin/ho-so')} />
+                <KpiCard icon={<UserPlus size={20} />} label="Đăng ký hôm nay" value={stats.newToday} unit="mới" accent="#3b82f6" accentLight="#dbeafe" trend={`+${stats.newToday}`} trendUp={stats.newToday > 0} onClick={() => navigate('/admin/ho-so')} />
+                <KpiCard icon={<Clock size={20} />} label="Chờ phỏng vấn" value={stats.pendingInterview} unit="hồ sơ" accent="#7c3aed" accentLight="#ede9fe" trend="Cần xử lý" neutral onClick={() => navigate('/admin/ho-so')} />
+                <KpiCard icon={<CheckCircle size={20} />} label="Đã trúng tuyển" value={stats.passed} unit="người" accent="#db2777" accentLight="#fce7f3" trend="+5%" trendUp onClick={() => navigate('/admin/ho-so')} />
+                <KpiCard icon={<Briefcase size={20} />} label="Tổng đơn hàng" value={stats.orders} unit="đơn" accent="#f59e0b" accentLight="#fef3c7" trend="Tổng cộng" neutral onClick={() => navigate('/admin/don-hang')} />
+                <KpiCard icon={<Zap size={20} />} label="Đang tuyển dụng" value={stats.activeOrders} unit="đơn mở" accent="#059669" accentLight="#d1fae5" trend="Đang chạy" neutral onClick={() => navigate('/admin/don-hang')} />
+            </div>
+
+            {/* Content */}
+            <div className="admd-content-grid">
+                {/* Left: Recent Profiles */}
+                <div className="admd-panel">
+                    <div className="admd-panel-header">
+                        <div className="admd-panel-title">
+                            <Users size={15} className="admd-panel-icon-el" />
+                            Hồ sơ mới nhất
+                        </div>
+                        <Link to="/admin/ho-so" className="admd-panel-link">
+                            Xem tất cả <ArrowRight size={13} />
+                        </Link>
                     </div>
-
-                    <div className="mb-6">
-                        <p className="px-4 text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Quản lý</p>
-                        <MenuItem id="hoso" icon="people" label="Hồ sơ ứng viên" badge={stats.pending > 0 ? stats.pending : null} />
-                        <MenuItem id="donhang" icon="work_outline" label="Đơn hàng" />
-
-                    </div>
-
                     <div>
-                        <p className="px-4 text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Hệ thống</p>
-                        <MenuItem id="taikhoan" icon="manage_accounts" label="Tài khoản" />
-                        <MenuItem id="cauhinh" icon="settings" label="Cài đặt" />
+                        {recentProfiles.length === 0 ? (
+                            <div className="admd-empty">
+                                <Users size={28} className="admd-empty-icon" />
+                                <p>Chưa có hồ sơ nào</p>
+                            </div>
+                        ) : recentProfiles.map(p => {
+                            const sc = getS(p.trang_thai || 'Mới đăng ký')
+                            const avatar = p.anh_ho_so || `https://ui-avatars.com/api/?name=${encodeURIComponent(p.ho_ten)}&background=${p.gioi_tinh === 'Nữ' ? 'fce7f3' : 'd1fae5'}&color=${p.gioi_tinh === 'Nữ' ? 'be185d' : '065f46'}&bold=true`
+                            return (
+                                <div key={p.id} className="admd-profile-row" onClick={() => navigate(`/ho-so/${p.id}`)}>
+                                    <img src={avatar} className="admd-profile-av" alt="" />
+                                    <div className="admd-profile-info">
+                                        <span className="admd-profile-name">{p.ho_ten}</span>
+                                        <span className="admd-profile-meta">{p.nganh_nghe_mong_muon || 'Chưa chọn ngành'}</span>
+                                    </div>
+                                    <div className="admd-profile-right">
+                                        <span className="admd-status-badge" style={{ color: sc.color, background: sc.bg, border: `1px solid ${sc.border}` }}>
+                                            {p.trang_thai || 'Mới đăng ký'}
+                                        </span>
+                                        <span className="admd-time">{timeAgo(p.created_at)}</span>
+                                    </div>
+                                    <ChevronRight size={14} className="admd-profile-arrow" />
+                                </div>
+                            )
+                        })}
                     </div>
                 </div>
 
-                <div className="p-4 border-t border-gray-100">
-                    <div className="flex items-center gap-3">
-                        <img src="https://ui-avatars.com/api/?name=Admin&background=0d9488&color=fff" alt="Admin" className="w-10 h-10 rounded-full" />
+                {/* Right Column */}
+                <div className="admd-right-col">
+                    {/* Recent Orders */}
+                    <div className="admd-panel">
+                        <div className="admd-panel-header">
+                            <div className="admd-panel-title">
+                                <Briefcase size={15} className="admd-panel-icon-el" />
+                                Đơn hàng gần đây
+                            </div>
+                            <Link to="/admin/don-hang" className="admd-panel-link">
+                                Xem tất cả <ArrowRight size={13} />
+                            </Link>
+                        </div>
                         <div>
-                            <p className="text-sm font-bold text-gray-800">Quản trị viên</p>
-                            <p className="text-xs text-green-600 flex items-center gap-1">● Online</p>
+                            {recentOrders.length === 0 ? (
+                                <div className="admd-empty">
+                                    <Briefcase size={24} className="admd-empty-icon" />
+                                    <p>Chưa có đơn hàng</p>
+                                </div>
+                            ) : recentOrders.map(o => {
+                                const osc = getO(o.trang_thai)
+                                return (
+                                    <div key={o.id} className="admd-order-row" onClick={() => navigate('/admin/don-hang')}>
+                                        <div className="admd-order-info">
+                                            <p className="admd-order-name">{o.ten_don_hang}</p>
+                                            <p className="admd-order-meta">{o.nganh_nghe} · {o.so_luong_tuyen} người</p>
+                                        </div>
+                                        <span className="admd-order-status" style={{ color: osc.color, background: osc.bg }}>
+                                            {o.trang_thai}
+                                        </span>
+                                    </div>
+                                )
+                            })}
+                        </div>
+                    </div>
+
+                    {/* Quick Actions */}
+                    <div className="admd-panel">
+                        <div className="admd-panel-header">
+                            <div className="admd-panel-title">
+                                <Zap size={15} className="admd-panel-icon-el" />
+                                Hành động nhanh
+                            </div>
+                        </div>
+                        <div className="admd-quick-grid">
+                            <QuickAction icon={<Users size={17} />} label="Quản lý hồ sơ" desc="Xem & xử lý ứng viên" accent="#10b981" accentLight="#d1fae5" to="/admin/ho-so" />
+                            <QuickAction icon={<Briefcase size={17} />} label="Đơn hàng" desc="Thêm & quản lý đơn" accent="#3b82f6" accentLight="#dbeafe" to="/admin/don-hang" />
+                            <QuickAction icon={<GitMerge size={17} />} label="Ghép đơn thi" desc="Kết nối ứng viên" accent="#7c3aed" accentLight="#ede9fe" to="/admin/ghep-don" />
+                            <QuickAction icon={<Globe size={17} />} label="Trang chủ" desc="Xem giao diện người dùng" accent="#f59e0b" accentLight="#fef3c7" to="/" />
+                        </div>
+                    </div>
+
+                    {/* Pipeline */}
+                    <div className="admd-panel">
+                        <div className="admd-panel-header">
+                            <div className="admd-panel-title">
+                                <BarChart2 size={15} className="admd-panel-icon-el" />
+                                Pipeline ứng viên
+                            </div>
+                        </div>
+                        <div className="admd-pipeline">
+                            {[
+                                { label: 'Tổng hồ sơ', value: stats.total, max: stats.total || 1, color: '#10b981', bg: '#d1fae5' },
+                                { label: 'Chờ phỏng vấn', value: stats.pendingInterview, max: stats.total || 1, color: '#7c3aed', bg: '#ede9fe' },
+                                { label: 'Đã trúng tuyển', value: stats.passed, max: stats.total || 1, color: '#db2777', bg: '#fce7f3' },
+                            ].map(item => (
+                                <div key={item.label} className="admd-pipeline-item">
+                                    <div className="admd-pipeline-label">
+                                        <span>{item.label}</span>
+                                        <span style={{ color: item.color, fontWeight: 800 }}>{item.value}</span>
+                                    </div>
+                                    <div className="admd-pipeline-track">
+                                        <div className="admd-pipeline-bar" style={{
+                                            width: `${Math.min(100, (item.value / item.max) * 100)}%`,
+                                            background: item.color,
+                                        }} />
+                                    </div>
+                                </div>
+                            ))}
                         </div>
                     </div>
                 </div>
-            </aside>
+            </div>
 
-            {/* --- MAIN CONTENT --- */}
-            <main className="flex-1 flex flex-col overflow-hidden">
-                {/* Header */}
-                <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6 shadow-sm z-10">
-                    <div className="flex items-center gap-4">
-                        <button className="md:hidden text-gray-500"><span className="material-icons-outlined">menu</span></button>
-                        <h2 className="text-xl font-bold text-gray-800 capitalize">{selectedMenu === 'dashboard' ? 'Tổng quan hệ thống' : selectedMenu}</h2>
-                    </div>
-                    <div className="flex items-center gap-4">
-                        <div className="relative hidden md:block">
-                            <input type="text" placeholder="Tìm kiếm nhanh..." className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 w-64 transition-all" />
-                            <span className="material-icons-outlined absolute left-3 top-2 text-gray-400 text-lg">search</span>
-                        </div>
-                        <button className="relative p-2 text-gray-500 hover:bg-gray-100 rounded-full transition-colors">
-                            <span className="material-icons-outlined">notifications</span>
-                            <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
-                        </button>
-                    </div>
-                </header>
+            <style>{`
+                @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 
-                {/* Content Body */}
-                <div className="flex-1 overflow-y-auto p-6 bg-gray-50">
-                    {loading ? (
-                        <div className="flex items-center justify-center h-full"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div></div>
-                    ) : selectedMenu === 'dashboard' ? (
-                        <div className="space-y-6 animate-fade-in">
-                            {/* Stats Grid */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                                <StatCard title="Tổng hồ sơ" value={stats.totalActive} unit="ứng viên" icon="people_alt" color="blue" />
-                                <StatCard title="Hồ sơ mới" value={`+${stats.newToday}`} unit="hôm nay" icon="person_add" color="green" />
-                                <StatCard title="Chờ duyệt" value={stats.pending} unit="hồ sơ" icon="pending_actions" color="yellow" />
-                                <StatCard title="Doanh thu" value="1.2" unit="tỷ VNĐ" icon="payments" color="red" />
-                            </div>
+                .admd-root {
+                    min-height: calc(100vh - 56px);
+                    background: #f8fafc;
+                    padding: 1.5rem 1.25rem 3rem;
+                    font-family: 'Inter', sans-serif;
+                }
 
-                            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                                {/* Chart Placeholder */}
-                                <div className="lg:col-span-2 bg-white p-6 rounded-xl border border-gray-100 shadow-sm min-h-[300px]">
-                                    <div className="flex items-center justify-between mb-4">
-                                        <h3 className="font-bold text-gray-800 text-lg">Biểu đồ đăng ký tháng</h3>
-                                        <select className="text-sm border-gray-300 rounded-md shadow-sm"><option>7 ngày qua</option><option>Tháng này</option></select>
-                                    </div>
-                                    <div className="h-64 bg-gray-50 rounded-lg flex items-center justify-center border border-dashed border-gray-300 text-gray-400 italic">
-                                        [Biểu đồ thống kê sẽ hiển thị ở đây]
-                                    </div>
-                                </div>
+                .admd-loading {
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    justify-content: center;
+                    min-height: calc(100vh - 56px);
+                    gap: 0.75rem;
+                    color: #94a3b8;
+                    font-family: 'Inter', sans-serif;
+                    font-size: 0.85rem;
+                }
 
-                                {/* Recent Activity */}
-                                <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
-                                    <div className="flex items-center justify-between mb-4">
-                                        <h3 className="font-bold text-gray-800 text-lg">Vừa đăng ký</h3>
-                                        <Link to="/" className="text-sm text-primary-600 hover:underline">Xem tất cả</Link>
-                                    </div>
-                                    <div className="space-y-4">
-                                        {recentProfiles.map(profile => (
-                                            <div key={profile.id} className="flex items-center gap-3 p-3 hover:bg-gray-50 rounded-lg transition-colors cursor-pointer" onClick={() => navigate(`/ho-so/${profile.id}`)}>
-                                                <img src={profile.anh_ho_so || 'https://via.placeholder.com/40'} alt="" className="w-10 h-10 rounded-full object-cover border border-gray-200" />
-                                                <div className="flex-1 min-w-0">
-                                                    <p className="font-bold text-gray-800 truncate text-sm">{profile.ho_ten}</p>
-                                                    <p className="text-xs text-gray-500 truncate">{profile.nganh_nghe_mong_muon || 'Chưa chọn ngành'} • {new Date(profile.created_at).toLocaleDateString('vi-VN')}</p>
-                                                </div>
-                                                <span className="material-icons-outlined text-gray-400 text-sm">chevron_right</span>
-                                            </div>
-                                        ))}
-                                        {recentProfiles.length === 0 && <p className="text-sm text-gray-400 text-center py-4">Chưa có dữ liệu mới.</p>}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    ) : selectedMenu === 'hoso' ? (
-                        <HoSoManager />
-                    ) : selectedMenu === 'donhang' ? (
-                        <DonHangManager />
-                    ) : (
-                        <div className="bg-white p-10 rounded-xl shadow-sm border border-gray-100 text-center py-20">
-                            <span className="material-icons-outlined text-6xl text-gray-300 mb-4">construction</span>
-                            <h3 className="text-xl font-bold text-gray-800 mb-2">Chức năng đang xây dựng</h3>
-                            <p className="text-gray-500">Vui lòng quay lại Dashboard hoặc chọn mục khác.</p>
-                            <button onClick={() => setSelectedMenu('dashboard')} className="mt-6 px-6 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors font-medium">
-                                Quay về Dashboard
-                            </button>
-                        </div>
-                    )}
-                </div>
-            </main>
+                .admd-spinner {
+                    width: 36px; height: 36px;
+                    border: 2px solid #e2e8f0;
+                    border-top-color: #10b981;
+                    border-radius: 50%;
+                    animation: admdSpin 0.8s linear infinite;
+                }
+
+                @keyframes admdSpin { to { transform: rotate(360deg); } }
+
+                /* ─── HEADER ─── */
+                .admd-page-header {
+                    display: flex;
+                    align-items: flex-start;
+                    justify-content: space-between;
+                    margin-bottom: 1.5rem;
+                    gap: 1rem;
+                }
+
+                .admd-header-badge {
+                    display: inline-flex;
+                    align-items: center;
+                    gap: 0.35rem;
+                    font-size: 0.68rem;
+                    font-weight: 700;
+                    color: #059669;
+                    background: #d1fae5;
+                    border: 1px solid #a7f3d0;
+                    border-radius: 20px;
+                    padding: 0.25rem 0.6rem;
+                    margin-bottom: 0.5rem;
+                }
+
+                .admd-title {
+                    font-size: 1.5rem;
+                    font-weight: 800;
+                    color: #0f172a;
+                    letter-spacing: -0.5px;
+                }
+
+                .admd-subtitle {
+                    font-size: 0.8rem;
+                    color: #94a3b8;
+                    margin-top: 0.2rem;
+                }
+
+                .admd-refresh-btn {
+                    display: flex;
+                    align-items: center;
+                    gap: 0.4rem;
+                    padding: 0.5rem 0.9rem;
+                    background: #ffffff;
+                    border: 1px solid #e2e8f0;
+                    border-radius: 8px;
+                    color: #64748b;
+                    font-size: 0.78rem;
+                    font-weight: 600;
+                    font-family: inherit;
+                    cursor: pointer;
+                    transition: all 0.15s;
+                    flex-shrink: 0;
+                    box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+                }
+
+                .admd-refresh-btn:hover {
+                    background: #f8fafc;
+                    border-color: #cbd5e1;
+                    color: #334155;
+                }
+
+                /* ─── KPI ─── */
+                .admd-kpi-grid {
+                    display: grid;
+                    grid-template-columns: repeat(2, 1fr);
+                    gap: 0.75rem;
+                    margin-bottom: 1.25rem;
+                }
+
+                @media (min-width: 768px) { .admd-kpi-grid { grid-template-columns: repeat(3, 1fr); } }
+                @media (min-width: 1280px) { .admd-kpi-grid { grid-template-columns: repeat(6, 1fr); } }
+
+                /* ─── CONTENT GRID ─── */
+                .admd-content-grid {
+                    display: grid;
+                    grid-template-columns: 1fr;
+                    gap: 1rem;
+                }
+
+                @media (min-width: 1024px) { .admd-content-grid { grid-template-columns: 1fr 360px; } }
+
+                .admd-right-col {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 1rem;
+                }
+
+                /* ─── PANEL ─── */
+                .admd-panel {
+                    background: #ffffff;
+                    border: 1px solid #e2e8f0;
+                    border-radius: 14px;
+                    overflow: hidden;
+                    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+                }
+
+                .admd-panel-header {
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    padding: 1rem 1.1rem;
+                    border-bottom: 1px solid #f1f5f9;
+                }
+
+                .admd-panel-title {
+                    display: flex;
+                    align-items: center;
+                    gap: 0.5rem;
+                    font-size: 0.85rem;
+                    font-weight: 700;
+                    color: #374151;
+                }
+
+                .admd-panel-icon-el { color: #94a3b8; }
+
+                .admd-panel-link {
+                    display: flex;
+                    align-items: center;
+                    gap: 0.25rem;
+                    font-size: 0.73rem;
+                    font-weight: 600;
+                    color: #059669;
+                    text-decoration: none;
+                    transition: opacity 0.15s;
+                }
+
+                .admd-panel-link:hover { opacity: 0.7; }
+
+                /* ─── PROFILE ROWS ─── */
+                .admd-profile-row {
+                    display: flex;
+                    align-items: center;
+                    gap: 0.75rem;
+                    padding: 0.7rem 1.1rem;
+                    cursor: pointer;
+                    transition: background 0.12s;
+                    border-bottom: 1px solid #f8fafc;
+                }
+
+                .admd-profile-row:last-child { border-bottom: none; }
+                .admd-profile-row:hover { background: #f8fafc; }
+
+                .admd-profile-av {
+                    width: 34px; height: 34px;
+                    border-radius: 9px;
+                    object-fit: cover;
+                    border: 1.5px solid #e2e8f0;
+                    flex-shrink: 0;
+                }
+
+                .admd-profile-info {
+                    flex: 1;
+                    min-width: 0;
+                    display: flex;
+                    flex-direction: column;
+                    gap: 1px;
+                }
+
+                .admd-profile-name {
+                    font-size: 0.82rem;
+                    font-weight: 700;
+                    color: #0f172a;
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                }
+
+                .admd-profile-meta {
+                    font-size: 0.7rem;
+                    color: #94a3b8;
+                }
+
+                .admd-profile-right {
+                    display: flex;
+                    flex-direction: column;
+                    align-items: flex-end;
+                    gap: 3px;
+                    flex-shrink: 0;
+                }
+
+                .admd-status-badge {
+                    font-size: 0.62rem;
+                    font-weight: 700;
+                    padding: 0.15rem 0.5rem;
+                    border-radius: 20px;
+                    white-space: nowrap;
+                }
+
+                .admd-time {
+                    font-size: 0.65rem;
+                    color: #cbd5e1;
+                }
+
+                .admd-profile-arrow {
+                    color: #e2e8f0;
+                    flex-shrink: 0;
+                    transition: transform 0.15s, color 0.15s;
+                }
+
+                .admd-profile-row:hover .admd-profile-arrow {
+                    transform: translateX(3px);
+                    color: #94a3b8;
+                }
+
+                /* ─── ORDER ROWS ─── */
+                .admd-order-row {
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    gap: 0.75rem;
+                    padding: 0.75rem 1.1rem;
+                    cursor: pointer;
+                    transition: background 0.12s;
+                    border-bottom: 1px solid #f8fafc;
+                }
+
+                .admd-order-row:last-child { border-bottom: none; }
+                .admd-order-row:hover { background: #f8fafc; }
+
+                .admd-order-info { flex: 1; min-width: 0; }
+
+                .admd-order-name {
+                    font-size: 0.82rem;
+                    font-weight: 700;
+                    color: #0f172a;
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                }
+
+                .admd-order-meta {
+                    font-size: 0.7rem;
+                    color: #94a3b8;
+                    margin-top: 1px;
+                }
+
+                .admd-order-status {
+                    font-size: 0.63rem;
+                    font-weight: 700;
+                    padding: 0.2rem 0.55rem;
+                    border-radius: 20px;
+                    white-space: nowrap;
+                    flex-shrink: 0;
+                }
+
+                /* ─── QUICK ACTIONS ─── */
+                .admd-quick-grid {
+                    display: grid;
+                    grid-template-columns: 1fr 1fr;
+                    gap: 0.6rem;
+                    padding: 0.85rem;
+                }
+
+                /* ─── PIPELINE ─── */
+                .admd-pipeline {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 1rem;
+                    padding: 1rem 1.1rem;
+                }
+
+                .admd-pipeline-label {
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    font-size: 0.75rem;
+                    color: #64748b;
+                    font-weight: 500;
+                    margin-bottom: 0.4rem;
+                }
+
+                .admd-pipeline-track {
+                    height: 6px;
+                    background: #f1f5f9;
+                    border-radius: 10px;
+                    overflow: hidden;
+                }
+
+                .admd-pipeline-bar {
+                    height: 100%;
+                    border-radius: 10px;
+                    transition: width 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+                    min-width: 4px;
+                }
+
+                /* ─── EMPTY ─── */
+                .admd-empty {
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 0.5rem;
+                    padding: 2rem;
+                    color: #e2e8f0;
+                    font-size: 0.8rem;
+                }
+
+                .admd-empty-icon { color: #e2e8f0; }
+            `}</style>
         </div>
+    )
+}
+
+function KpiCard({ icon, label, value, unit, accent, accentLight, trend, trendUp, neutral, onClick }) {
+    return (
+        <div className="admd-kpi" style={{ '--a': accent, '--al': accentLight }} onClick={onClick}>
+            <div className="admd-kpi-top">
+                <div className="admd-kpi-icon">{icon}</div>
+                <div className={`admd-kpi-trend ${neutral ? 'n' : trendUp ? 'u' : 'd'}`}>
+                    {!neutral && (trendUp ? <TrendingUp size={10} /> : <TrendingDown size={10} />)}
+                    {trend}
+                </div>
+            </div>
+            <div className="admd-kpi-value">{value.toLocaleString()}</div>
+            <div className="admd-kpi-label">{label}</div>
+            <div className="admd-kpi-unit">{unit}</div>
+
+            <style>{`
+                .admd-kpi {
+                    background: #ffffff;
+                    border: 1px solid #e2e8f0;
+                    border-radius: 14px;
+                    padding: 1rem;
+                    cursor: pointer;
+                    transition: all 0.2s;
+                    position: relative;
+                    overflow: hidden;
+                    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+                }
+
+                .admd-kpi::before {
+                    content: '';
+                    position: absolute;
+                    top: 0; left: 0; right: 0;
+                    height: 3px;
+                    background: var(--a);
+                    opacity: 0.7;
+                }
+
+                .admd-kpi:hover {
+                    border-color: var(--a);
+                    background: var(--al);
+                    transform: translateY(-2px);
+                    box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+                }
+
+                .admd-kpi-top {
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    margin-bottom: 0.75rem;
+                }
+
+                .admd-kpi-icon {
+                    width: 38px; height: 38px;
+                    background: var(--al);
+                    border: 1.5px solid var(--a)30;
+                    border-radius: 10px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    color: var(--a);
+                }
+
+                .admd-kpi-trend {
+                    display: flex;
+                    align-items: center;
+                    gap: 3px;
+                    font-size: 0.62rem;
+                    font-weight: 700;
+                    padding: 0.2rem 0.4rem;
+                    border-radius: 6px;
+                }
+
+                .admd-kpi-trend.u { color: #059669; background: #d1fae5; }
+                .admd-kpi-trend.d { color: #d97706; background: #fef3c7; }
+                .admd-kpi-trend.n { color: #64748b; background: #f1f5f9; }
+
+                .admd-kpi-value {
+                    font-size: 1.7rem;
+                    font-weight: 900;
+                    color: #0f172a;
+                    letter-spacing: -1px;
+                    line-height: 1;
+                    margin-bottom: 0.2rem;
+                }
+
+                .admd-kpi-label {
+                    font-size: 0.73rem;
+                    font-weight: 600;
+                    color: #64748b;
+                    line-height: 1.3;
+                }
+
+                .admd-kpi-unit {
+                    font-size: 0.65rem;
+                    color: #cbd5e1;
+                    margin-top: 2px;
+                }
+            `}</style>
+        </div>
+    )
+}
+
+function QuickAction({ icon, label, desc, accent, accentLight, to }) {
+    const navigate = useNavigate()
+    return (
+        <button
+            onClick={() => navigate(to)}
+            className="admd-qa"
+            style={{ '--qa': accent, '--qal': accentLight }}
+        >
+            <div className="admd-qa-icon">{icon}</div>
+            <span className="admd-qa-label">{label}</span>
+            <span className="admd-qa-desc">{desc}</span>
+
+            <style>{`
+                .admd-qa {
+                    display: flex;
+                    flex-direction: column;
+                    align-items: flex-start;
+                    gap: 0.3rem;
+                    padding: 0.85rem;
+                    background: #f8fafc;
+                    border: 1px solid #e2e8f0;
+                    border-radius: 10px;
+                    cursor: pointer;
+                    transition: all 0.15s;
+                    font-family: inherit;
+                    text-align: left;
+                    width: 100%;
+                }
+
+                .admd-qa:hover {
+                    background: var(--qal);
+                    border-color: var(--qa)50;
+                }
+
+                .admd-qa-icon {
+                    width: 32px; height: 32px;
+                    background: var(--qal);
+                    border: 1.5px solid var(--qa)30;
+                    border-radius: 8px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    color: var(--qa);
+                    margin-bottom: 0.2rem;
+                }
+
+                .admd-qa-label {
+                    font-size: 0.78rem;
+                    font-weight: 700;
+                    color: #1e293b;
+                }
+
+                .admd-qa-desc {
+                    font-size: 0.65rem;
+                    color: #94a3b8;
+                }
+            `}</style>
+        </button>
     )
 }

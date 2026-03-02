@@ -15,6 +15,7 @@ import DonHangManager from './pages/admin/DonHangManager'
 import OrderMatching from './pages/admin/OrderMatching'
 import YeuCauTuVanManager from './pages/admin/YeuCauTuVanManager'
 import AdminLogin from './pages/admin/AdminLogin'
+import AdminDashboard from './pages/AdminDashboard'
 
 import PrintCandidateList from './pages/admin/PrintCandidateList'
 import PrintBatchProfile from './pages/admin/PrintBatchProfile'
@@ -49,9 +50,10 @@ function App() {
         {/* ADMIN ROUTES - Protected */}
         <Route element={<ProtectedAdminRoute />}>
           <Route path="/admin" element={<AdminLayout />}>
-            <Route index element={<HoSoManager />} />
+            <Route index element={<AdminDashboard />} />
             <Route path="yeu-cau-tu-van" element={<YeuCauTuVanManager />} />
             <Route path="ho-so" element={<HoSoManager />} />
+            <Route path="ho-so/them-moi" element={<DangKy adminMode />} />
             <Route path="don-hang" element={<DonHangManager />} />
             <Route path="ghep-don" element={<OrderMatching />} />
 

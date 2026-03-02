@@ -9,7 +9,6 @@ export default function OrderMatching() {
     const [selectedOrder, setSelectedOrder] = useState(null)
     const [loadingOrders, setLoadingOrders] = useState(false)
 
-    // States for selected order logic
     const [matchedCandidates, setMatchedCandidates] = useState([])
     const [availableCandidates, setAvailableCandidates] = useState([])
     const [searchTerm, setSearchTerm] = useState('')
@@ -17,9 +16,7 @@ export default function OrderMatching() {
     const [loadingDetails, setLoadingDetails] = useState(false)
 
 
-    useEffect(() => {
-        fetchOrders()
-    }, [])
+    useEffect(() => { fetchOrders() }, [])
 
     useEffect(() => {
         if (selectedOrder) {
@@ -50,16 +47,14 @@ export default function OrderMatching() {
         if (!selectedOrder) return
         setLoadingDetails(true)
         try {
-            // Fetch necessary fields including 'anh_ho_so'
             const { data, error } = await supabase
                 .from('lien_ket_don_hang_ho_so')
                 .select(`
                     id, sbd, created_at,
-                    ho_so:ho_so_id ( id, ho_ten, ngay_sinh, que_quan, anh_ho_so, nganh_nghe_mong_muon, so_dien_thoai, hon_nhan, chieu_cao, can_nang, nhom_mau )
+                    ho_so:ho_so_id ( id, ho_ten, ngay_sinh, que_quan, anh_ho_so, nganh_nghe_mong_muon, so_dien_thoai )
                 `)
                 .eq('don_hang_id', selectedOrder.id)
                 .order('sbd', { ascending: true })
-
             if (error) throw error
             setMatchedCandidates(data || [])
         } catch (error) {
@@ -74,32 +69,27 @@ export default function OrderMatching() {
         if (!selectedOrder) return
         setLoadingDetails(true)
         try {
-            // Get matched IDs
             const { data: matchedData, error: matchedError } = await supabase
                 .from('lien_ket_don_hang_ho_so')
                 .select('ho_so_id')
                 .eq('don_hang_id', selectedOrder.id)
-
             if (matchedError) throw matchedError
             const matchedIds = matchedData.map(m => m.ho_so_id)
 
-            // Query candidates
+            // Only show candidates waiting for interview
             let query = supabase
                 .from('ho_so')
                 .select('*')
+                .eq('trang_thai', 'Chờ phỏng vấn')
                 .order('created_at', { ascending: false })
                 .limit(100)
 
-            if (searchTerm) {
-                query = query.ilike('ho_ten', `%${searchTerm}%`)
-            }
+            if (searchTerm) query = query.ilike('ho_ten', `%${searchTerm}%`)
 
             const { data, error } = await query
             if (error) throw error
 
-            // Filter out already matched
-            const filtered = data.filter(c => !matchedIds.includes(c.id))
-            setAvailableCandidates(filtered)
+            setAvailableCandidates(data.filter(c => !matchedIds.includes(c.id)))
         } catch (error) {
             console.error('Lỗi tìm ứng viên:', error)
         } finally {
@@ -110,7 +100,6 @@ export default function OrderMatching() {
     const handleAddCandidate = async (candidate) => {
         if (!selectedOrder) return
         try {
-            // Auto SBD logic
             let nextSBD = 1
             if (matchedCandidates.length > 0) {
                 const max = Math.max(...matchedCandidates.map(m => parseInt(m.sbd || 0)))
@@ -123,14 +112,10 @@ export default function OrderMatching() {
                 ho_so_id: candidate.id,
                 sbd: sbdString
             }])
-
             if (error) throw error
-
-            alert(`Đã thêm ứng viên ${candidate.ho_ten} thành công!`)
 
             await fetchMatchedCandidates()
             setAvailableCandidates(prev => prev.filter(c => c.id !== candidate.id))
-
         } catch (error) {
             alert('Lỗi thêm ứng viên: ' + error.message)
         }
@@ -148,148 +133,169 @@ export default function OrderMatching() {
         }
     }
 
-
+    const age = (ngaySinh) => ngaySinh ? (new Date().getFullYear() - new Date(ngaySinh).getFullYear()) : '—'
 
     return (
-        <div className="min-h-screen md:h-[calc(100vh-80px)] flex flex-col md:flex-row gap-6 animate-fade-in overflow-y-auto md:overflow-hidden pb-20 md:pb-4">
-            {/* LEFT PANEL */}
-            <div className="w-full md:w-1/3 bg-white rounded-xl shadow-sm border border-secondary-100 flex flex-col overflow-hidden">
-                <div className="p-4 border-b border-slate-100 bg-slate-50">
-                    <h2 className="font-bold text-lg text-emerald-900 flex items-center gap-2">
-                        <span className="material-icons-outlined text-emerald-600">list_alt</span>
-                        Chọn Đơn Hàng
-                    </h2>
-                </div>
-                <div className="flex-1 overflow-y-auto p-2 space-y-2">
-                    {loadingOrders ? (
-                        <div className="text-center py-8"><span className="animate-spin inline-block w-6 h-6 border-2 border-primary-600 rounded-full border-t-transparent"></span></div>
-                    ) : orders.map(order => (
-                        <div
-                            key={order.id}
-                            onClick={() => setSelectedOrder(order)}
-                            className={`p-4 rounded-lg cursor-pointer border transition-all hover:shadow-md
-                                ${selectedOrder?.id === order.id ? 'bg-emerald-50 border-emerald-500 ring-1 ring-emerald-500' : 'bg-white border-slate-100 hover:border-emerald-300'}
-                            `}
-                        >
-                            <div className="font-bold text-gray-800 line-clamp-1">{order.ten_don_hang}</div>
-                            <div className="flex justify-between items-center mt-2 text-sm">
-                                <span className="text-gray-500">{order.dia_diem_lam_viec}</span>
-                                <span className={`px-2 py-0.5 rounded text-xs font-bold ${order.trang_thai === 'Đang tuyển' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}>
-                                    {order.trang_thai}
-                                </span>
-                            </div>
-                        </div>
-                    ))}
-                </div>
-            </div>
+        <div className="admin-page" style={{ padding: '0.75rem 1.25rem 2rem' }}>
+            <div style={{ display: 'flex', gap: '0.85rem', height: 'calc(100vh - 72px)' }}>
 
-            {/* RIGHT PANEL */}
-            <div className="flex-1 bg-white rounded-xl shadow-sm border border-secondary-100 flex flex-col overflow-hidden relative">
-                {!selectedOrder ? (
-                    <div className="flex-1 flex flex-col items-center justify-center text-gray-400 p-8 text-center">
-                        <span className="material-icons-outlined text-6xl mb-4 text-gray-200">touch_app</span>
-                        <p className="text-lg font-medium">Chọn một đơn hàng từ danh sách bên trái để bắt đầu ghép ứng viên.</p>
+                {/* ── LEFT: Order list ── */}
+                <div className="admin-panel" style={{ width: '255px', flexShrink: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+                    {/* Header */}
+                    <div style={{ padding: '0.6rem 0.9rem', borderBottom: '1px solid #f1f5f9', background: '#f8fafc', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                        <span className="material-icons-outlined" style={{ fontSize: '14px', color: '#059669' }}>list_alt</span>
+                        <span style={{ fontWeight: '800', fontSize: '0.72rem', color: '#0f172a', textTransform: 'uppercase', letterSpacing: '0.06em', flex: 1 }}>Đơn Hàng</span>
+                        <span style={{ background: '#d1fae5', color: '#059669', fontSize: '0.6rem', fontWeight: '800', padding: '0.1rem 0.4rem', borderRadius: '20px', border: '1px solid #6ee7b7' }}>{orders.length}</span>
                     </div>
-                ) : (
-                    <>
-                        {/* Header */}
-                        <div className="p-6 border-b border-gray-100 bg-white flex justify-between items-start">
-                            <div>
-                                <h3 className="text-xl font-black text-gray-800">{selectedOrder.ten_don_hang}</h3>
-                                <div className="flex gap-4 mt-2 text-sm text-gray-500">
-                                    <span className="flex items-center gap-1"><span className="material-icons-outlined text-sm">place</span> {selectedOrder.dia_diem_lam_viec}</span>
-                                    <span className="flex items-center gap-1"><span className="material-icons-outlined text-sm">payments</span> {selectedOrder.muc_luong || selectedOrder.luong_co_ban} ¥</span>
-                                    <span className="flex items-center gap-1"><span className="material-icons-outlined text-sm">group</span> Cần tuyển: {selectedOrder.so_luong_tuyen}</span>
+                    {/* List */}
+                    <div style={{ flex: 1, overflowY: 'auto', padding: '0.35rem' }} className="no-scrollbar">
+                        {loadingOrders ? (
+                            <div className="admin-spinner-wrap"><div className="admin-spinner" /></div>
+                        ) : orders.map(order => {
+                            const isActive = selectedOrder?.id === order.id
+                            return (
+                                <div key={order.id} onClick={() => setSelectedOrder(order)}
+                                    style={{
+                                        padding: '0.5rem 0.65rem', borderRadius: '8px', cursor: 'pointer',
+                                        border: isActive ? '1.5px solid #10b981' : '1.5px solid transparent',
+                                        background: isActive ? '#f0fdf4' : 'transparent',
+                                        marginBottom: '0.2rem', transition: 'all 0.12s',
+                                    }}
+                                    onMouseEnter={e => { if (!isActive) e.currentTarget.style.background = '#f8fafc' }}
+                                    onMouseLeave={e => { if (!isActive) e.currentTarget.style.background = 'transparent' }}
+                                >
+                                    <div style={{ fontWeight: '700', fontSize: '0.76rem', color: isActive ? '#065f46' : '#0f172a', lineHeight: 1.3, marginBottom: '0.15rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{order.ten_don_hang}</div>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.3rem' }}>
+                                        <span style={{ fontSize: '0.65rem', color: '#94a3b8', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>{order.dia_diem_lam_viec}</span>
+                                        <span style={{
+                                            fontSize: '0.56rem', fontWeight: '800', padding: '0.1rem 0.35rem', borderRadius: '20px', flexShrink: 0,
+                                            color: order.trang_thai === 'Đang tuyển' ? '#059669' : '#64748b',
+                                            background: order.trang_thai === 'Đang tuyển' ? '#d1fae5' : '#f1f5f9',
+                                        }}>{order.trang_thai}</span>
+                                    </div>
+                                </div>
+                            )
+                        })}
+                    </div>
+                </div>
+
+                {/* ── RIGHT: Detail ── */}
+                <div className="admin-panel" style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minWidth: 0 }}>
+                    {!selectedOrder ? (
+                        <div className="admin-empty" style={{ flex: 1 }}>
+                            <span className="material-icons-outlined" style={{ fontSize: '2.5rem', color: '#e2e8f0' }}>touch_app</span>
+                            <p style={{ fontWeight: '600', color: '#94a3b8', fontSize: '0.82rem' }}>Chọn một đơn hàng để bắt đầu ghép ứng viên</p>
+                        </div>
+                    ) : (<>
+                        {/* Compact header */}
+                        <div style={{ padding: '0.55rem 1rem', borderBottom: '1px solid #f1f5f9', background: '#f8fafc', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.75rem', flexWrap: 'wrap' }}>
+                            <div style={{ minWidth: 0, flex: 1 }}>
+                                <div style={{ fontWeight: '800', fontSize: '0.86rem', color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{selectedOrder.ten_don_hang}</div>
+                                <div style={{ display: 'flex', gap: '0.8rem', marginTop: '0.12rem', fontSize: '0.68rem', color: '#64748b' }}>
+                                    <span style={{ display: 'flex', alignItems: 'center', gap: '2px' }}><span className="material-icons-outlined" style={{ fontSize: '11px' }}>place</span>{selectedOrder.dia_diem_lam_viec}</span>
+                                    <span style={{ display: 'flex', alignItems: 'center', gap: '2px' }}><span className="material-icons-outlined" style={{ fontSize: '11px' }}>payments</span>{parseInt(selectedOrder.muc_luong || 0).toLocaleString()}¥</span>
+                                    <span style={{ display: 'flex', alignItems: 'center', gap: '2px' }}><span className="material-icons-outlined" style={{ fontSize: '11px' }}>group</span>Tuyển: {selectedOrder.so_luong_tuyen}</span>
                                 </div>
                             </div>
                             {hasPermission(Permissions.PRINT_EXPORT) && (
-                                <div className="flex gap-2">
-                                    <Link
-                                        to={`/print-candidate-list/${selectedOrder.id}`}
-                                        target="_blank"
-                                        className={`px-3 py-2 text-white rounded-lg font-bold shadow flex items-center gap-2 transition-colors
-                                            ${matchedCandidates.length === 0 ? 'bg-gray-400 cursor-not-allowed pointer-events-none' : 'bg-blue-600 hover:bg-blue-700'}
-                                        `}
-                                    >
-                                        <span className="material-icons-outlined">list_alt</span>
-                                        In DS
-                                    </Link>
-                                    <Link
-                                        to={`/batch-print-profiles/${selectedOrder.id}`}
-                                        target="_blank"
-                                        className={`px-3 py-2 text-white rounded-lg font-bold shadow flex items-center gap-2 transition-colors
-                                            ${matchedCandidates.length === 0 ? 'bg-gray-400 cursor-not-allowed pointer-events-none' : 'bg-teal-600 hover:bg-teal-700'}
-                                        `}
-                                    >
-                                        <span className="material-icons-outlined">folder_shared</span>
-                                        In Hồ Sơ (JP)
-                                    </Link>
+                                <div style={{ display: 'flex', gap: '0.4rem', flexShrink: 0 }}>
+                                    {[
+                                        { to: `/print-candidate-list/${selectedOrder.id}`, icon: 'list_alt', label: 'In DS', activeColor: '#2563eb', activeBg: '#eff6ff', activeBorder: '#bfdbfe' },
+                                        { to: `/batch-print-profiles/${selectedOrder.id}`, icon: 'folder_shared', label: 'In HS (JP)', activeColor: '#059669', activeBg: '#f0fdf4', activeBorder: '#6ee7b7' },
+                                    ].map(btn => (
+                                        <Link key={btn.to} to={btn.to} target="_blank" style={{
+                                            display: 'inline-flex', alignItems: 'center', gap: '0.3rem',
+                                            padding: '0.3rem 0.65rem', borderRadius: '7px', fontSize: '0.7rem', fontWeight: '700',
+                                            textDecoration: 'none', transition: 'all 0.12s',
+                                            background: matchedCandidates.length === 0 ? '#f1f5f9' : btn.activeBg,
+                                            color: matchedCandidates.length === 0 ? '#cbd5e1' : btn.activeColor,
+                                            border: `1px solid ${matchedCandidates.length === 0 ? '#e2e8f0' : btn.activeBorder}`,
+                                            pointerEvents: matchedCandidates.length === 0 ? 'none' : 'auto',
+                                        }}>
+                                            <span className="material-icons-outlined" style={{ fontSize: '13px' }}>{btn.icon}</span>{btn.label}
+                                        </Link>
+                                    ))}
                                 </div>
                             )}
                         </div>
 
                         {/* Tabs */}
-                        <div className="flex border-b border-gray-100 bg-gray-50">
-                            <button
-                                onClick={() => setActiveTab('list')}
-                                className={`flex-1 py-3 text-sm font-bold uppercase tracking-wide transition-colors border-b-2
-                                    ${activeTab === 'list' ? 'border-emerald-600 text-emerald-700 bg-white' : 'border-transparent text-slate-500 hover:text-slate-700'}
-                                `}
-                            >
-                                DANH SÁCH PHỎNG VẤN ({matchedCandidates.length})
-                            </button>
-                            <button
-                                onClick={() => setActiveTab('add')}
-                                className={`flex-1 py-3 text-sm font-bold uppercase tracking-wide transition-colors border-b-2
-                                    ${activeTab === 'add' ? 'border-emerald-600 text-emerald-700 bg-white' : 'border-transparent text-slate-500 hover:text-slate-700'}
-                                `}
-                            >
-                                Thêm Ứng Viên (+)
-                            </button>
+                        <div style={{ display: 'flex', borderBottom: '2px solid #f1f5f9' }}>
+                            {[
+                                { key: 'list', label: 'Danh sách phỏng vấn', icon: 'format_list_bulleted', count: matchedCandidates.length },
+                                { key: 'add', label: 'Thêm ứng viên', icon: 'person_add' },
+                            ].map(tab => (
+                                <button key={tab.key} onClick={() => setActiveTab(tab.key)} style={{
+                                    display: 'flex', alignItems: 'center', gap: '0.35rem',
+                                    padding: '0.5rem 1rem 0.55rem', border: 'none', background: 'none',
+                                    fontFamily: 'inherit', fontSize: '0.75rem', fontWeight: '700', cursor: 'pointer',
+                                    borderBottom: activeTab === tab.key ? '2px solid #059669' : '2px solid transparent',
+                                    color: activeTab === tab.key ? '#059669' : '#94a3b8',
+                                    marginBottom: '-2px', transition: 'color 0.12s',
+                                }}>
+                                    <span className="material-icons-outlined" style={{ fontSize: '14px' }}>{tab.icon}</span>
+                                    {tab.label}
+                                    {tab.count !== undefined && (
+                                        <span style={{
+                                            background: activeTab === tab.key ? '#d1fae5' : '#f1f5f9',
+                                            color: activeTab === tab.key ? '#059669' : '#94a3b8',
+                                            fontSize: '0.6rem', fontWeight: '800', padding: '0.1rem 0.4rem',
+                                            borderRadius: '20px', border: `1px solid ${activeTab === tab.key ? '#6ee7b7' : '#e2e8f0'}`,
+                                        }}>{tab.count}</span>
+                                    )}
+                                </button>
+                            ))}
                         </div>
 
-                        {/* Content Area */}
-                        <div className="flex-1 overflow-y-auto p-6 bg-gray-50/30 relative">
-                            {loadingDetails && <div className="absolute inset-0 bg-white/50 z-10 flex items-center justify-center"><span className="animate-spin w-8 h-8 border-2 border-primary-600 rounded-full border-t-transparent"></span></div>}
+                        {/* Content */}
+                        <div style={{ flex: 1, overflowY: 'auto', padding: '0.65rem', background: '#f8fafc', position: 'relative' }} className="no-scrollbar">
+                            {loadingDetails && (
+                                <div style={{ position: 'absolute', inset: 0, background: 'rgba(255,255,255,0.8)', zIndex: 10, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                    <div className="admin-spinner" />
+                                </div>
+                            )}
 
+                            {/* Tab: Danh sách phỏng vấn */}
                             {activeTab === 'list' && (
-                                <div className="bg-white rounded-xl border border-gray-100 overflow-hidden shadow-sm">
-                                    <table className="w-full text-left table-auto">
-                                        <thead className="bg-gray-100 text-gray-500 text-xs uppercase font-bold">
+                                <div className="admin-panel">
+                                    <table className="admin-table">
+                                        <thead>
                                             <tr>
-                                                <th className="px-4 py-3 border-b text-center w-16">SBD</th>
-                                                <th className="px-4 py-3 border-b text-center w-20">Ảnh</th>
-                                                <th className="px-4 py-3 border-b">Họ Tên</th>
-                                                <th className="px-4 py-3 border-b text-center w-16">Tuổi</th>
-                                                <th className="px-4 py-3 border-b">Quê Quán</th>
-
-                                                <th className="px-4 py-3 border-b text-right w-16"></th>
+                                                <th style={{ textAlign: 'center', width: '48px' }}>SBD</th>
+                                                <th style={{ width: '36px' }}></th>
+                                                <th>Họ Tên</th>
+                                                <th style={{ textAlign: 'center', width: '55px' }}>Tuổi</th>
+                                                <th>Quê Quán</th>
+                                                <th style={{ width: '40px' }}></th>
                                             </tr>
                                         </thead>
-                                        <tbody className="divide-y divide-gray-50">
+                                        <tbody>
                                             {matchedCandidates.length === 0 ? (
-                                                <tr><td colSpan="10" className="p-8 text-center text-gray-400">Chưa có ứng viên nào.</td></tr>
+                                                <tr><td colSpan="6" style={{ textAlign: 'center', padding: '2.5rem', color: '#cbd5e1', fontSize: '0.8rem' }}>Chưa có ứng viên nào.</td></tr>
                                             ) : matchedCandidates.map(item => (
-                                                <tr key={item.id} className="hover:bg-blue-50 group transition-colors">
-                                                    <td className="px-4 py-3 font-mono font-bold text-primary-600 text-center align-middle">{item.sbd}</td>
-                                                    <td className="px-4 py-3 text-center align-middle">
-                                                        <div className="w-10 h-10 rounded-full overflow-hidden border border-gray-200 bg-gray-100 mx-auto">
-                                                            {item.ho_so?.anh_ho_so ? (
-                                                                <img src={item.ho_so.anh_ho_so} alt={item.ho_so.ho_ten} className="w-full h-full object-cover" />
-                                                            ) : (
-                                                                <span className="material-icons-outlined text-gray-400 text-2xl mt-1.5 leading-none">person</span>
-                                                            )}
+                                                <tr key={item.id}>
+                                                    <td style={{ textAlign: 'center', fontFamily: 'monospace', fontWeight: '800', color: '#059669', fontSize: '0.82rem' }}>{item.sbd}</td>
+                                                    <td style={{ padding: '0.4rem 0.4rem' }}>
+                                                        <div style={{ width: '30px', height: '30px', borderRadius: '50%', overflow: 'hidden', border: '1px solid #e2e8f0', background: '#f8fafc', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                                            {item.ho_so?.anh_ho_so
+                                                                ? <img src={item.ho_so.anh_ho_so} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                                                : <span className="material-icons-outlined" style={{ fontSize: '16px', color: '#cbd5e1' }}>person</span>
+                                                            }
                                                         </div>
                                                     </td>
-                                                    <td className="px-4 py-3 font-medium text-gray-900 align-middle">{item.ho_so ? item.ho_so.ho_ten : <span className="text-red-400 italic">Dữ liệu lỗi</span>}</td>
-                                                    <td className="px-4 py-3 text-gray-500 text-center font-bold align-middle">
-                                                        {item.ho_so?.ngay_sinh ? (new Date().getFullYear() - new Date(item.ho_so.ngay_sinh).getFullYear()) : ''}
+                                                    <td style={{ fontWeight: '700', color: '#0f172a', fontSize: '0.82rem' }}>
+                                                        {item.ho_so ? item.ho_so.ho_ten : <span style={{ color: '#f87171', fontStyle: 'italic' }}>Dữ liệu lỗi</span>}
                                                     </td>
-                                                    <td className="px-4 py-3 text-gray-500 align-middle">{item.ho_so?.que_quan}</td>
-
-                                                    <td className="px-4 py-3 text-right align-middle">
-                                                        <button onClick={() => handleRemoveCandidate(item.id)} className="text-red-300 hover:text-red-500 transition-colors p-1" title="Xóa khỏi danh sách">
-                                                            <span className="material-icons-outlined text-lg">cancel</span>
+                                                    <td style={{ textAlign: 'center', fontWeight: '700', fontSize: '0.8rem', color: '#64748b' }}>{age(item.ho_so?.ngay_sinh)}</td>
+                                                    <td style={{ fontSize: '0.78rem', color: '#64748b' }}>{item.ho_so?.que_quan || '—'}</td>
+                                                    <td style={{ textAlign: 'center' }}>
+                                                        <button onClick={() => handleRemoveCandidate(item.id)}
+                                                            style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#fca5a5', padding: '3px', borderRadius: '5px', display: 'flex', alignItems: 'center' }}
+                                                            onMouseEnter={e => e.currentTarget.style.color = '#ef4444'}
+                                                            onMouseLeave={e => e.currentTarget.style.color = '#fca5a5'}
+                                                            title="Xóa khỏi danh sách"
+                                                        >
+                                                            <span className="material-icons-outlined" style={{ fontSize: '16px' }}>cancel</span>
                                                         </button>
                                                     </td>
                                                 </tr>
@@ -299,68 +305,67 @@ export default function OrderMatching() {
                                 </div>
                             )}
 
+                            {/* Tab: Thêm ứng viên */}
                             {activeTab === 'add' && (
-                                <div className="flex flex-col h-full">
-                                    <div className="mb-4 relative">
-                                        <span className="material-icons-outlined absolute left-3 top-2.5 text-gray-400">search</span>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
+                                    <div style={{ position: 'relative' }}>
+                                        <span className="material-icons-outlined" style={{ position: 'absolute', left: '0.65rem', top: '50%', transform: 'translateY(-50%)', fontSize: '15px', color: '#cbd5e1' }}>search</span>
                                         <input
-                                            className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 shadow-sm"
-                                            placeholder="Tìm kiếm ứng viên theo tên..."
+                                            style={{ width: '100%', paddingLeft: '2.1rem', paddingRight: '1rem', paddingTop: '0.45rem', paddingBottom: '0.45rem', border: '1.5px solid #e2e8f0', borderRadius: '8px', fontSize: '0.8rem', fontFamily: 'inherit', background: '#fff', outline: 'none', boxSizing: 'border-box' }}
+                                            placeholder="Tìm ứng viên theo tên... (Enter để tìm)"
                                             value={searchTerm}
                                             onChange={e => setSearchTerm(e.target.value)}
                                             onKeyDown={e => e.key === 'Enter' && fetchAvailableCandidates()}
+                                            onFocus={e => e.target.style.borderColor = '#10b981'}
+                                            onBlur={e => e.target.style.borderColor = '#e2e8f0'}
                                         />
                                     </div>
-                                    <div className="flex-1 bg-white rounded-xl border border-gray-100 overflow-y-auto shadow-sm">
-                                        <table className="w-full text-left">
-                                            <thead className="bg-gray-100 text-gray-500 text-xs uppercase font-bold sticky top-0 z-10">
+                                    <div className="admin-panel">
+                                        <table className="admin-table">
+                                            <thead>
                                                 <tr>
-                                                    <th className="px-4 py-3 border-b">Ứng Viên</th>
-                                                    <th className="px-4 py-3 border-b">Thông Tin</th>
-                                                    <th className="px-4 py-3 border-b text-right">Thao tác</th>
+                                                    <th style={{ width: '34px' }}></th>
+                                                    <th>Họ Tên</th>
+                                                    <th>Quê quán / Ngành</th>
+                                                    <th style={{ textAlign: 'right' }}>Thao tác</th>
                                                 </tr>
                                             </thead>
-                                            <tbody className="divide-y divide-gray-50">
-                                                {availableCandidates.map(c => {
-                                                    const tuoi = c.ngay_sinh ? (new Date().getFullYear() - new Date(c.ngay_sinh).getFullYear()) : '??'
-                                                    return (
-                                                        <tr key={c.id} className="hover:bg-green-50 transition-colors">
-                                                            <td className="px-4 py-3 flex items-center gap-3">
-                                                                <div className="w-10 h-10 rounded-full overflow-hidden border border-gray-200 bg-gray-50 flex-shrink-0">
-                                                                    {c.anh_ho_so ? (
-                                                                        <img src={c.anh_ho_so} alt="" className="w-full h-full object-cover" />
-                                                                    ) : (
-                                                                        <div className="w-full h-full flex items-center justify-center text-gray-400"><span className="material-icons-outlined text-lg">person</span></div>
-                                                                    )}
-                                                                </div>
-                                                                <div>
-                                                                    <div className="font-bold text-gray-800">{c.ho_ten}</div>
-                                                                    <div className="text-xs text-gray-400">{tuoi} tuổi</div>
-                                                                </div>
-                                                            </td>
-                                                            <td className="px-4 py-3 text-sm text-gray-600">
-                                                                <div>{c.que_quan}</div>
-                                                                <div className="text-xs text-gray-400">{c.nganh_nghe_mong_muon || 'LĐPT'}</div>
-                                                            </td>
-                                                            <td className="px-4 py-3 text-right">
-                                                                <button
-                                                                    onClick={() => handleAddCandidate(c)}
-                                                                    className="px-3 py-1.5 bg-green-600 text-white text-xs font-bold rounded shadow hover:bg-green-700 transition-colors flex items-center gap-1 ml-auto"
-                                                                >
-                                                                    <span className="material-icons-outlined text-sm">add</span> Chọn
-                                                                </button>
-                                                            </td>
-                                                        </tr>
-                                                    )
-                                                })}
+                                            <tbody>
+                                                {availableCandidates.length === 0 ? (
+                                                    <tr><td colSpan="4" style={{ textAlign: 'center', padding: '2.5rem', color: '#cbd5e1', fontSize: '0.8rem' }}>Không có ứng viên nào ở trạng thái Chờ phỏng vấn.</td></tr>
+                                                ) : availableCandidates.map(c => (
+                                                    <tr key={c.id}>
+                                                        <td style={{ padding: '0.4rem 0.4rem' }}>
+                                                            <div style={{ width: '30px', height: '30px', borderRadius: '50%', overflow: 'hidden', border: '1px solid #e2e8f0', background: '#f8fafc', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                                                {c.anh_ho_so
+                                                                    ? <img src={c.anh_ho_so} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                                                    : <span className="material-icons-outlined" style={{ fontSize: '16px', color: '#cbd5e1' }}>person</span>
+                                                                }
+                                                            </div>
+                                                        </td>
+                                                        <td>
+                                                            <div style={{ fontWeight: '700', fontSize: '0.82rem', color: '#0f172a' }}>{c.ho_ten}</div>
+                                                            <div style={{ fontSize: '0.67rem', color: '#94a3b8' }}>{age(c.ngay_sinh)} tuổi</div>
+                                                        </td>
+                                                        <td style={{ fontSize: '0.78rem', color: '#64748b' }}>
+                                                            <div>{c.que_quan || '—'}</div>
+                                                            <div style={{ fontSize: '0.67rem', color: '#94a3b8' }}>{c.nganh_nghe_mong_muon || 'LĐPT'}</div>
+                                                        </td>
+                                                        <td style={{ textAlign: 'right' }}>
+                                                            <button onClick={() => handleAddCandidate(c)} className="admin-btn-primary" style={{ height: '28px', fontSize: '0.7rem', padding: '0 0.6rem' }}>
+                                                                <span className="material-icons-outlined" style={{ fontSize: '13px' }}>add</span>Chọn
+                                                            </button>
+                                                        </td>
+                                                    </tr>
+                                                ))}
                                             </tbody>
                                         </table>
                                     </div>
                                 </div>
                             )}
                         </div>
-                    </>
-                )}
+                    </>)}
+                </div>
             </div>
         </div>
     )

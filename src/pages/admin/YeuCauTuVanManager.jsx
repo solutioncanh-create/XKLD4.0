@@ -48,13 +48,19 @@ export default function YeuCauTuVanManager() {
     }
 
     const deleteLead = async (id) => {
-        if (!confirm('Bạn có chắc muốn xóa yêu cầu này?')) return
+        if (!window.confirm('Bạn có chắc muốn xóa yêu cầu này?')) return
         try {
-            const { error } = await supabase.from('yeu_cau_tu_van').delete().eq('id', id)
-            if (error) throw error
-            setLeads(leads.filter(lead => lead.id !== id))
+            const { error } = await supabase
+                .from('yeu_cau_tu_van')
+                .delete()
+                .eq('id', id)
+            if (error) {
+                console.error('Delete error:', error)
+                throw error
+            }
+            setLeads(prev => prev.filter(lead => lead.id !== id))
         } catch (error) {
-            alert('Lỗi xóa: ' + error.message)
+            alert('Lỗi xóa: ' + (error.message || JSON.stringify(error)))
         }
     }
 
@@ -76,45 +82,31 @@ export default function YeuCauTuVanManager() {
     const STATUS_OPTIONS = ['Chờ tư vấn', 'Đã liên hệ', 'Đã chốt', 'Hủy']
 
     return (
-        <div className="bg-gray-50 min-h-screen font-sans pb-20">
-            {/* Header Stats - Removed per request */}
+        <div className="admin-page">
 
-            {/* Toolbar - Combined Responsive */}
-            <div className="bg-gray-50 px-3 pt-3 md:px-4 mb-4">
-                <div className="flex flex-wrap items-center gap-2">
-
-
-                    {/* Filter Buttons */}
-                    <div className="flex flex-wrap gap-2 flex-1 md:justify-start w-full md:w-auto">
-                        {['All', ...STATUS_OPTIONS].map(status => (
-                            <button
-                                key={status}
-                                onClick={() => setFilterStatus(status)}
-                                className={`shrink-0 h-[38px] px-3.5 rounded-lg text-sm font-bold transition-all border shadow-sm whitespace-nowrap ${filterStatus === status
-                                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200 ring-1 ring-emerald-100'
-                                    : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50'
-                                    }`}
-                            >
-                                {status === 'All' ? 'Tất cả' : status}
-                            </button>
-                        ))}
-                    </div>
-                </div>
+            <div className="admin-toolbar">
+                {['All', ...STATUS_OPTIONS].map(status => (
+                    <button
+                        key={status}
+                        onClick={() => setFilterStatus(status)}
+                        className={`admin-chip ${filterStatus === status ? 'active' : ''}`}
+                    >
+                        {status === 'All' ? 'Tất cả' : status}
+                    </button>
+                ))}
             </div>
 
-            {/* Content Area - Natural Scroll */}
-            <div className="px-3 md:px-4 no-scrollbar">
-                {/* Grid Content */}
+            <div className="no-scrollbar">
                 {loading ? (
-                    <div className="flex justify-center py-10"><span className="animate-spin w-8 h-8 border-2 border-primary-600 rounded-full border-t-transparent"></span></div>
-                ) : (filteredLeads.length === 0 ? (
-                    <div className="text-center py-20 text-gray-500 bg-white rounded-xl border border-dashed border-gray-300">
-                        <span className="material-icons-outlined text-4xl mb-2 text-gray-300">search_off</span>
+                    <div className="admin-spinner-wrap"><div className="admin-spinner" /></div>
+                ) : filteredLeads.length === 0 ? (
+                    <div className="admin-panel admin-empty">
+                        <span className="material-icons-outlined" style={{ fontSize: '2rem', color: '#e2e8f0' }}>search_off</span>
                         <p>Không tìm thấy yêu cầu nào.</p>
                     </div>
                 ) : (
-                    <div className="w-full">
-                        {/* Mobile View */}
+                    <div>
+                        {/* Mobile */}
                         <div className="md:hidden grid grid-cols-1 gap-4">
                             {filteredLeads.map(lead => (
                                 <LeadCard
@@ -126,19 +118,19 @@ export default function YeuCauTuVanManager() {
                             ))}
                         </div>
 
-                        {/* Desktop View */}
-                        <div className="hidden md:block bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                            <table className="w-full text-left border-collapse">
-                                <thead className="bg-gray-50 uppercase text-xs font-bold text-gray-500 border-b border-gray-100 tracking-wider">
+                        {/* Desktop */}
+                        <div className="hidden md:block admin-panel">
+                            <table className="admin-table">
+                                <thead>
                                     <tr>
-                                        <th className="px-6 py-4">Ứng viên</th>
-                                        <th className="px-6 py-4">Liên hệ</th>
-                                        <th className="px-6 py-4">Nhu cầu</th>
-                                        <th className="px-6 py-4">Trạng thái</th>
-                                        <th className="px-6 py-4 text-right">Hành động</th>
+                                        <th>Ứng viên</th>
+                                        <th>Liên hệ</th>
+                                        <th>Nhu cầu</th>
+                                        <th>Trạng thái</th>
+                                        <th style={{ textAlign: 'right' }}>Hành động</th>
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-gray-50">
+                                <tbody>
                                     {filteredLeads.map(lead => (
                                         <LeadRow
                                             key={lead.id}
@@ -151,8 +143,7 @@ export default function YeuCauTuVanManager() {
                             </table>
                         </div>
                     </div>
-                ))
-                }
+                )}
             </div>
         </div>
     )
@@ -259,7 +250,7 @@ function LeadCard({ lead, onStatusChange, onDelete }) {
                     <a href={`tel:${lead.so_dien_thoai}`} className="w-7 h-7 flex items-center justify-center rounded text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-all" title="Gọi ngay">
                         <span className="material-icons-outlined text-[16px]">call</span>
                     </a>
-                    <button onClick={() => onDelete(lead.id)} className="w-7 h-7 flex items-center justify-center rounded text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-all" title="Xóa">
+                    <button onClick={() => onDelete()} className="w-7 h-7 flex items-center justify-center rounded text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-all" title="Xóa">
                         <span className="material-icons-outlined text-[16px]">delete</span>
                     </button>
                 </div>
@@ -348,7 +339,7 @@ function LeadRow({ lead, onStatusChange, onDelete }) {
                     <a href={`tel:${lead.so_dien_thoai}`} className="w-7 h-7 flex items-center justify-center rounded-full text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 transition-colors" title="Gọi ngay">
                         <span className="material-icons-outlined text-[16px]">call</span>
                     </a>
-                    <button onClick={() => onDelete(lead.id)} className="w-7 h-7 flex items-center justify-center rounded-full text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors" title="Xóa">
+                    <button onClick={() => onDelete()} className="w-7 h-7 flex items-center justify-center rounded-full text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors" title="Xóa">
                         <span className="material-icons-outlined text-[16px]">delete</span>
                     </button>
                 </div>

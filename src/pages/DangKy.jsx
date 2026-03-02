@@ -4,7 +4,7 @@ import { scanIdCard } from '../utils/aiScanner'
 import { compressImage } from '../utils/compressImage'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 
-export default function DangKy() {
+export default function DangKy({ adminMode = false }) {
     const { id } = useParams()
     const navigate = useNavigate()
     const [loading, setLoading] = useState(false)
@@ -202,22 +202,15 @@ export default function DangKy() {
             ho_ten: 'Họ và Tên',
             ngay_sinh: 'Ngày sinh',
             gioi_tinh: 'Giới tính',
-            so_dien_thoai: 'Số điện thoại',
-            email: 'Email',
             que_quan: 'Quê quán',
-            noi_o_hien_tai: 'Nơi ở hiện tại',
             ton_giao: 'Tôn giáo',
             hon_nhan: 'Tình trạng hôn nhân',
-            size_ao: 'Size Quần áo',
-            size_giay: 'Size Giày',
             so_cccd: 'Số CCCD',
             ngay_cap_cccd: 'Ngày cấp CCCD',
             noi_cap_cccd: 'Nơi cấp CCCD',
             anh_ho_so: 'Ảnh chân dung',
             anh_cccd_mat_truoc: 'Ảnh mặt trước CCCD/CMT',
             // anh_cccd_mat_sau: 'Ảnh mặt sau CCCD', // Không bắt buộc
-            nguoi_bao_lanh: 'Họ tên người bảo lãnh',
-            sdt_nguoi_bao_lanh: 'SĐT người bảo lãnh',
             chieu_cao: 'Chiều cao',
             can_nang: 'Cân nặng',
             nhom_mau: 'Nhóm máu',
@@ -299,7 +292,11 @@ export default function DangKy() {
             } else {
                 const { error } = await supabase.from('ho_so').insert([payload])
                 if (error) throw error
-                setShowSuccess(true)
+                if (adminMode) {
+                    navigate('/admin/ho-so')
+                } else {
+                    setShowSuccess(true)
+                }
             }
         } catch (error) { alert('Lỗi: ' + error.message) }
         finally { setLoading(false) }
@@ -439,207 +436,217 @@ export default function DangKy() {
 
     const Step1_CaNhan = () => (
         <div className="space-y-6 animate-fade-in">
-            {/* PHẦN 1: AI SCANNER - UPLOAD CCCD TRƯỚC */}
-            <div className="bg-gradient-to-r from-emerald-50 to-teal-50 p-6 rounded-2xl border border-emerald-100 shadow-sm relative overflow-hidden">
-                <div className="flex justify-between items-center mb-6">
-                    <h3 className="text-lg font-bold text-emerald-900 flex items-center gap-2">
-                        <span className="material-icons-outlined">document_scanner</span>
-                        1. Số hóa Giấy tờ
-                    </h3>
-                    <span className="text-xs font-bold text-orange-700 bg-white px-3 py-1.5 rounded-full shadow-sm border border-orange-200 flex items-center gap-2">
-                        <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse shadow-sm"></span>
-                        AI Scan
-                    </span>
-                </div>
+            {/* I. SỐ HÓA GIẤY TỜ - Ẩn trong chế độ Admin */}
+            {!adminMode && (
+                <div className="bg-gradient-to-r from-emerald-50 to-teal-50 p-4 rounded-2xl border border-emerald-100 relative overflow-hidden">
+                    <div className="flex justify-between items-center mb-4">
+                        <h3 className="section-title !mb-0 !pb-0 !border-b-0 text-emerald-900 flex items-center gap-2">
+                            <span className="material-icons-outlined">document_scanner</span>
+                            I. SỐ HÓA GIẤY TỜ
+                        </h3>
+                        <span className="text-xs font-bold text-orange-700 bg-white px-3 py-1.5 rounded-full border border-orange-200 flex items-center gap-2">
+                            <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
+                            AI Scan
+                        </span>
+                    </div>
 
-                {/* Ảnh CCCD 2 mặt (Đưa lên đầu) */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {/* Mặt trước */}
-                    <div>
-                        <label className="label mb-2 text-emerald-700 font-semibold">Ảnh mặt trước CCCD/CMT <span className="text-red-500">*</span></label>
-                        <div className={`border-2 border-dashed rounded-xl h-48 flex flex-col items-center justify-center text-gray-500 hover:bg-white/80 bg-white relative overflow-hidden cursor-pointer group transition-all
+                    {/* Ảnh CCCD 2 mặt */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {/* Mặt trước */}
+                        <div>
+                            <label className="label mb-2 text-emerald-700 font-semibold text-xs">Ảnh mặt trước CCCD/CMT <span className="text-red-500">*</span></label>
+                            <div className={`border-2 border-dashed rounded-xl h-40 flex flex-col items-center justify-center text-gray-500 hover:bg-white/80 bg-white relative overflow-hidden cursor-pointer group transition-all
                             ${isScanning ? 'border-emerald-400 ring-4 ring-emerald-50' : 'border-gray-200 hover:border-emerald-300'}`}
-                            onClick={() => document.getElementById('file-upload-cccd-truoc').click()}>
+                                onClick={() => document.getElementById('file-upload-cccd-truoc').click()}>
 
-                            {uploading && !formData.anh_cccd_mat_truoc ? (
-                                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
-                            ) : isScanning ? (
-                                <div className="absolute inset-0 bg-white/95 z-20 flex flex-col items-center justify-center backdrop-blur-sm">
-                                    <div className="w-12 h-12 border-4 border-emerald-100 border-t-emerald-500 rounded-full animate-spin mb-3"></div>
-                                    <p className="text-emerald-700 font-bold text-sm animate-pulse">AI đang phân tích dữ liệu...</p>
-                                </div>
-                            ) : formData.anh_cccd_mat_truoc ? (
-                                <img src={formData.anh_cccd_mat_truoc} alt="CCCD Trước" className="w-full h-full object-contain p-2" />
-                            ) : (
-                                <>
-                                    <span className="material-icons-outlined text-4xl text-emerald-300 group-hover:text-emerald-500 transition-colors mb-2">add_a_photo</span>
-                                    <span className="text-sm font-medium text-gray-500">Tải ảnh mặt trước</span>
-                                </>
-                            )}
-                            <input type="file" id="file-upload-cccd-truoc" accept="image/*" className="hidden"
-                                onChange={(e) => handleUploadImage(e, 'anh_cccd_mat_truoc')} disabled={uploading || isScanning} />
+                                {uploading && !formData.anh_cccd_mat_truoc ? (
+                                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
+                                ) : isScanning ? (
+                                    <div className="absolute inset-0 bg-white/95 z-20 flex flex-col items-center justify-center backdrop-blur-sm">
+                                        <div className="w-12 h-12 border-4 border-emerald-100 border-t-emerald-500 rounded-full animate-spin mb-3"></div>
+                                        <p className="text-emerald-700 font-bold text-sm animate-pulse">AI đang phân tích dữ liệu...</p>
+                                    </div>
+                                ) : formData.anh_cccd_mat_truoc ? (
+                                    <img src={formData.anh_cccd_mat_truoc} alt="CCCD Trước" className="w-full h-full object-contain p-2" />
+                                ) : (
+                                    <>
+                                        <span className="material-icons-outlined text-4xl text-emerald-300 group-hover:text-emerald-500 transition-colors mb-2">add_a_photo</span>
+                                        <span className="text-sm font-medium text-gray-500">Tải ảnh mặt trước</span>
+                                    </>
+                                )}
+                                <input type="file" id="file-upload-cccd-truoc" accept="image/*" className="hidden"
+                                    onChange={(e) => handleUploadImage(e, 'anh_cccd_mat_truoc')} disabled={uploading || isScanning} />
+                            </div>
+                        </div>
+
+                        {/* Mặt sau */}
+                        <div>
+                            <label className="label mb-2 text-emerald-700 font-semibold text-xs">Ảnh mặt sau</label>
+                            <div className="border-2 border-dashed border-gray-200 hover:border-emerald-300 rounded-xl h-40 flex flex-col items-center justify-center text-gray-500 hover:bg-white/80 bg-white relative overflow-hidden cursor-pointer group transition-all"
+                                onClick={() => document.getElementById('file-upload-cccd-sau').click()}>
+                                {uploading && !formData.anh_cccd_mat_sau ? (
+                                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
+                                ) : formData.anh_cccd_mat_sau ? (
+                                    <img src={formData.anh_cccd_mat_sau} alt="CCCD Sau" className="w-full h-full object-contain p-2" />
+                                ) : (
+                                    <>
+                                        <span className="material-icons-outlined text-4xl text-gray-400 mb-2">add_a_photo</span>
+                                        <span className="text-sm font-medium text-gray-500">Tải ảnh mặt sau</span>
+                                    </>
+                                )}
+                                <input type="file" id="file-upload-cccd-sau" accept="image/*" className="hidden"
+                                    onChange={(e) => handleUploadImage(e, 'anh_cccd_mat_sau')} disabled={uploading} />
+                            </div>
                         </div>
                     </div>
 
-                    {/* Mặt sau */}
-                    <div>
-                        <label className="label mb-2 text-emerald-700 font-semibold">Ảnh mặt sau</label>
-                        <div className="border-2 border-dashed border-gray-200 hover:border-emerald-300 rounded-xl h-48 flex flex-col items-center justify-center text-gray-500 hover:bg-white/80 bg-white relative overflow-hidden cursor-pointer group transition-all"
-                            onClick={() => document.getElementById('file-upload-cccd-sau').click()}>
-                            {uploading && !formData.anh_cccd_mat_sau ? (
-                                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
-                            ) : formData.anh_cccd_mat_sau ? (
-                                <img src={formData.anh_cccd_mat_sau} alt="CCCD Sau" className="w-full h-full object-contain p-2" />
-                            ) : (
-                                <>
-                                    <span className="material-icons-outlined text-4xl text-gray-400 mb-2">add_a_photo</span>
-                                    <span className="text-sm font-medium text-gray-500">Tải ảnh mặt sau</span>
-                                </>
-                            )}
-                            <input type="file" id="file-upload-cccd-sau" accept="image/*" className="hidden"
-                                onChange={(e) => handleUploadImage(e, 'anh_cccd_mat_sau')} disabled={uploading} />
+                    {/* Các trường thông tin trích xuất ID */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6 pt-6 border-t border-emerald-100/50">
+                        <div><label className="label">Số CCCD / CMND <span className="text-red-500 ml-1">*</span></label><input name="so_cccd" value={formData.so_cccd} onChange={handleChange} className={vCls(formData.so_cccd)} placeholder="AI sẽ tự điền..." /></div>
+                        <div className="z-0 relative">
+                            <label className="label">Ngày cấp <span className="text-red-500 ml-1">*</span></label>
+                            <FullDateSelect name="ngay_cap_cccd" value={formData.ngay_cap_cccd} onChange={handleChange} startYear={2000} endYear={new Date().getFullYear()} />
                         </div>
+                        <div><label className="label">Nơi cấp <span className="text-red-500 ml-1">*</span></label><input name="noi_cap_cccd" value={formData.noi_cap_cccd} onChange={handleChange} className={vCls(formData.noi_cap_cccd)} placeholder="Cục CS QLHC..." /></div>
                     </div>
                 </div>
+            )}
 
-                {/* Các trường thông tin trích xuất ID */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6 pt-6 border-t border-emerald-100/50">
-                    <div><label className="label">Số CCCD / CMND <span className="text-red-500 ml-1">*</span></label><input name="so_cccd" value={formData.so_cccd} onChange={handleChange} className={vCls(formData.so_cccd)} placeholder="AI sẽ tự điền..." /></div>
-                    <div className="z-0 relative">
-                        <label className="label">Ngày cấp <span className="text-red-500 ml-1">*</span></label>
-                        <FullDateSelect name="ngay_cap_cccd" value={formData.ngay_cap_cccd} onChange={handleChange} startYear={2000} endYear={new Date().getFullYear()} />
-                    </div>
-                    <div><label className="label">Nơi cấp <span className="text-red-500 ml-1">*</span></label><input name="noi_cap_cccd" value={formData.noi_cap_cccd} onChange={handleChange} className={vCls(formData.noi_cap_cccd)} placeholder="Cục CS QLHC..." /></div>
-                </div>
+            <div className="flex items-center gap-4 py-2 mt-4">
+                <div className="h-px bg-slate-200 flex-1"></div>
+                <h3 className="section-title !mb-0 !pb-0 !border-b-0 text-slate-700 text-sm">
+                    {adminMode ? 'I. THÔNG TIN CƠ BẢN' : 'II. XÁC THỰC THÔNG TIN ỨNG VIÊN'}
+                </h3>
+                <div className="h-px bg-slate-200 flex-1"></div>
             </div>
 
-            <div className="flex items-center gap-4 py-4 mt-8">
-                <div className="h-px bg-slate-200 flex-1"></div>
-                <h3 className="text-lg font-bold text-slate-700">2. XÁC THỰC THÔNG TIN ỨNG VIÊN</h3>
-                <div className="h-px bg-slate-200 flex-1"></div>
-            </div>
+            {/* Ảnh & Thông tin chính - Reorganized for better balance */}
+            <div className="flex flex-col md:flex-row gap-4 md:gap-6 items-center md:items-start">
+                {/* Cột 1: Ảnh chân dung - Compacted & Centered on mobile */}
+                <div className="w-40 flex-shrink-0">
+                    <div className="border-2 border-dashed border-gray-300 rounded-xl h-48 flex flex-col items-center justify-center text-gray-500 hover:bg-gray-50 bg-white relative overflow-hidden cursor-pointer group transition-all"
+                        onClick={() => document.getElementById('file-upload').click()}>
 
-            {/* Ảnh & Tên */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                <div className="md:col-span-1 border-2 border-dashed border-gray-300 rounded-lg h-48 flex flex-col items-center justify-center text-gray-500 hover:bg-gray-50 bg-white relative overflow-hidden cursor-pointer group transition-colors"
-                    onClick={() => document.getElementById('file-upload').click()}>
+                        {uploading ? (
+                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
+                        ) : formData.anh_ho_so ? (
+                            <img src={formData.anh_ho_so} alt="Ảnh hồ sơ" className="w-full h-full object-cover" />
+                        ) : (
+                            <>
+                                <span className="material-icons-outlined text-4xl text-gray-300 group-hover:text-primary-500 transition-colors">account_circle</span>
+                                <span className="text-[10px] mt-2 font-bold text-gray-400 group-hover:text-primary-600 uppercase tracking-tighter text-center px-2">Ảnh chân dung 4x6</span>
+                            </>
+                        )}
+                        <input type="file" id="file-upload" accept="image/*" className="hidden"
+                            onChange={(e) => handleUploadImage(e, 'anh_ho_so')} disabled={uploading} />
 
-                    {uploading ? (
-                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
-                    ) : formData.anh_ho_so ? (
-                        <img src={formData.anh_ho_so} alt="Ảnh hồ sơ" className="w-full h-full object-cover" />
-                    ) : (
-                        <>
-                            <span className="material-icons-outlined text-4xl text-gray-400 group-hover:text-primary-500 transition-colors">cloud_upload</span>
-                            <span className="text-xs mt-2 font-medium text-gray-500 group-hover:text-primary-600">Chọn ảnh 4x6</span>
-                        </>
-                    )}
-
-                    {/* Input ẩn */}
-                    <input type="file" id="file-upload" accept="image/*" className="hidden"
-                        onChange={(e) => handleUploadImage(e, 'anh_ho_so')} disabled={uploading} />
-
-                    {/* Overlay hướng dẫn khi hover vào ảnh đã có */}
-                    {formData.anh_ho_so && !uploading && (
-                        <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                            <span className="text-white text-xs font-bold bg-black bg-opacity-50 px-2 py-1 rounded">Thay ảnh khác</span>
-                        </div>
-                    )}
+                        {formData.anh_ho_so && !uploading && (
+                            <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                <span className="text-white text-[10px] font-bold bg-black/50 px-2 py-1 rounded-full">Thay đổi</span>
+                            </div>
+                        )}
+                    </div>
                 </div>
-                <div className="md:col-span-3 grid grid-cols-1 gap-4">
-                    <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-2">
-                        <div className="md:col-span-2">
+
+                {/* Cột chính: Thông tin chi tiết */}
+                <div className="w-full space-y-4">
+                    {/* Hàng 1: Họ tên & Furigana */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
                             <label className="label">Họ và Tên <span className="text-red-500 ml-1">*</span></label>
-                            <input name="ho_ten" value={formData.ho_ten} onChange={handleChange} className={vCls(formData.ho_ten) + " uppercase"} placeholder="NGUYEN VAN A" />
+                            <input name="ho_ten" value={formData.ho_ten} onChange={handleChange} className={vCls(formData.ho_ten) + " uppercase font-bold text-teal-900"} placeholder="NGUYÊN VĂN A" />
                         </div>
-                        <div className="col-span-1">
-                            <label className="label">Nickname</label>
-                            <input name="nickname" value={formData.nickname || ''} onChange={handleChange} className={vCls(formData.nickname)} placeholder="Nếu có" />
-                        </div>
-                    </div>
-                    <div className="z-10 relative">
-                        <label className="label">Ngày sinh <span className="text-red-500 ml-1">*</span></label>
-                        <FullDateSelect name="ngay_sinh" value={formData.ngay_sinh} onChange={handleChange} startYear={1970} endYear={2010} />
-                    </div>
-                    <div>
-                        <label className="label">Giới tính <span className="text-red-500 ml-1">*</span></label>
-                        <div className="flex gap-4 mt-1">
-                            {['Nam', 'Nữ'].map(g => (
-                                <label key={g} className="flex items-center"><input type="radio" name="gioi_tinh" value={g} checked={formData.gioi_tinh === g} onChange={handleChange} className="mr-2" />{g}</label>
-                            ))}
+                        <div>
+                            <label className="label">Tên gọi theo フリガナ</label>
+                            <input name="nickname" value={formData.nickname || ''} onChange={handleChange} className={vCls(formData.nickname)} placeholder="VD: ヌグイエン ヴァン ア" />
                         </div>
                     </div>
+
+                    {/* Hàng 2: Ngày sinh, Giới tính, Tôn giáo, Hôn nhân */}
+                    <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
+                        <div className="md:col-span-4 z-20 relative">
+                            <label className="label">Ngày sinh <span className="text-red-500 ml-1">*</span></label>
+                            <FullDateSelect name="ngay_sinh" value={formData.ngay_sinh} onChange={handleChange} startYear={1970} endYear={2010} />
+                        </div>
+                        <div className="md:col-span-3 pb-2">
+                            <label className="label">Giới tính <span className="text-red-500 ml-1">*</span></label>
+                            <div className="flex gap-4">
+                                {['Nam', 'Nữ'].map(g => (
+                                    <label key={g} className="flex items-center cursor-pointer group">
+                                        <input type="radio" name="gioi_tinh" value={g} checked={formData.gioi_tinh === g} onChange={handleChange} className="w-4 h-4 text-teal-600 border-gray-300 focus:ring-teal-500" />
+                                        <span className={`ml-2 text-sm font-medium ${formData.gioi_tinh === g ? 'text-teal-700' : 'text-gray-500'}`}>{g}</span>
+                                    </label>
+                                ))}
+                            </div>
+                        </div>
+                        <div className="md:col-span-2">
+                            <label className="label">Tôn giáo <span className="text-red-500 ml-1">*</span></label>
+                            <select name="ton_giao" value={formData.ton_giao} onChange={handleChange} className={vCls(formData.ton_giao, true)}>
+                                <option value="" disabled>Chọn</option>
+                                {['Không', 'Phật giáo', 'Thiên Chúa giáo', 'Tin Lành', 'Hòa Hảo', 'Cao Đài', 'Khác'].map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                            </select>
+                        </div>
+                        <div className="md:col-span-3">
+                            <label className="label">Hôn nhân <span className="text-red-500 ml-1">*</span></label>
+                            <select name="hon_nhan" value={formData.hon_nhan} onChange={handleChange} className={vCls(formData.hon_nhan, true)}>
+                                <option value="" disabled>Chọn</option>
+                                {['Độc thân', 'Đã kết hôn', 'Ly hôn'].map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                            </select>
+                        </div>
+                    </div>
+
+                    {/* Hàng 3: Quê quán & Nơi ở hiện tại (Nếu không phải admin) */}
+                    <div className="space-y-4">
+                        <div>
+                            <label className="label">Quê quán (Nguyên quán) <span className="text-red-500 ml-1">*</span></label>
+                            <input name="que_quan" value={formData.que_quan} onChange={handleChange} className={vCls(formData.que_quan) + " uppercase"} placeholder="XÃ, HUYỆN, TỈNH..." />
+                        </div>
+
+                        {!adminMode && (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div><label className="label">Số điện thoại</label><input name="so_dien_thoai" value={formData.so_dien_thoai} onChange={handleChange} className={vCls(formData.so_dien_thoai)} placeholder="09xx..." /></div>
+                                <div><label className="label">Email</label><input name="email" value={formData.email} onChange={handleChange} className={vCls(formData.email)} placeholder="example@gmail.com" /></div>
+                            </div>
+                        )}
+
+                        {!adminMode && (
+                            <div>
+                                <label className="label">Nơi ở hiện tại (Để liên hệ) <span className="text-red-500 ml-1">*</span></label>
+                                <input name="noi_o_hien_tai" value={formData.noi_o_hien_tai} onChange={handleChange} className={vCls(formData.noi_o_hien_tai) + " uppercase"} placeholder="SỐ NHÀ, ĐƯỜNG..." />
+                            </div>
+                        )}
+
+                        {!adminMode && (
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                <div>
+                                    <label className="label">Size Áo <span className="text-red-500 ml-1">*</span></label>
+                                    <select name="size_ao" value={formData.size_ao} onChange={handleChange} className={vCls(formData.size_ao, true)}>
+                                        <option value="" disabled>Size</option>
+                                        {['S', 'M', 'L', 'XL', 'XXL', '3XL'].map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="label">Size Giày <span className="text-red-500 ml-1">*</span></label>
+                                    <select name="size_giay" value={formData.size_giay} onChange={handleChange} className={vCls(formData.size_giay, true)}>
+                                        <option value="" disabled>Size</option>
+                                        {Array.from({ length: 17 }, (_, i) => 22 + i * 0.5).map(s => <option key={s} value={s}>{s} cm</option>)}
+                                    </select>
+                                </div>
+                            </div>
+                        )}
+                    </div>
                 </div>
             </div>
-
-            {/* Liên hệ */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div><label className="label">Số điện thoại <span className="text-red-500 ml-1">*</span></label><input name="so_dien_thoai" value={formData.so_dien_thoai} onChange={handleChange} className={vCls(formData.so_dien_thoai)} placeholder="09xx..." /></div>
-
-                <div><label className="label">Email <span className="text-red-500 ml-1">*</span></label><input name="email" value={formData.email} onChange={handleChange} className={vCls(formData.email)} placeholder="example@gmail.com" /></div>
-            </div>
-
-            {/* Địa chỉ */}
-            <div className="space-y-3">
-                <div><label className="label">Quê quán (Nguyên quán) <span className="text-red-500 ml-1">*</span></label><input name="que_quan" value={formData.que_quan} onChange={handleChange} className={vCls(formData.que_quan) + " uppercase"} placeholder="Xã, Huyện, Tỉnh..." /></div>
-                <div><label className="label">Nơi ở hiện tại (Để liên hệ) <span className="text-red-500 ml-1">*</span></label><input name="noi_o_hien_tai" value={formData.noi_o_hien_tai} onChange={handleChange} className={vCls(formData.noi_o_hien_tai) + " uppercase"} placeholder="Số nhà, đường..." /></div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 pb-4 border-b border-gray-100">
-                <div><label className="label">Tôn giáo <span className="text-red-500 ml-1">*</span></label>
-                    <select name="ton_giao" value={formData.ton_giao} onChange={handleChange} className={vCls(formData.ton_giao, true)}>
-                        <option value="" disabled>-- Chọn --</option>
-                        <option value="Không">Không</option>
-                        <option value="Phật giáo">Phật giáo</option>
-                        <option value="Thiên Chúa giáo">Thiên Chúa giáo</option>
-                        <option value="Tin Lành">Tin Lành</option>
-                        <option value="Hòa Hảo">Hòa Hảo</option>
-                        <option value="Cao Đài">Cao Đài</option>
-                        <option value="Khác">Khác</option>
-                    </select>
-                </div>
-                <div><label className="label">Tình trạng hôn nhân <span className="text-red-500 ml-1">*</span></label>
-                    <select name="hon_nhan" value={formData.hon_nhan} onChange={handleChange} className={vCls(formData.hon_nhan, true)}>
-                        <option value="" disabled>-- Chọn --</option>
-                        <option value="Độc thân">Độc thân</option><option value="Đã kết hôn">Đã kết hôn</option><option value="Ly hôn">Ly hôn</option>
-                    </select>
-                </div>
-                <div><label className="label">Size Quần áo <span className="text-red-500 ml-1">*</span></label>
-                    <select name="size_ao" value={formData.size_ao} onChange={handleChange} className={vCls(formData.size_ao, true)}>
-                        <option value="" disabled>-- Chọn --</option>
-                        <option value="S">S</option>
-                        <option value="M">M</option>
-                        <option value="L">L</option>
-                        <option value="XL">XL</option>
-                        <option value="XXL">XXL</option>
-                        <option value="3XL">3XL</option>
-                    </select>
-                </div>
-                <div><label className="label">Size Giày (cm) <span className="text-red-500 ml-1">*</span></label>
-                    <select name="size_giay" value={formData.size_giay} onChange={handleChange} className={vCls(formData.size_giay, true)}>
-                        <option value="" disabled>-- Chọn --</option>
-                        {Array.from({ length: 17 }, (_, i) => 22 + i * 0.5).map(s => (
-                            <option key={s} value={s}>{s}</option>
-                        ))}
-                    </select>
-                    <p className="text-[10px] text-gray-500 italic mt-1">*Đo độ dài bàn chân (Ví dụ: 25.5)</p>
-                </div>
-            </div>
-
-
-
-
-
-        </div >
+        </div>
     )
 
     const Step2_GiaDinh = () => (
-        <div className="space-y-6 animate-fade-in">
-            <h3 className="section-title">III. THÔNG TIN GIA ĐÌNH</h3>
-            <p className="text-sm text-gray-500 italic mb-2">(*) Khai đầy đủ thông tin: Bố, Mẹ, Vợ/Chồng, Con cái (Bắt buộc để xin Visa).</p>
+        <div className="space-y-4 animate-fade-in">
+            <h3 className="section-title text-base">{adminMode ? 'III' : 'IV'}. THÔNG TIN GIA ĐÌNH</h3>
+            <p className="text-[11px] text-gray-500 italic -mt-2">(*) Khai đầy đủ thông tin: Bố, Mẹ, Vợ/Chồng, Con cái (Bắt buộc để xin Visa).</p>
 
             {formData.thong_tin_gia_dinh.map((mem, idx) => (
-                <div key={idx} className="bg-gray-50 p-4 rounded-lg border border-gray-200 relative mb-4 shadow-sm">
+                <div key={idx} className="bg-gray-50 p-3 rounded-lg border border-gray-200 relative mb-2 shadow-sm">
                     {mem.quan_he !== 'Bố' && mem.quan_he !== 'Mẹ' && (
                         <button type="button" onClick={() => removeItem('thong_tin_gia_dinh', idx)} className="absolute top-2 right-2 text-red-500 hover:text-red-700 font-bold bg-white rounded-full p-1" title="Xóa dòng này">
                             <span className="material-icons-outlined text-lg">close</span>
@@ -678,26 +685,28 @@ export default function DangKy() {
             ))}
 
             <button type="button" onClick={() => addItem('thong_tin_gia_dinh', { quan_he: '', ho_ten: '', nam_sinh: '', nghe_nghiep: '' })}
-                className="w-full md:w-auto px-6 py-3 bg-emerald-50 text-emerald-700 font-bold rounded-xl border-2 border-dashed border-emerald-300 hover:bg-emerald-100 hover:border-emerald-400 hover:shadow-sm transition-all flex items-center justify-center gap-2 uppercase text-sm tracking-wide">
-                <span className="material-icons-outlined">person_add</span>
+                className="w-full md:w-auto px-6 py-2 bg-emerald-50 text-emerald-700 font-bold rounded-xl border-2 border-dashed border-emerald-300 hover:bg-emerald-100 transition-all flex items-center justify-center gap-2 uppercase text-[11px] tracking-wide">
+                <span className="material-icons-outlined text-base">person_add</span>
                 Thêm thành viên khác
             </button>
 
-            <div className="mt-8 pt-4 border-t">
-                <h4 className="font-bold text-gray-700 mb-3">Người bảo lãnh (Liên hệ khẩn cấp)</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div><label className="label">Họ tên người bảo lãnh <span className="text-red-500 ml-1">*</span></label><input name="nguoi_bao_lanh" value={formData.nguoi_bao_lanh} onChange={handleChange} className={vCls(formData.nguoi_bao_lanh)} /></div>
-                    <div><label className="label">Số điện thoại liên hệ <span className="text-red-500 ml-1">*</span></label><input name="sdt_nguoi_bao_lanh" value={formData.sdt_nguoi_bao_lanh} onChange={handleChange} className={vCls(formData.sdt_nguoi_bao_lanh)} /></div>
+            {!adminMode && (
+                <div className="mt-8 pt-4 border-t">
+                    <h4 className="font-bold text-gray-700 mb-3">Người bảo lãnh (Liên hệ khẩn cấp)</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div><label className="label">Họ tên người bảo lãnh <span className="text-red-500 ml-1">*</span></label><input name="nguoi_bao_lanh" value={formData.nguoi_bao_lanh} onChange={handleChange} className={vCls(formData.nguoi_bao_lanh)} /></div>
+                        <div><label className="label">Số điện thoại liên hệ <span className="text-red-500 ml-1">*</span></label><input name="sdt_nguoi_bao_lanh" value={formData.sdt_nguoi_bao_lanh} onChange={handleChange} className={vCls(formData.sdt_nguoi_bao_lanh)} /></div>
+                    </div>
                 </div>
-            </div>
+            )}
         </div>
     )
     const Step3_SucKhoe = () => (
-        <div className="space-y-6 animate-fade-in">
-            <h3 className="section-title">IV. SỨC KHỎE & THỂ CHẤT</h3>
+        <div className="space-y-4 animate-fade-in">
+            <h3 className="section-title text-base">{adminMode ? 'II' : 'III'}. SỨC KHỎE & THỂ CHẤT</h3>
             {/* Chỉ số cơ bản */}
-            <div className="bg-primary-50 p-4 rounded text-center mb-4">
-                <span className="text-lg font-bold text-primary-800">BMI: {bmi || '--'}</span>
+            <div className="bg-primary-50 p-2 rounded text-center mb-2">
+                <span className="text-base font-bold text-primary-800">BMI: {bmi || '--'}</span>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
@@ -758,10 +767,11 @@ export default function DangKy() {
                 ))}
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Hidden: Dị ứng & Tiền sử bệnh */}
+            {/* <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div><label className="label">Dị ứng (Thuốc, Thức ăn...)</label><textarea rows={2} name="di_ung" value={formData.di_ung} onChange={handleChange} className={vCls(formData.di_ung, true)} placeholder="Nếu không có ghi 'Không'" /></div>
                 <div><label className="label">Tiền sử Bệnh / Phẫu thuật</label><textarea rows={2} name="benh_an_phau_thuat" value={formData.benh_an_phau_thuat} onChange={handleChange} className={vCls(formData.benh_an_phau_thuat, true)} placeholder="Đã từng mổ ruột thừa..." /></div>
-            </div>
+            </div> */}
         </div>
     )
 
@@ -907,7 +917,7 @@ export default function DangKy() {
             <div className="space-y-8 animate-fade-in">
                 {/* QUÁ TRÌNH HỌC TẬP */}
                 <div>
-                    <h3 className="section-title">V. QUÁ TRÌNH HỌC TẬP</h3>
+                    <h3 className="section-title text-primary-700">{adminMode ? 'IV' : 'V'}. QUÁ TRÌNH HỌC TẬP</h3>
                     <p className="text-xs text-gray-500 mb-2">(*) Khai cấp học cao nhất đã học.</p>
 
                     {formData.qua_trinh_hoc_tap.length > 0 && (
@@ -951,8 +961,8 @@ export default function DangKy() {
                 </div>
 
                 {/* KINH NGHIỆM LÀM VIỆC */}
-                <div>
-                    <h3 className="section-title mt-8">VI. KINH NGHIỆM LÀM VIỆC</h3>
+                <div className="mt-10">
+                    <h3 className="section-title text-emerald-700">{adminMode ? 'V' : 'VI'}. KINH NGHIỆM LÀM VIỆC</h3>
                     <p className="text-xs text-red-500 italic mb-2 font-medium">(*) Khai 3 công việc gần nhất (nếu có).</p>
 
                     {formData.kinh_nghiem_lam_viec.map((item, idx) => (
@@ -1040,7 +1050,7 @@ export default function DangKy() {
             <div className="space-y-6 animate-fade-in">
 
                 {/* --- VII. NGUYỆN VỌNG ĐĂNG KÝ (Moved Up) --- */}
-                <h3 className="section-title">VII. NGUYỆN VỌNG ĐĂNG KÝ</h3>
+                <h3 className="section-title">{adminMode ? 'VI' : 'VII'}. NGUYỆN VỌNG ĐĂNG KÝ</h3>
                 <div>
                     <label className="label mb-2 block">Ngành nghề mong muốn</label>
                     <select name="nganh_nghe_mong_muon" value={formData.nganh_nghe_mong_muon} onChange={handleChange} className={vCls(formData.nganh_nghe_mong_muon, true)}>
@@ -1073,7 +1083,7 @@ export default function DangKy() {
                 </div>
 
                 {/* --- VIII. KỸ NĂNG & SÀNG LỌC (Moved Down) --- */}
-                <h3 className="section-title mt-6">VIII. KỸ NĂNG & TÍNH CÁCH</h3>
+                <h3 className="section-title mt-6">{adminMode ? 'VII' : 'VIII'}. KỸ NĂNG & TÍNH CÁCH</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div><label className="label">Tiếng Nhật <span className="text-red-500 ml-1">*</span></label><select name="trinh_do_tieng_nhat" value={formData.trinh_do_tieng_nhat} onChange={handleChange} className={vCls(formData.trinh_do_tieng_nhat, true)}><option value="" disabled>-- Chọn --</option><option>Chưa biết</option><option>Giới thiệu cơ bản</option><option>N5</option><option>N4</option><option>N3</option></select></div>
                     <div><label className="label">Bằng lái xe <span className="text-red-500 ml-1">*</span></label><select name="bang_lai_xe" value={formData.bang_lai_xe} onChange={handleChange} className={vCls(formData.bang_lai_xe, true)}><option value="" disabled>-- Chọn --</option><option>Chưa có</option><option>Xe máy</option><option>Ô tô</option></select></div>
@@ -1117,115 +1127,83 @@ export default function DangKy() {
         <div className="max-w-4xl mx-auto px-4 py-8 pb-32"> {/* pb-32 để tránh nút che nội dung cuối */}
 
             {/* Header Difference Notice */}
-            <div className="bg-emerald-50 border-l-4 border-emerald-500 p-4 mb-6 mt-10 rounded-r shadow-sm">
-                <div className="flex">
-                    <div className="flex-shrink-0">
-                        <span className="material-icons-outlined text-emerald-500">info</span>
+            <div className={`${adminMode ? 'bg-orange-50 border-orange-500' : 'bg-emerald-50 border-emerald-500'} border-l-4 p-4 mb-8 mt-6 rounded-xl transition-all`}>
+                <div className="flex items-center gap-3">
+                    <div className="flex-shrink-0 flex items-center justify-center w-10 h-10 rounded-full bg-white border border-orange-100">
+                        <span className={`material-icons-outlined ${adminMode ? 'text-orange-500' : 'text-emerald-500'} text-2xl`}>info</span>
                     </div>
-                    <div className="ml-3">
-                        <p className="text-sm text-emerald-800">
-                            <strong>HỒ SƠ ĐĂNG KÝ CHÍNH THỨC</strong> (Dành cho ứng viên nộp hồ sơ đầy đủ).<br />
-                            Nếu bạn chỉ muốn nhận tư vấn sơ bộ, vui lòng <Link to="/yeu-cau-tu-van" className="font-bold underline hover:text-emerald-900">bấm vào đây để đăng ký tư vấn nhanh</Link>.
-                        </p>
-                    </div>
-                </div>
-            </div>
-
-            {/* Progress Stepper - Redesigned */}
-            <div className="mb-6">
-                <div className="max-w-3xl mx-auto py-3 md:py-4">
-
-                    {/* MOBILE VIEW: Compact Header */}
-                    <div className="md:hidden">
-                        <div className="flex justify-between items-end mb-3">
-                            <div>
-                                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Bước {step}/{steps.length}</span>
-                                <h2 className="text-lg font-extrabold text-teal-700 leading-none mt-1">{steps[step - 1].label}</h2>
-                            </div>
-                            <div className="w-10 h-10 rounded-full bg-teal-50 flex items-center justify-center text-teal-600 border border-teal-100 shadow-sm">
-                                <span className="material-icons-outlined text-xl">{steps[step - 1].icon}</span>
-                            </div>
-                        </div>
-                        {/* Segmented Bar */}
-                        <div className="flex gap-1 h-1.5">
-                            {steps.map(s => (
-                                <div key={s.num} className={`flex-1 rounded-full transition-all duration-500 ${s.num <= step ? 'bg-teal-500' : 'bg-gray-200'}`}></div>
-                            ))}
-                        </div>
-                    </div>
-
-                    {/* DESKTOP VIEW: Full Stepper */}
-                    <div className="hidden md:flex justify-between relative items-center px-4">
-                        {/* Connecting Lines */}
-                        <div className="absolute top-1/2 left-4 right-4 h-1 bg-gray-100 -z-10 rounded"></div>
-                        <div className="absolute top-1/2 left-4 h-1 bg-teal-500 -z-10 rounded transition-all duration-500" style={{ width: `${((step - 1) / (steps.length - 1)) * 100}%` }}></div>
-
-                        {steps.map((s) => (
-                            <div key={s.num}
-                                onClick={() => step > s.num && setStep(s.num)}
-                                className={`cursor-pointer flex flex-col items-center gap-2 transition-all duration-300 group ${s.num === step ? 'scale-110' : 'hover:opacity-80'}`}
-                            >
-                                <div className={`w-12 h-12 rounded-xl flex items-center justify-center border-[3px] shadow-sm transition-all duration-300 z-10
-                                    ${s.num <= step ? 'bg-teal-600 border-teal-600 text-white' : 'bg-white border-gray-200 text-gray-300'}
-                                    ${s.num === step ? 'ring-4 ring-teal-100' : ''}
-                                `}>
-                                    <span className="material-icons-outlined text-xl">{s.icon}</span>
-                                </div>
-                                <span className={`absolute -bottom-6 text-xs font-bold whitespace-nowrap bg-white px-2 py-0.5 rounded transition-all duration-300
-                                    ${s.num === step ? 'text-teal-700 opacity-100 translate-y-0' : 'text-gray-400 opacity-0 translate-y-1 group-hover:opacity-100 group-hover:translate-y-0'}
-                                `}>{s.label}</span>
-                            </div>
-                        ))}
+                    <div className="flex-1">
+                        {adminMode ? (
+                            <p className="text-sm text-orange-900 font-extrabold uppercase tracking-widest flex items-center gap-2">
+                                <span className="w-1.5 h-1.5 rounded-full bg-orange-400 animate-pulse"></span>
+                                Giao diện nhập liệu nội bộ — KHAI FORM NHANH
+                            </p>
+                        ) : (
+                            <p className="text-sm text-emerald-800 leading-relaxed">
+                                <strong className="font-black text-emerald-900">HỒ SƠ ĐĂNG KÝ CHÍNH THỨC</strong> (Dành cho ứng viên nộp hồ sơ đầy đủ).<br />
+                                <span className="text-xs opacity-80">Nếu bạn chỉ muốn nhận tư vấn sơ bộ, vui lòng </span>
+                                <Link to="/yeu-cau-tu-van" className="font-bold underline hover:text-emerald-900 decoration-emerald-300 underline-offset-4">bấm vào đây để đăng ký tư vấn nhanh</Link>.
+                            </p>
+                        )}
                     </div>
                 </div>
             </div>
 
-            <div className="bg-white shadow-xl rounded-xl border border-gray-100 overflow-hidden min-h-[500px]">
-                <form className="p-4 md:p-8">
-                    {step === 1 && Step1_CaNhan()}
-                    {step === 2 && Step2_GiaDinh()}
-                    {step === 3 && Step3_SucKhoe()}
-                    {step === 4 && Step4_HocVan()}
-                    {step === 5 && Step5_NguyenVong()}
+            {/* Form Content - Unified Vertical Layout */}
+            <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
+                <form className="p-3 md:p-6 space-y-6 md:space-y-8">
+                    <section id="step1">
+                        {Step1_CaNhan()}
+                    </section>
+
+                    <div className="h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent"></div>
+
+                    <section id="step3">
+                        {Step3_SucKhoe()}
+                    </section>
+
+                    <div className="h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent"></div>
+
+                    <section id="step2">
+                        {Step2_GiaDinh()}
+                    </section>
+
+                    <div className="h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent"></div>
+
+                    <section id="step4">
+                        {Step4_HocVan()}
+                    </section>
+
+                    <div className="h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent"></div>
+
+                    <section id="step5">
+                        {Step5_NguyenVong()}
+                    </section>
+
+                    {/* Action Buttons (Sticky at Bottom or at End) */}
+                    <div className="mt-16 pt-8 border-t border-gray-100 flex flex-col md:flex-row justify-center items-center gap-4">
+                        <button type="button" onClick={() => navigate(adminMode ? '/admin/ho-so' : '/')}
+                            className="w-full md:w-auto px-10 py-3.5 rounded-xl border-2 border-gray-100 font-bold text-gray-400 hover:text-gray-600 hover:border-gray-200 hover:bg-gray-50 transition-all uppercase text-sm min-w-[180px]">
+                            Hủy bỏ
+                        </button>
+
+                        <button type="button" onClick={handleSubmit}
+                            disabled={loading}
+                            className="w-full md:w-auto px-12 py-3.5 rounded-xl bg-gradient-to-r from-teal-600 to-teal-500 text-white font-bold hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50 disabled:cursor-not-allowed transition-all uppercase text-sm min-w-[250px] flex items-center justify-center gap-3">
+                            {loading ? (
+                                <><span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span> ĐANG XỬ LÝ...</>
+                            ) : (
+                                <><span className="material-icons-outlined">check_circle</span> HOÀN TẤT & LƯU HỒ SƠ</>
+                            )}
+                        </button>
+                    </div>
                 </form>
-            </div>
-
-            {/* Action Buttons (Centered at Bottom) */}
-            <div className="mt-10 flex flex-col md:flex-row justify-center items-center gap-4 pb-12">
-                <button type="button" onClick={() => {
-                    if (step > 1) {
-                        setStep(s => s - 1);
-                        window.scrollTo({ top: 0, behavior: 'smooth' });
-                    } else {
-                        navigate('/');
-                    }
-                }}
-                    className="w-full md:w-auto px-8 py-3 rounded-xl border-2 border-gray-200 font-bold text-gray-500 hover:text-gray-700 hover:border-gray-300 hover:bg-gray-50 transition-all uppercase text-sm min-w-[150px]">
-                    {step === 1 ? 'Hủy' : 'Quay lại'}
-                </button>
-
-                <button type="button" onClick={(e) => {
-                    if (step < 5) {
-                        setStep(s => s + 1);
-                        window.scrollTo({ top: 0, behavior: 'smooth' });
-                    } else {
-                        handleSubmit(e);
-                    }
-                }}
-                    className="w-full md:w-auto px-10 py-3 rounded-xl bg-gradient-to-r from-teal-600 to-teal-500 text-white font-bold shadow-lg shadow-teal-500/30 hover:shadow-teal-500/40 hover:-translate-y-0.5 active:translate-y-0 transition-all uppercase text-sm min-w-[200px] flex items-center justify-center gap-2">
-                    {step === 5 ? (
-                        loading ? <><span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span> ĐANG GỬI...</>
-                            : <><span className="material-icons-outlined">send</span> Gửi hồ sơ</>
-                    ) : (
-                        <>Tiếp theo <span className="material-icons-outlined text-lg">arrow_forward</span></>
-                    )}
-                </button>
             </div>
 
             {/* VALIDATION ERROR MODAL */}
             {validationErrors.length > 0 && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
-                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 relative overflow-hidden animate-slide-up">
+                    <div className="bg-white rounded-2xl w-full max-w-md p-6 relative overflow-hidden animate-slide-up">
                         <button onClick={() => setValidationErrors([])} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors">
                             <span className="material-icons-outlined">close</span>
                         </button>
@@ -1251,7 +1229,7 @@ export default function DangKy() {
 
                         <button
                             onClick={() => setValidationErrors([])}
-                            className="w-full py-3.5 bg-red-500 hover:bg-red-600 text-white font-bold rounded-xl shadow-lg shadow-red-500/30 transition-all uppercase tracking-wide flex items-center justify-center gap-2"
+                            className="w-full py-3.5 bg-red-500 hover:bg-red-600 text-white font-bold rounded-xl transition-all uppercase tracking-wide flex items-center justify-center gap-2"
                         >
                             <span>KIỂM TRA LẠI</span>
                         </button>
@@ -1262,7 +1240,7 @@ export default function DangKy() {
             {/* SUCCESS MODAL */}
             {showSuccess && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
-                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8 text-center relative overflow-hidden animate-slide-up">
+                    <div className="bg-white rounded-2xl w-full max-w-md p-8 text-center relative overflow-hidden animate-slide-up">
                         <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-emerald-400 to-teal-600"></div>
                         <div className="w-20 h-20 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-6 animate-bounce-slow">
                             <span className="material-icons-outlined text-5xl text-emerald-600">check_circle</span>
@@ -1273,7 +1251,7 @@ export default function DangKy() {
                         </p>
                         <button
                             onClick={() => navigate('/')}
-                            className="w-full py-3.5 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-bold rounded-xl shadow-lg shadow-emerald-500/30 hover:shadow-emerald-500/40 hover:-translate-y-0.5 transition-all text-base uppercase tracking-wide flex items-center justify-center gap-2"
+                            className="w-full py-3.5 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-bold rounded-xl hover:-translate-y-0.5 transition-all text-base uppercase tracking-wide flex items-center justify-center gap-2"
                         >
                             <span>Về Trang Chủ</span>
                             <span className="material-icons-outlined">arrow_forward</span>
@@ -1284,24 +1262,27 @@ export default function DangKy() {
 
             {/* CSS Utility Classes embedded for this component */}
             <style>{`
-        .label { display: block; font-size: 0.9rem; font-weight: 600; color: #374151; margin-bottom: 0.35rem; }
+        .label { display: block; font-size: 0.85rem; font-weight: 600; color: #374151; margin-bottom: 0.2rem; }
         .input { 
             display: block; width: 100%; max-width: 100%; box-sizing: border-box;
-            border-radius: 0.75rem; border: 1px solid #e2e8f0; 
-            padding: 0.75rem 1rem; font-size: 16px; line-height: 1.5; /* iOS zoom prevention */
+            border-radius: 0.6rem; border: 1px solid #e2e8f0; 
+            padding: 0.5rem 0.85rem; font-size: 16px; line-height: 1.4; /* iOS zoom prevention */
             background-color: #f8fafc; transition: all 0.2s;
-            min-height: 50px; /* Touch target */
+            min-height: 42px; 
         }
         .input:focus { outline: none; border-color: #0d9488; background-color: #ffffff; ring: 2px solid rgba(13, 148, 136, 0.1); box-shadow: 0 0 0 4px rgba(13, 148, 136, 0.1); }
         
         .input-sm { 
-            display: block; width: 100%; border-radius: 0.5rem; border: 1px solid #e2e8f0; 
-            padding: 0.5rem 0.75rem; font-size: 16px; /* iOS zoom prevention */
-            background-color: #f8fafc; min-height: 44px;
+            display: block; width: 100%; border-radius: 0.4rem; border: 1px solid #e2e8f0; 
+            padding: 0.35rem 0.65rem; font-size: 16px; 
+            background-color: #f8fafc; min-height: 38px;
         }
         .input-sm:focus { outline: none; border-color: #0d9488; background-color: #ffffff; }
 
-        .section-title { font-size: 1.25rem; font-weight: 800; color: #115e59; text-transform: uppercase; letter-spacing: -0.025em; padding-bottom: 0.75rem; border-bottom: 2px dashed #ccfbf1; margin-bottom: 1.5rem; }
+        .section-title { font-size: 1rem; font-weight: 800; color: #115e59; text-transform: uppercase; letter-spacing: -0.01em; padding-bottom: 0.6rem; border-bottom: 2px dashed #ccfbf1; margin-bottom: 1.2rem; }
+        @media (min-width: 768px) {
+            .section-title { font-size: 1.25rem; }
+        }
         .btn-add { margin-top: 0.75rem; padding: 0.5rem 1rem; background-color: #f0fdfa; border-radius: 0.5rem; color: #0d9488; font-weight: 600; display: inline-flex; align-items: center; gap: 0.5rem; transition: all 0.2s; }
         .btn-add:active { background-color: #ccfbf1; transform: scale(0.98); }
 
