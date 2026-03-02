@@ -195,7 +195,10 @@ export default function DangKy({ adminMode = false }) {
             gioi_tinh: 'Giới tính',
             que_quan: 'Quê quán',
             ton_giao: 'Tôn giáo',
-            hon_nhan: 'Tình trạng hôn nhân',
+            so_cccd: 'Số CCCD',
+            ngay_cap_cccd: 'Ngày cấp CCCD',
+            noi_cap_cccd: 'Nơi cấp CCCD',
+            anh_ho_so: 'Ảnh chân dung',
             ...(!adminMode ? { anh_cccd_mat_truoc: 'Ảnh mặt trước CCCD/CMT' } : {}),
             // anh_cccd_mat_sau: 'Ảnh mặt sau CCCD', // Không bắt buộc
             chieu_cao: 'Chiều cao',
@@ -528,7 +531,7 @@ export default function DangKy({ adminMode = false }) {
             <div className="flex items-center gap-4 py-2 mt-4">
                 <div className="h-px bg-slate-200 flex-1"></div>
                 <h3 className="section-title !mb-0 !pb-0 !border-b-0 text-slate-700 text-sm">
-                    {adminMode ? 'I. THÔNG TIN CƠ BẢN' : 'II. XÁC THỰC THÔNG TIN ỨNG VIÊN'}
+                    {adminMode ? 'I. THÔNG TIN CƠ BẢN (v2)' : 'II. XÁC THỰC THÔNG TIN ỨNG VIÊN'}
                 </h3>
                 <div className="h-px bg-slate-200 flex-1"></div>
             </div>
