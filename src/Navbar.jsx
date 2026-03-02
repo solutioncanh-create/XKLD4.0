@@ -20,7 +20,6 @@ export default function Navbar() {
     const navLinks = [
         { name: 'Trang Chủ', path: '/', icon: <Globe size={18} /> },
         // { name: 'Cộng Đồng Số', path: '/community', icon: <Users size={18} /> }, // Hidden
-        { name: 'Hồ Sơ Của Tôi', path: '/dang-ky', icon: <FileText size={18} /> },
         // { name: 'Cơ Hội Việc Làm', path: '/viec-lam', icon: <Briefcase size={18} /> }, // Hidden
     ]
 

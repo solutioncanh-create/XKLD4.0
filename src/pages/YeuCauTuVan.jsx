@@ -299,10 +299,7 @@ export default function YeuCauTuVan() {
                             </form>
 
                             <div className="mt-6 text-center border-t border-secondary-100 pt-4">
-                                <p className="text-sm text-secondary-500 mb-2">
-                                    Bạn muốn nộp hồ sơ chi tiết ngay? <br />
-                                    <Link to="/dang-ky" className="text-primary-600 font-bold hover:underline">Điền form đầy đủ tại đây &rarr;</Link>
-                                </p>
+
                                 <p className="text-[10px] text-secondary-400 flex items-center justify-center gap-1">
                                     <span className="material-icons-outlined text-xs">lock</span>
                                     Hệ thống bảo mật dữ liệu theo tiêu chuẩn quốc tế.

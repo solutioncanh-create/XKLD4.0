@@ -41,11 +41,8 @@ export default function HomePage() {
 
                     {/* CTA Buttons */}
                     <div className="flex flex-col sm:flex-row gap-4 justify-center items-center animate-fade-in-up delay-300">
-                        <Link to="/dang-ky" className="group relative w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-4 text-base font-bold text-white transition-all duration-300 bg-emerald-600 rounded-full hover:bg-emerald-700 hover:shadow-lg hover:shadow-emerald-500/30 hover:-translate-y-1">
-                            <FileText size={20} />
-                            Tạo Hồ Sơ Số (E-Resume)
-                        </Link>
-                        <Link to="/yeu-cau-tu-van" className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-4 text-base font-bold text-slate-700 transition-all duration-300 bg-white border border-slate-200 rounded-full hover:bg-slate-50 hover:border-emerald-200 hover:text-emerald-700 hover:shadow-md hover:-translate-y-1">
+
+                        <Link to="/yeu-cau-tu-van" className="group relative w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-4 text-base font-bold text-white transition-all duration-300 bg-emerald-600 rounded-full hover:bg-emerald-700 hover:shadow-lg hover:shadow-emerald-500/30 hover:-translate-y-1">
                             <MessageCircle size={20} />
                             Tư Vấn Online
                         </Link>
